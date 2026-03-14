@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Liferefix 변호사 포털</title>
+<link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{--p:#0B5FFF;--pd:#0040CC;--pl:#E8F0FF;--a:#00C6A2;--al:#E0FAF5;--r:#FF4B4B;--o:#FF8C00;--ol:#FFF3E0;--t:#0D1B2A;--ts:#5A6E85;--bd:#E4EAF2;--bg:#F4F7FF;--wh:#fff;--rad:16px;--rads:10px;--sh:0 4px 20px rgba(11,95,255,.10);--shs:0 2px 8px rgba(11,95,255,.07)}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'Pretendard',-apple-system,sans-serif;background:var(--bg);color:var(--t);-webkit-font-smoothing:antialiased}
+.lw{min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:30px 24px;background:linear-gradient(160deg,#0B5FFF,#0035BB 60%,#002080)}
+.lcard{background:#fff;border-radius:20px;padding:28px 24px;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.finput{width:100%;padding:13px 15px;border:2px solid var(--bd);border-radius:var(--rads);font-size:15px;font-family:inherit;color:var(--t);background:#fff;outline:none;transition:border-color .2s;margin-bottom:12px}
+.finput:focus{border-color:var(--p)}
+textarea.finput{resize:none}
+.btn{width:100%;padding:14px;border:none;border-radius:var(--rads);font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s}
+.btn.p{background:var(--p);color:#fff}.btn.p:active{background:var(--pd)}
+.btn.o{background:transparent;color:var(--p);border:2px solid var(--p);margin-top:10px}
+.btn.sm{width:auto;padding:7px 14px;font-size:12px}
+.btn.danger{background:#FFF0F0;color:var(--r);border:none}
+.btn.ok{background:var(--al);color:#005945;border:none}
+.hdr{position:sticky;top:0;z-index:200;height:56px;background:rgba(255,255,255,.96);backdrop-filter:blur(14px);border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;padding:0 18px}
+.hdr-logo{font-size:17px;font-weight:900;background:linear-gradient(135deg,var(--p),var(--a));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.av{width:34px;height:34px;border-radius:50%;background:var(--pl);color:var(--p);font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.bnav{position:fixed;bottom:0;left:0;right:0;z-index:200;background:#fff;border-top:1px solid var(--bd);display:flex;padding-bottom:env(safe-area-inset-bottom);box-shadow:0 -4px 16px rgba(0,0,0,.06)}
+.ni{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:9px 0 7px;border:none;background:none;color:var(--ts);font-size:10px;font-weight:600;gap:3px;cursor:pointer;font-family:inherit;transition:color .15s}
+.ni svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2}
+.ni.on{color:var(--p)}
+main{padding-bottom:76px}
+.scr{display:none}.scr.on{display:block;animation:fu .2s ease}
+@keyframes fu{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.card{background:#fff;border-radius:var(--rad);padding:16px 18px;box-shadow:var(--shs);border:1px solid var(--bd);margin-bottom:11px}
+.sg{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:16px 16px 0}
+.si{background:#fff;border-radius:var(--rad);padding:14px;box-shadow:var(--shs);border:1px solid var(--bd);cursor:pointer}
+.si-n{font-size:24px;font-weight:900;line-height:1;margin-bottom:2px}
+.si-l{font-size:11px;color:var(--ts)}
+.si-sub{font-size:11px;margin-top:3px;font-weight:600}
+.si-sub.up{color:var(--a)}.si-sub.warn{color:var(--o)}
+.sec{padding:16px 16px 0}
+.sec-t{font-size:16px;font-weight:800;margin-bottom:2px}
+.sec-s{font-size:12px;color:var(--ts);margin-bottom:11px}
+.tabs{display:flex;background:#fff;border-bottom:2px solid var(--bd);position:sticky;top:56px;z-index:100}
+.tab{flex:1;padding:13px 0;font-size:13px;font-weight:700;border:none;background:none;color:var(--ts);cursor:pointer;font-family:inherit;border-bottom:3px solid transparent;margin-bottom:-2px;transition:all .2s}
+.tab.on{color:var(--p);border-bottom-color:var(--p)}
+.tp{padding:16px;display:none}.tp.on{display:block}
+.cc{background:#fff;border-radius:var(--rad);padding:16px 18px;border:1px solid var(--bd);margin-bottom:10px;cursor:pointer;transition:transform .15s;box-shadow:var(--shs);position:relative}
+.cc:active{transform:scale(.985)}
+.cc.new-c{border-left:4px solid var(--p)}.cc.bid-c{border-left:4px solid var(--a)}.cc.done-c{border-left:4px solid var(--ts)}
+.cc-id{font-size:12px;font-weight:800;color:var(--p)}
+.cc-title{font-size:14px;font-weight:700;margin-top:2px;margin-bottom:8px}
+.cc-info{font-size:13px;color:var(--ts);line-height:1.8}
+.cc-footer{display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:10px;border-top:1px solid var(--bd)}
+.cc-time{font-size:11px;color:var(--ts)}
+.cc-btn{font-size:12px;font-weight:700;color:var(--p);background:var(--pl);border:none;padding:6px 14px;border-radius:20px;cursor:pointer;font-family:inherit}
+.badge{font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px}
+.badge.new-b{background:var(--pl);color:var(--p)}
+.badge.bid-b{background:var(--al);color:#005945}
+.badge.done-b{background:#F0F0F0;color:var(--ts)}
+.badge.urg{background:var(--ol);color:var(--o)}
+.tg{display:flex;gap:7px;margin-bottom:14px;flex-wrap:wrap}
+.tb{padding:8px 14px;border-radius:20px;font-size:13px;font-weight:600;border:2px solid var(--bd);background:#fff;color:var(--ts);cursor:pointer;transition:all .15s;font-family:inherit}
+.tb.on{border-color:var(--p);background:var(--pl);color:var(--p)}
+.flabel{font-size:14px;font-weight:700;margin-bottom:7px;display:block}
+.prog{height:8px;border-radius:4px;background:var(--bd);overflow:hidden;margin:6px 0}
+.prog-fill{height:100%;border-radius:4px}
+.prog-fill.blue{background:linear-gradient(90deg,var(--p),#4D8EFF)}
+.prog-fill.green{background:linear-gradient(90deg,var(--a),#00DDB4)}
+.alert{border-radius:var(--rads);padding:12px 14px;font-size:13px;font-weight:500;line-height:1.55;margin-bottom:12px}
+.alert.info{background:var(--pl);color:#002B99}
+.alert.ok{background:var(--al);color:#004D3A}
+.alert.warn{background:var(--ol);color:#7A3500}
+.profile-hero{background:linear-gradient(135deg,var(--p),var(--pd));padding:28px 20px;color:#fff;position:relative;overflow:hidden}
+.profile-hero::before{content:'';position:absolute;width:200px;height:200px;background:rgba(255,255,255,.07);border-radius:50%;top:-60px;right:-50px}
+.pav{width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,.2);color:#fff;font-size:24px;font-weight:900;display:flex;align-items:center;justify-content:center;margin-bottom:12px;border:3px solid rgba(255,255,255,.4)}
+.ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:300;align-items:flex-end}
+.ov.on{display:flex}
+.modal{background:#fff;width:100%;border-radius:24px 24px 0 0;padding:22px 22px 40px;max-height:90vh;overflow-y:auto;animation:sU .28s ease}
+@keyframes sU{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.mhandle{width:34px;height:4px;background:var(--bd);border-radius:2px;margin:0 auto 18px}
+.mclose{position:absolute;right:22px;top:22px;font-size:21px;cursor:pointer;color:var(--ts);background:none;border:none;padding:0}
+.mtitle{font-size:18px;font-weight:800;margin-bottom:14px}
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:var(--t);color:#fff;padding:12px 20px;border-radius:12px;font-size:13px;font-weight:600;z-index:500;max-width:86vw;text-align:center;line-height:1.5;box-shadow:0 4px 20px rgba(0,0,0,.28);display:none}
+</style>
+</head>
+<body>
+
+<div id="login-screen">
+  <div class="lw">
+    <div style="text-align:center;margin-bottom:28px">
+      <div style="font-size:28px;font-weight:900;color:#fff;letter-spacing:-.5px">Liferefix</div>
+      <div style="font-size:13px;color:rgba(255,255,255,.6);margin-top:4px">변호사 전용 포털</div>
+    </div>
+    <div class="lcard">
+      <div style="font-size:18px;font-weight:800;margin-bottom:4px">⚖️ 변호사 로그인</div>
+      <div style="font-size:13px;color:var(--ts);margin-bottom:20px">등록된 파트너 변호사만 접근 가능합니다.</div>
+      <input type="email" class="finput" id="att-email" placeholder="이메일 주소" value="kim@lawfirm.com">
+      <input type="password" class="finput" id="att-pw" placeholder="비밀번호" value="12345678">
+      <button class="btn p" id="att-login-btn">로그인</button>
+      <div style="text-align:center;margin-top:16px;font-size:13px;color:var(--ts)">입점 문의: <span style="color:var(--p);font-weight:700">partner@liferefix.com</span></div>
+    </div>
+  </div>
+</div>
+
+<div id="app" style="display:none">
+  <header class="hdr">
+    <div class="hdr-logo">Liferefix 변호사</div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <div style="font-size:12px;font-weight:600;color:var(--ts)">김○○ 변호사</div>
+      <div class="av" id="go-profile-btn">김</div>
+    </div>
+  </header>
+
+  <main>
+    <!-- 대시보드 -->
+    <div class="scr on" id="s-dash">
+      <div style="padding:16px 16px 0">
+        <div style="font-size:16px;font-weight:800;margin-bottom:2px">대시보드</div>
+        <div style="font-size:13px;color:var(--ts);margin-bottom:14px">오늘도 좋은 하루 되세요, 김○○ 변호사님 👋</div>
+        <div class="alert info" id="dash-notice">📬 신규 사건을 확인해보세요.</div>
+      </div>
+      <div class="sg">
+        <div class="si" id="dash-new-card"><div class="si-n" id="stat-new" style="color:var(--p)">0</div><div class="si-l">신규 사건</div><div class="si-sub warn">오늘 등록</div></div>
+        <div class="si"><div class="si-n" id="stat-bid" style="color:var(--a)">0</div><div class="si-l">비딩 중</div><div class="si-sub up">답변 대기</div></div>
+        <div class="si"><div class="si-n" id="stat-hired" style="color:#005945">7</div><div class="si-l">수임 완료</div><div class="si-sub up">이번 달</div></div>
+        <div class="si"><div class="si-n" style="color:var(--o)">840</div><div class="si-l">수임료 (만원)</div><div class="si-sub up">이번 달</div></div>
+      </div>
+      <div class="sec">
+        <div class="sec-t">📊 이번 달 실적</div>
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:14px;font-weight:600">수임 목표 달성률</span><span style="font-size:14px;font-weight:800;color:var(--p)">70%</span></div>
+          <div class="prog"><div class="prog-fill blue" style="width:70%"></div></div>
+          <div style="font-size:12px;color:var(--ts);margin-top:5px">7건 / 목표 10건</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px">
+          <div style="background:var(--bg);border-radius:var(--rads);padding:12px;text-align:center"><div style="font-size:20px;font-weight:800;color:var(--p)">94%</div><div style="font-size:11px;color:var(--ts);margin-top:2px">승인율</div></div>
+          <div style="background:var(--bg);border-radius:var(--rads);padding:12px;text-align:center"><div style="font-size:20px;font-weight:800;color:#FFBE00">4.9</div><div style="font-size:11px;color:var(--ts);margin-top:2px">평점</div></div>
+          <div style="background:var(--bg);border-radius:var(--rads);padding:12px;text-align:center"><div style="font-size:20px;font-weight:800;color:var(--o)">127</div><div style="font-size:11px;color:var(--ts);margin-top:2px">누적 수임</div></div>
+        </div>
+      </div>
+      <div style="height:20px"></div>
+    </div>
+
+    <!-- 사건 목록 -->
+    <div class="scr" id="s-cases">
+      <div class="tabs">
+        <button class="tab on" id="ct-new" data-tab="new">신규</button>
+        <button class="tab" id="ct-bid" data-tab="bid">비딩중</button>
+        <button class="tab" id="ct-hired" data-tab="hired">수임완료</button>
+        <button class="tab" id="ct-all" data-tab="all">전체</button>
+      </div>
+      <div id="tp-new" class="tp on"></div>
+      <div id="tp-bid" class="tp"></div>
+      <div id="tp-hired" class="tp"></div>
+      <div id="tp-all" class="tp"></div>
+    </div>
+
+    <!-- 제안 작성 -->
+    <div class="scr" id="s-bid-form">
+      <div style="padding:16px">
+        <div style="font-size:16px;font-weight:800;margin-bottom:14px">✍️ 비딩 제안 작성</div>
+        <div class="card" style="border:2px solid var(--p)">
+          <div class="cc-id" id="bf-case-id">CASE-???</div>
+          <div class="cc-title" id="bf-case-title">사건 정보</div>
+          <div class="cc-info" id="bf-case-info"></div>
+        </div>
+        <span class="flabel">착수금</span>
+        <div class="tg" id="g-ret">
+          <button class="tb" data-v="100">100만</button>
+          <button class="tb on" data-v="120">120만</button>
+          <button class="tb" data-v="150">150만</button>
+          <button class="tb" data-v="180">180만</button>
+        </div>
+        <span class="flabel">성공보수</span>
+        <div class="tg" id="g-suc">
+          <button class="tb on" data-v="0">없음</button>
+          <button class="tb" data-v="30">30만</button>
+          <button class="tb" data-v="50">50만</button>
+          <button class="tb" data-v="100">100만</button>
+        </div>
+        <span class="flabel">변제 기간 제안</span>
+        <div class="tg" id="g-per">
+          <button class="tb on" data-v="36">36개월</button>
+          <button class="tb" data-v="48">48개월</button>
+          <button class="tb" data-v="60">60개월</button>
+        </div>
+        <span class="flabel">분할납부 가능 여부</span>
+        <div class="tg" id="g-ins">
+          <button class="tb on" data-v="가능">가능</button>
+          <button class="tb" data-v="불가">불가</button>
+        </div>
+        <span class="flabel">제안 전략</span>
+        <textarea class="finput" id="bf-strategy" rows="4" placeholder="채무자에게 표시될 전략을 입력하세요.&#10;예: 소득 대비 변제금을 최소화하여 36개월 인가를 목표로 합니다."></textarea>
+        <div style="background:var(--bg);border-radius:var(--rads);padding:12px;font-size:12px;color:var(--ts);line-height:1.7;margin-bottom:18px">
+          ※ 제출된 제안은 채무자에게 익명으로 전달됩니다.<br>
+          ※ 채무자가 선택하면 연락처가 공개됩니다.
+        </div>
+        <button class="btn p" id="submit-bid-btn">🎯 제안 제출하기</button>
+        <button class="btn o" id="cancel-bid-btn">← 취소</button>
+      </div>
+    </div>
+
+    <!-- 프로필 -->
+    <div class="scr" id="s-profile">
+      <div class="profile-hero">
+        <div class="pav">김</div>
+        <div style="font-size:20px;font-weight:900;margin-bottom:3px">김○○ 변호사</div>
+        <div style="font-size:13px;opacity:.8">법무법인 리커버 · 서울중앙지방법원</div>
+        <div style="display:flex;gap:7px;margin-top:12px;flex-wrap:wrap">
+          <span style="font-size:11px;font-weight:600;background:rgba(255,255,255,.2);color:#fff;padding:4px 10px;border-radius:20px">개인회생 전문</span>
+          <span style="font-size:11px;font-weight:600;background:rgba(255,255,255,.2);color:#fff;padding:4px 10px;border-radius:20px">경력 12년</span>
+          <span style="font-size:11px;font-weight:600;background:rgba(255,255,255,.2);color:#fff;padding:4px 10px;border-radius:20px">파트너 인증 ✓</span>
+        </div>
+      </div>
+      <div style="padding:16px">
+        <div style="font-size:14px;font-weight:800;margin-bottom:10px">📦 구독 현황</div>
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+            <div><div style="font-size:15px;font-weight:800">기본 플랜</div><div style="font-size:12px;color:var(--ts);margin-top:2px">월 50만원 · 비딩 10건 기본</div></div>
+            <span style="font-size:11px;font-weight:700;background:var(--al);color:#005945;padding:4px 10px;border-radius:20px">활성</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px">
+            <span style="color:var(--ts)">이번 달 비딩</span><b>9건 / 10건</b>
+          </div>
+          <div class="prog"><div class="prog-fill blue" style="width:90%"></div></div>
+          <button class="btn p" style="margin-top:14px;padding:11px;font-size:14px" id="buy-bid-btn">+ 비딩 참여권 추가 구매</button>
+        </div>
+        <div style="font-size:14px;font-weight:800;margin:6px 0 10px">⭐ 의뢰인 평가</div>
+        <div class="card">
+          <div style="display:flex;align-items:center;gap:16px">
+            <div style="text-align:center"><div style="font-size:36px;font-weight:900;color:var(--p);line-height:1">4.9</div><div style="font-size:12px;color:var(--ts)">/ 5.0</div></div>
+            <div><div style="font-size:13px;color:var(--ts)">127건 수임 기준</div><div style="font-size:14px;color:#FFBE00;letter-spacing:2px;margin-top:4px">★★★★★</div></div>
+          </div>
+        </div>
+        <button class="btn danger" id="att-logout-btn">로그아웃</button>
+        <div style="height:20px"></div>
+      </div>
+    </div>
+  </main>
+
+  <nav class="bnav">
+    <button class="ni on" id="n-dash">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>대시보드
+    </button>
+    <button class="ni" id="n-cases">
+      <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>사건
+    </button>
+    <button class="ni" id="n-bid-form">
+      <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>제안작성
+    </button>
+    <button class="ni" id="n-profile">
+      <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>프로필
+    </button>
+  </nav>
+</div>
+
+<!-- 사건 상세 모달 -->
+<div class="ov" id="m-case">
+  <div class="modal" style="position:relative">
+    <button class="mclose" id="m-case-close">✕</button>
+    <div class="mhandle"></div>
+    <div id="m-case-body"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// SHARED DB (localStorage 연동)
+// ═══════════════════════════════════════════════════════
+var DB = {
+  save: function(k,v){ try{localStorage.setItem('lrx_'+k,JSON.stringify(v));}catch(e){} },
+  load: function(k,d){ try{var v=localStorage.getItem('lrx_'+k);return v!==null?JSON.parse(v):d;}catch(e){return d;} },
+  getCases:    function(){ return DB.load('cases',[]); },
+  saveCases:   function(cs){ DB.save('cases',cs); },
+  addCase:     function(c){ var cs=DB.getCases(); cs.unshift(c); DB.saveCases(cs); },
+  updateCase:  function(id,p){ var cs=DB.getCases(); var i=cs.findIndex(function(x){return x.id===id;}); if(i>-1){Object.assign(cs[i],p);DB.saveCases(cs);} },
+  getCase:     function(id){ return DB.getCases().find(function(x){return x.id===id;})||null; },
+  getBids:     function(){ return DB.load('bids',[]); },
+  addBid:      function(b){ var bs=DB.getBids(); bs.unshift(b); DB.save('bids',bs); },
+  getBidsFor:  function(cid){ return DB.getBids().filter(function(b){return b.caseId===cid;}); },
+};
+
+// 샘플 사건 초기 데이터 (DB가 비어있을 때)
+var SAMPLE_CASES = [
+  {id:'SMPL-001',status:'new',dtype:'신용대출',region:'서울',drange:'5천만~1억',budget:'100~150만',dep:'없음',memo:'빠른 처리 원함',at:'30분 전',bidCnt:0},
+  {id:'SMPL-002',status:'new',dtype:'카드채무',region:'서울',drange:'1천~3천만',budget:'100만 미만',dep:'1명',memo:'',at:'1시간 전',bidCnt:0},
+  {id:'SMPL-003',status:'new',dtype:'복합채무',region:'경기·인천',drange:'3천~5천만',budget:'100~150만',dep:'없음',memo:'사채 포함',at:'3시간 전',bidCnt:0},
+];
+
+// ═══════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════
+var currentBidCaseId = null;
+var currentCaseTab = 'new';
+
+// ═══════════════════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════════════════
+function toast(msg) {
+  var el = document.getElementById('toast');
+  el.textContent = msg; el.style.display = 'block'; el.style.opacity = '1';
+  clearTimeout(el._t);
+  el._t = setTimeout(function(){ el.style.opacity='0'; setTimeout(function(){ el.style.display='none'; }, 300); }, 2800);
+}
+
+function openM(id){ document.getElementById(id).classList.add('on'); document.body.style.overflow='hidden'; }
+function closeM(id){ document.getElementById(id).classList.remove('on'); document.body.style.overflow=''; }
+
+function sel(el, gid) {
+  document.getElementById(gid).querySelectorAll('.tb').forEach(function(b){ b.classList.remove('on'); });
+  el.classList.add('on');
+}
+
+// ═══════════════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════════════
+var NAV_MAP = { 's-dash':'n-dash','s-cases':'n-cases','s-bid-form':'n-bid-form','s-profile':'n-profile' };
+function go(id) {
+  document.querySelectorAll('.scr').forEach(function(s){ s.classList.remove('on'); });
+  document.querySelectorAll('.ni').forEach(function(n){ n.classList.remove('on'); });
+  document.getElementById(id).classList.add('on');
+  if(NAV_MAP[id]) document.getElementById(NAV_MAP[id]).classList.add('on');
+  window.scrollTo(0,0);
+}
+
+// ═══════════════════════════════════════════════════════
+// LOGIN / LOGOUT
+// ═══════════════════════════════════════════════════════
+function doLogin() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  loadCasesFromDB();
+  updateStats();
+}
+
+function doLogout() {
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'block';
+}
+
+// ═══════════════════════════════════════════════════════
+// CASES
+// ═══════════════════════════════════════════════════════
+function getAllCases() {
+  var shared = DB.getCases();
+  var ids = shared.map(function(c){ return c.id; });
+  // 샘플 중 중복 없는 것만 추가
+  SAMPLE_CASES.forEach(function(sc){ if(ids.indexOf(sc.id) < 0) shared.push(sc); });
+  return shared;
+}
+
+function loadCasesFromDB() { renderCaseTabs(); }
+
+function updateStats() {
+  var all = getAllCases();
+  var nw  = all.filter(function(c){ return c.status==='new'; }).length;
+  var bd  = all.filter(function(c){ return c.status==='bid'; }).length;
+  var hr  = all.filter(function(c){ return c.status==='hired'; }).length;
+  var el = document.getElementById('stat-new'); if(el) el.textContent = nw;
+  el = document.getElementById('stat-bid');     if(el) el.textContent = bd;
+  el = document.getElementById('stat-hired');   if(el) el.textContent = hr+7;
+  el = document.getElementById('dash-notice');
+  if(el) el.innerHTML = '📬 신규 사건 <b>'+nw+'건</b>이 등록되어 있습니다. 비딩에 참여해보세요.';
+}
+
+function renderCaseTabs() {
+  var all = getAllCases();
+  var tabs = {
+    new:    all.filter(function(c){ return c.status==='new'; }),
+    bid:    all.filter(function(c){ return c.status==='bid'; }),
+    hired:  all.filter(function(c){ return c.status==='hired'; }),
+    all:    all,
+  };
+  Object.keys(tabs).forEach(function(t){
+    var el = document.getElementById('tp-'+t);
+    if(!el) return;
+    if(!tabs[t].length) { el.innerHTML = '<div style="text-align:center;padding:40px 16px;color:var(--ts);font-size:14px">해당 사건이 없습니다</div>'; return; }
+    el.innerHTML = tabs[t].map(function(c){ return makeCaseCard(c); }).join('');
+  });
+  // 탭 버튼 클릭 바인딩
+  document.querySelectorAll('.tab[data-tab]').forEach(function(btn){
+    btn.onclick = function() {
+      var t = btn.dataset.tab;
+      currentCaseTab = t;
+      document.querySelectorAll('.tab').forEach(function(b){ b.classList.remove('on'); });
+      btn.classList.add('on');
+      document.querySelectorAll('.tp').forEach(function(p){ p.classList.remove('on'); });
+      var panel = document.getElementById('tp-'+t);
+      if(panel) panel.classList.add('on');
+    };
+  });
+  // 카드 버튼 바인딩
+  bindCaseCardBtns();
+}
+
+function makeCaseCard(c) {
+  var statusCls = c.status==='new'?'new-c':c.status==='bid'?'bid-c':'done-c';
+  var badgeCls  = c.status==='new'?'new-b':c.status==='bid'?'bid-b':'done-b';
+  var badgeTxt  = c.status==='new'?'신규':c.status==='bid'?'비딩중':'수임완료';
+  var bidInfo   = c.myBid ? '<div style="margin-top:8px;font-size:12px;background:var(--al);color:#004D3A;border-radius:8px;padding:8px 10px">내 제안: 착수금 <b>'+c.myBid.retainer+'만</b> · 성공보수 <b>'+(c.myBid.success>0?c.myBid.success+'만':'없음')+'</b></div>' : '';
+  var actionBtn = c.status==='new' ? '<button class="cc-btn" data-action="bid" data-id="'+c.id+'">제안 작성</button>' : '<button class="cc-btn" data-action="detail" data-id="'+c.id+'">상세 보기</button>';
+  var diagInfo  = (c.diagRelief||c.diag) ? '<div style="font-size:12px;color:var(--p);margin-top:4px">📊 AI 진단: 탕감률 '+(c.diagRelief||(c.diag?Math.round(c.diag.final*100):'-'))+'%</div>' : '';
+  return '<div class="cc '+statusCls+'" data-action="detail" data-id="'+c.id+'">'
+    +'<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px">'
+    +'<div class="cc-id">CASE-'+c.id+'</div><span class="badge '+badgeCls+'">'+badgeTxt+'</span></div>'
+    +'<div class="cc-title">'+(c.dtype||'')+(c.region?' · '+c.region:'')+'</div>'
+    +'<div class="cc-info">채무 <b>'+(c.drange||'')+'</b> · 부양가족 <b>'+(c.dep||'미입력')+'</b> · 희망착수금 <b>'+(c.budget||'')+'</b>'+(c.memo?'<br>메모: '+c.memo:'')+'</div>'
+    +diagInfo+bidInfo
+    +'<div class="cc-footer"><span class="cc-time">'+(c.at||'')+'</span>'+actionBtn+'</div>'
+    +'</div>';
+}
+
+function bindCaseCardBtns() {
+  document.querySelectorAll('[data-action]').forEach(function(el){
+    el.onclick = function(e) {
+      e.stopPropagation();
+      var id = el.dataset.id;
+      var action = el.dataset.action;
+      if(action==='bid') { openBidForm(id); }
+      else { openCaseDetail(id); }
+    };
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// CASE DETAIL
+// ═══════════════════════════════════════════════════════
+function openCaseDetail(id) {
+  var all = getAllCases();
+  var c = all.find(function(x){ return x.id===id; });
+  if(!c) return;
+  var bids = DB.getBidsFor(id);
+  var bidsHtml = bids.length ? '<div class="alert ok" style="margin-top:10px">✅ 비딩 '+bids.length+'건 제출됨</div>' : '';
+  var myBidHtml = c.myBid ? '<div style="background:var(--al);border-radius:var(--rads);padding:14px;margin-top:10px"><div style="font-size:13px;font-weight:700;color:#004D3A;margin-bottom:5px">✅ 내 제안</div><div style="font-size:13px;color:var(--ts);line-height:1.7">착수금 <b>'+c.myBid.retainer+'만원</b> · 성공보수 <b>'+(c.myBid.success>0?c.myBid.success+'만원':'없음')+'</b><br>'+c.myBid.strategy+'</div></div>' : '';
+  var actionHtml = c.status==='new'
+    ? '<button class="btn p" style="margin-top:14px" id="detail-bid-btn" data-id="'+id+'">✍️ 제안 작성하기</button>'
+    : c.status==='bid' ? '<div class="alert warn" style="margin-top:10px">⏳ 채무자의 선택을 기다리고 있습니다.</div>' : '';
+  document.getElementById('m-case-body').innerHTML =
+    '<div style="font-size:12px;font-weight:800;color:var(--p);margin-bottom:4px">CASE-'+id+'</div>'
+    +'<div style="font-size:17px;font-weight:800;margin-bottom:12px">'+(c.dtype||'')+' · '+(c.region||'')+'</div>'
+    +'<div style="background:var(--bg);border-radius:var(--rads);padding:14px;font-size:13.5px;line-height:1.9;color:var(--ts)">'
+    +'채무유형: <b style="color:var(--t)">'+(c.dtype||'')+'</b><br>'
+    +'채무규모: <b style="color:var(--t)">'+(c.drange||'')+'</b><br>'
+    +'지역: <b style="color:var(--t)">'+(c.region||'')+'</b><br>'
+    +'부양가족: <b style="color:var(--t)">'+(c.dep||'미입력')+'</b><br>'
+    +'희망착수금: <b style="color:var(--t)">'+(c.budget||'')+'</b><br>'
+    +(c.memo?'메모: <b style="color:var(--t)">'+c.memo+'</b><br>':'')
+    +'등록: '+(c.at||'')
+    +'</div>'
+    +bidsHtml+myBidHtml+actionHtml;
+  // 모달 내 버튼 바인딩
+  var dbb = document.getElementById('detail-bid-btn');
+  if(dbb) { dbb.onclick = function(){ closeM('m-case'); openBidForm(dbb.dataset.id); }; }
+  openM('m-case');
+}
+
+// ═══════════════════════════════════════════════════════
+// BID FORM
+// ═══════════════════════════════════════════════════════
+function openBidForm(id) {
+  var all = getAllCases();
+  var c = all.find(function(x){ return x.id===id; });
+  if(!c) { go('s-bid-form'); return; }
+  currentBidCaseId = id;
+  var el = document.getElementById('bf-case-id'); if(el) el.textContent = 'CASE-'+id;
+  el = document.getElementById('bf-case-title'); if(el) el.textContent = (c.dtype||'')+(c.region?' · '+c.region:'');
+  el = document.getElementById('bf-case-info');  if(el) el.textContent = '채무 '+(c.drange||'')+' · 부양가족 '+(c.dep||'미입력')+' · 희망착수금 '+(c.budget||'');
+  go('s-bid-form');
+}
+
+function submitBid() {
+  if(!currentBidCaseId) return;
+  var retainer = parseInt((document.querySelector('#g-ret .tb.on')||{dataset:{v:'120'}}).dataset.v) || 120;
+  var success  = parseInt((document.querySelector('#g-suc .tb.on')||{dataset:{v:'0'}}).dataset.v) || 0;
+  var period   = (document.querySelector('#g-per .tb.on')||{dataset:{v:'48'}}).dataset.v || '48';
+  var strategy = document.getElementById('bf-strategy').value || '성실히 도와드리겠습니다.';
+
+  var bid = {
+    id: 'BID-'+Date.now().toString(36).toUpperCase().slice(-5),
+    caseId: currentBidCaseId,
+    attId: 'A001', attName: '김○○',
+    retainer: retainer, success: success, period: period, strategy: strategy,
+    at: new Date().toLocaleString('ko-KR'),
+  };
+  DB.addBid(bid);
+  DB.updateCase(currentBidCaseId, {status:'bid'});
+
+  // 로컬 샘플도 업데이트
+  var sc = SAMPLE_CASES.find(function(x){ return x.id===currentBidCaseId; });
+  if(sc) { sc.status='bid'; sc.myBid={retainer:retainer,success:success,strategy:strategy}; }
+
+  updateStats();
+  renderCaseTabs();
+  toast('✅ 제안이 제출되었습니다!\n채무자에게 즉시 전달됩니다.');
+  go('s-cases');
+}
+
+// ═══════════════════════════════════════════════════════
+// 다른 탭 변경 감지
+// ═══════════════════════════════════════════════════════
+window.addEventListener('storage', function(e) {
+  if(e.key && (e.key==='lrx_cases'||e.key==='lrx_bids')) {
+    updateStats();
+    renderCaseTabs();
+  }
+});
+
+// ═══════════════════════════════════════════════════════
+// INIT (모든 함수 정의 후 실행)
+// ═══════════════════════════════════════════════════════
+(function init() {
+  // 로그인 버튼
+  var loginBtn = document.getElementById('att-login-btn');
+  if(loginBtn) loginBtn.onclick = doLogin;
+
+  // 로그아웃
+  var logoutBtn = document.getElementById('att-logout-btn');
+  if(logoutBtn) logoutBtn.onclick = doLogout;
+
+  // 프로필 아바타
+  var profileBtn = document.getElementById('go-profile-btn');
+  if(profileBtn) profileBtn.onclick = function(){ go('s-profile'); };
+
+  // 모달 닫기
+  var mClose = document.getElementById('m-case-close');
+  if(mClose) mClose.onclick = function(){ closeM('m-case'); };
+  var mCase = document.getElementById('m-case');
+  if(mCase) mCase.onclick = function(e){ if(e.target===mCase) closeM('m-case'); };
+
+  // 비딩 제출
+  var submitBtn = document.getElementById('submit-bid-btn');
+  if(submitBtn) submitBtn.onclick = submitBid;
+  var cancelBtn = document.getElementById('cancel-bid-btn');
+  if(cancelBtn) cancelBtn.onclick = function(){ go('s-cases'); };
+
+  // 추가 구매
+  var buyBtn = document.getElementById('buy-bid-btn');
+  if(buyBtn) buyBtn.onclick = function(){ toast('추가 비딩 참여권 구매 페이지로 이동합니다.'); };
+
+  // 하단 네비
+  var navMap = {'n-dash':'s-dash','n-cases':'s-cases','n-bid-form':'s-bid-form','n-profile':'s-profile'};
+  Object.keys(navMap).forEach(function(nid){
+    var nb = document.getElementById(nid);
+    if(nb) nb.onclick = function(){ go(navMap[nid]); };
+  });
+
+  // 토글 버튼 (제안 폼)
+  ['g-ret','g-suc','g-per','g-ins'].forEach(function(gid){
+    var g = document.getElementById(gid);
+    if(!g) return;
+    g.querySelectorAll('.tb').forEach(function(btn){
+      btn.onclick = function(){ sel(btn, gid); };
+    });
+  });
+})();
+</script>
+</body>
+</html>

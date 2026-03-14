@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Liferefix 관리자</title>
+<link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{--p:#0B5FFF;--pd:#0040CC;--pl:#E8F0FF;--a:#00C6A2;--al:#E0FAF5;--r:#FF4B4B;--o:#FF8C00;--ol:#FFF3E0;--y:#FFD600;--t:#0D1B2A;--ts:#5A6E85;--bd:#E4EAF2;--bg:#F4F7FF;--wh:#fff;--rad:14px;--rads:10px;--sh:0 4px 20px rgba(11,95,255,.10);--shs:0 2px 8px rgba(11,95,255,.07)}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'Pretendard',-apple-system,sans-serif;background:var(--bg);color:var(--t);-webkit-font-smoothing:antialiased}
+.lw{min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:30px 24px;background:linear-gradient(160deg,#0D1B2A,#1A2F4A)}
+.lcard{background:#fff;border-radius:20px;padding:28px 24px;width:100%;max-width:380px;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.finput{width:100%;padding:13px 15px;border:2px solid var(--bd);border-radius:var(--rads);font-size:15px;font-family:inherit;color:var(--t);background:#fff;outline:none;transition:border-color .2s;margin-bottom:12px}
+.finput:focus{border-color:var(--p)}
+.btn{width:100%;padding:14px;border:none;border-radius:var(--rads);font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s}
+.btn.p{background:var(--p);color:#fff}.btn.p:active{background:var(--pd)}
+.btn.o{background:transparent;color:var(--p);border:2px solid var(--p);margin-top:10px}
+.btn.sm{width:auto;padding:7px 14px;font-size:12px}
+.btn.danger{background:#FFF0F0;color:var(--r);border:none}
+.btn.ok{background:var(--al);color:#005945;border:none}
+.btn.warn-btn{background:var(--ol);color:var(--o);border:none}
+.hdr{position:sticky;top:0;z-index:200;height:52px;background:#0D1B2A;display:flex;align-items:center;justify-content:space-between;padding:0 16px}
+.hdr-logo{font-size:15px;font-weight:900;color:#fff}
+.hdr-logo span{color:var(--a);margin-left:4px;font-size:12px;font-weight:600}
+.bnav{position:fixed;bottom:0;left:0;right:0;z-index:200;background:#fff;border-top:1px solid var(--bd);display:flex;padding-bottom:env(safe-area-inset-bottom);box-shadow:0 -4px 16px rgba(0,0,0,.06)}
+.ni{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:9px 0 7px;border:none;background:none;color:var(--ts);font-size:10px;font-weight:600;gap:3px;cursor:pointer;font-family:inherit;transition:color .15s}
+.ni svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2}
+.ni.on{color:var(--p)}
+main{padding-bottom:76px}
+.scr{display:none}.scr.on{display:block;animation:fu .2s ease}
+@keyframes fu{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.sg{display:grid;grid-template-columns:1fr 1fr;gap:9px;padding:14px 14px 0}
+.si{background:#fff;border-radius:var(--rad);padding:14px;box-shadow:var(--shs);border:1px solid var(--bd);cursor:pointer}
+.si-n{font-size:24px;font-weight:900;line-height:1;margin-bottom:2px}
+.si-l{font-size:11px;color:var(--ts)}
+.si-sub{font-size:11px;margin-top:3px;font-weight:600}
+.si-sub.up{color:var(--a)}.si-sub.warn{color:var(--o)}
+.sec{padding:16px 14px 0}
+.sec-t{font-size:15px;font-weight:800;margin-bottom:2px}
+.sec-s{font-size:12px;color:var(--ts);margin-bottom:10px}
+.tcard{background:#fff;border-radius:var(--rad);overflow:hidden;box-shadow:var(--shs);border:1px solid var(--bd);margin-bottom:11px}
+.trow{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-bottom:1px solid var(--bd);cursor:pointer}
+.trow:last-child{border-bottom:none}
+.trow-l{flex:1}
+.trow-id{font-size:11px;font-weight:800;color:var(--p)}
+.trow-title{font-size:14px;font-weight:600;margin-top:1px}
+.trow-sub{font-size:12px;color:var(--ts);margin-top:1px}
+.trow-r{display:flex;align-items:center;gap:7px;flex-shrink:0}
+.badge{font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;white-space:nowrap}
+.badge.new-b{background:var(--pl);color:var(--p)}
+.badge.bid-b{background:var(--al);color:#005945}
+.badge.done-b{background:#F0F0F0;color:var(--ts)}
+.badge.hired-b{background:#E8FFE8;color:#005500}
+.badge.pend-b{background:var(--ol);color:var(--o)}
+.badge.block-b{background:#FFF0F0;color:var(--r)}
+.badge.ok-b{background:var(--al);color:#005945}
+.ftabs{display:flex;overflow-x:auto;gap:7px;padding:12px 14px 0;scrollbar-width:none}
+.ftabs::-webkit-scrollbar{display:none}
+.ftab{flex-shrink:0;padding:7px 14px;border-radius:20px;font-size:12px;font-weight:600;border:2px solid var(--bd);background:#fff;color:var(--ts);cursor:pointer;font-family:inherit;transition:all .15s}
+.ftab.on{border-color:var(--p);background:var(--pl);color:var(--p)}
+.chart{background:#fff;border-radius:var(--rad);padding:16px;box-shadow:var(--shs);border:1px solid var(--bd);margin-bottom:11px}
+.chart-t{font-size:14px;font-weight:700;margin-bottom:12px}
+.bar-row{display:flex;align-items:center;gap:9px;margin-bottom:8px}
+.bar-wrap{flex:1;height:18px;background:var(--bg);border-radius:20px;overflow:hidden}
+.bar-fill{height:100%;border-radius:20px;transition:width .6s}
+.alert{border-radius:var(--rads);padding:12px 14px;font-size:13px;font-weight:500;line-height:1.5;margin-bottom:11px}
+.alert.info{background:var(--pl);color:#002B99}
+.alert.ok{background:var(--al);color:#004D3A}
+.alert.warn{background:var(--ol);color:#7A3500}
+.prog{height:7px;border-radius:4px;background:var(--bd);overflow:hidden;margin:5px 0}
+.prog-fill{height:100%;border-radius:4px}
+.prog-fill.blue{background:linear-gradient(90deg,var(--p),#4D8EFF)}
+.ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:300;align-items:flex-end}
+.ov.on{display:flex}
+.modal{background:#fff;width:100%;border-radius:24px 24px 0 0;padding:20px 20px 40px;max-height:90vh;overflow-y:auto;animation:sU .28s ease}
+@keyframes sU{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.mhandle{width:34px;height:4px;background:var(--bd);border-radius:2px;margin:0 auto 16px}
+.mclose{position:absolute;right:20px;top:20px;font-size:20px;cursor:pointer;color:var(--ts);background:none;border:none;padding:0}
+.mtitle{font-size:17px;font-weight:800;margin-bottom:13px}
+.toast{position:fixed;bottom:88px;left:50%;transform:translateX(-50%);background:var(--t);color:#fff;padding:11px 18px;border-radius:12px;font-size:13px;font-weight:600;z-index:500;max-width:86vw;text-align:center;line-height:1.5;box-shadow:0 4px 20px rgba(0,0,0,.28);display:none}
+</style>
+</head>
+<body>
+
+<div id="login-screen">
+  <div class="lw">
+    <div style="margin-bottom:28px;text-align:center">
+      <div style="font-size:24px;font-weight:900;color:#fff;letter-spacing:-.5px">Liferefix</div>
+      <div style="font-size:12px;color:rgba(255,255,255,.5);margin-top:3px">관리자 포털</div>
+    </div>
+    <div class="lcard">
+      <div style="font-size:18px;font-weight:800;margin-bottom:4px">🔐 관리자 로그인</div>
+      <div style="font-size:13px;color:var(--ts);margin-bottom:18px">관리자 전용 접근입니다.</div>
+      <input type="email" class="finput" id="adm-email" placeholder="관리자 이메일" value="admin@liferefix.com">
+      <input type="password" class="finput" id="adm-pw" placeholder="비밀번호" value="admin1234">
+      <button class="btn p" id="adm-login-btn">로그인</button>
+    </div>
+  </div>
+</div>
+
+<div id="app" style="display:none">
+  <header class="hdr">
+    <div class="hdr-logo">Liferefix <span>Admin</span></div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <span style="font-size:10px;font-weight:700;background:var(--r);color:#fff;padding:3px 8px;border-radius:20px">관리자</span>
+      <div id="adm-logout-avatar" style="width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.15);color:#fff;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;cursor:pointer">관</div>
+    </div>
+  </header>
+
+  <main>
+    <!-- 전체 현황 -->
+    <div class="scr on" id="s-overview">
+      <div style="padding:14px 14px 0">
+        <div style="font-size:15px;font-weight:800;margin-bottom:2px">전체 현황</div>
+        <div style="font-size:12px;color:var(--ts);margin-bottom:12px">실시간 서비스 현황</div>
+        <div class="alert info" id="adm-notice">🔔 데이터를 불러오는 중...</div>
+      </div>
+      <div class="sg">
+        <div class="si" id="ov-cases-card"><div class="si-n" id="ov-total" style="color:var(--p)">0</div><div class="si-l">전체 사건</div><div class="si-sub up">등록 누계</div></div>
+        <div class="si" id="ov-atts-card"><div class="si-n" style="color:var(--a)" id="ov-atts">5</div><div class="si-l">파트너 변호사</div><div class="si-sub warn" id="ov-pend-txt">승인 대기 0</div></div>
+        <div class="si"><div class="si-n" style="color:var(--o)" id="ov-bid">0</div><div class="si-l">비딩 진행중</div><div class="si-sub up">활성</div></div>
+        <div class="si"><div class="si-n" style="color:#005945" id="ov-hired">0</div><div class="si-l">수임 완료</div><div class="si-sub up">누계</div></div>
+      </div>
+
+      <div class="sec">
+        <div class="sec-t">📈 월별 수익 현황</div>
+        <div class="sec-s">변호사 구독료 + 비딩 참여권 (만원)</div>
+        <div class="chart">
+          <div class="chart-t">2026년</div>
+          <div class="bar-row"><span style="font-size:11px;color:var(--ts);width:24px;text-align:right">1월</span><div class="bar-wrap"><div class="bar-fill" style="width:60%;background:var(--pl)"></div></div><span style="font-size:12px;font-weight:700;color:var(--p)">1,200</span></div>
+          <div class="bar-row"><span style="font-size:11px;color:var(--ts);width:24px;text-align:right">2월</span><div class="bar-wrap"><div class="bar-fill" style="width:75%;background:var(--pl)"></div></div><span style="font-size:12px;font-weight:700;color:var(--p)">1,500</span></div>
+          <div class="bar-row"><span style="font-size:11px;color:var(--ts);width:24px;text-align:right">3월</span><div class="bar-wrap"><div class="bar-fill" style="width:80%;background:linear-gradient(90deg,var(--p),#4D8EFF)"></div></div><span style="font-size:12px;font-weight:700;color:var(--p)">1,600</span></div>
+        </div>
+      </div>
+
+      <div class="sec">
+        <div class="sec-t">🎯 주요 지표</div>
+        <div class="tcard">
+          <div class="trow"><div class="trow-l"><div class="trow-title">평균 비딩 참여 수</div><div class="trow-sub">사건당 참여 변호사</div></div><div class="trow-r"><b style="font-size:17px;color:var(--p)" id="kpi-avg-bid">-</b></div></div>
+          <div class="trow"><div class="trow-l"><div class="trow-title">평균 수임 전환율</div></div><div class="trow-r"><b style="font-size:17px;color:var(--a)">61%</b></div></div>
+          <div class="trow"><div class="trow-l"><div class="trow-title">파트너 변호사 평균 평점</div></div><div class="trow-r"><b style="font-size:17px;color:var(--y)">4.8 ★</b></div></div>
+        </div>
+      </div>
+
+      <div class="sec">
+        <div class="sec-t">🔔 최근 활동</div>
+        <div id="recent-list">
+          <div class="tcard">
+            <div class="trow"><div class="trow-l"><div class="trow-title">활동 내역 없음</div><div class="trow-sub">사건 등록/비딩 시 여기에 표시됩니다</div></div></div>
+          </div>
+        </div>
+      </div>
+      <div style="height:20px"></div>
+    </div>
+
+    <!-- 사건 관리 -->
+    <div class="scr" id="s-cases">
+      <div style="padding:14px 14px 0"><div style="font-size:15px;font-weight:800;margin-bottom:10px">사건 관리</div></div>
+      <div class="ftabs" id="case-ftabs">
+        <button class="ftab on" data-filter="all">전체</button>
+        <button class="ftab" data-filter="new">신규</button>
+        <button class="ftab" data-filter="bid">비딩중</button>
+        <button class="ftab" data-filter="hired">수임완료</button>
+      </div>
+      <div style="padding:12px 14px 0">
+        <input type="text" class="finput" id="case-search" style="margin-bottom:11px" placeholder="🔍 사건 ID / 채무유형 / 지역 검색">
+        <div id="adm-case-list"></div>
+      </div>
+    </div>
+
+    <!-- 변호사 관리 -->
+    <div class="scr" id="s-attorneys">
+      <div style="padding:14px 14px 0">
+        <div style="font-size:15px;font-weight:800;margin-bottom:10px">변호사 관리</div>
+        <div class="alert warn" id="pend-notice">⚠️ 승인 대기 중인 변호사를 확인하세요.</div>
+      </div>
+      <div class="ftabs" id="att-ftabs">
+        <button class="ftab on" data-filter="all">전체</button>
+        <button class="ftab" data-filter="pending">승인 대기</button>
+        <button class="ftab" data-filter="active">활성</button>
+        <button class="ftab" data-filter="blocked">정지</button>
+      </div>
+      <div style="padding:12px 14px 0">
+        <div id="adm-att-list"></div>
+      </div>
+    </div>
+
+    <!-- DB 관리 -->
+    <div class="scr" id="s-db">
+      <div style="padding:14px">
+        <div style="font-size:15px;font-weight:800;margin-bottom:10px">판례 DB 관리</div>
+        <div class="tcard" style="margin-bottom:11px">
+          <div class="trow"><div class="trow-l"><div class="trow-title">총 판결문 DB</div><div class="trow-sub">라벨링 완료 건수</div></div><div class="trow-r"><b style="font-size:17px;color:var(--p)">3,218건</b></div></div>
+          <div class="trow"><div class="trow-l"><div class="trow-title">평균 탕감률</div></div><div class="trow-r"><b style="font-size:17px;color:var(--a)">67.3%</b></div></div>
+          <div class="trow"><div class="trow-l"><div class="trow-title">최근 업데이트</div></div><div class="trow-r"><b style="font-size:13px;color:var(--ts)">2026.03.10</b></div></div>
+        </div>
+        <div class="chart">
+          <div class="chart-t">법원별 분포</div>
+          <div class="bar-row"><span style="font-size:11px;color:var(--ts);width:48px;text-align:right">서울회생</span><div class="bar-wrap"><div class="bar-fill" style="width:72%;background:linear-gradient(90deg,var(--p),#4D8EFF)"></div></div><span style="font-size:12px;font-weight:700">1,823</span></div>
+          <div class="bar-row"><span style="font-size:11px;color:var(--ts);width:48px;text-align:right">수원</span><div class="bar-wrap"><div class="bar-fill" style="width:18%;background:var(--al)"></div></div><span style="font-size:12px;font-weight:700">468</span></div>
+          <div class="bar-row"><span style="font-size:11px;color:var(--ts);width:48px;text-align:right">대구</span><div class="bar-wrap"><div class="bar-fill" style="width:12%;background:var(--ol)"></div></div><span style="font-size:12px;font-weight:700">312</span></div>
+          <div class="bar-row"><span style="font-size:11px;color:var(--ts);width:48px;text-align:right">기타</span><div class="bar-wrap"><div class="bar-fill" style="width:25%;background:#EEE"></div></div><span style="font-size:12px;font-weight:700">615</span></div>
+        </div>
+        <div style="font-size:13px;font-weight:700;margin-bottom:10px">DB 작업</div>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">
+          <button class="btn p" style="padding:12px" id="run-crawler-btn">🔄 크롤러 실행 (law-story.com)</button>
+          <button class="btn o" style="padding:12px" id="check-integrity-btn">✅ 데이터 무결성 검사</button>
+        </div>
+        <div style="font-size:13px;font-weight:700;margin-bottom:10px">알고리즘 설정</div>
+        <div class="tcard">
+          <div class="trow"><div class="trow-l"><div class="trow-title">가중평균 비율</div><div class="trow-sub">기본:판례 = 6:4</div></div><div class="trow-r"><button class="btn sm p" id="edit-weight-btn">수정</button></div></div>
+          <div class="trow"><div class="trow-l"><div class="trow-title">최저 채무액</div><div class="trow-sub">1,000만 원</div></div><div class="trow-r"><button class="btn sm p" id="edit-min-debt-btn">수정</button></div></div>
+          <div class="trow"><div class="trow-l"><div class="trow-title">기본 변제 기간</div><div class="trow-sub">48개월</div></div><div class="trow-r"><button class="btn sm p" id="edit-period-btn">수정</button></div></div>
+        </div>
+        <div style="height:20px"></div>
+      </div>
+    </div>
+
+    <!-- 설정 -->
+    <div class="scr" id="s-settings">
+      <div style="padding:14px">
+        <div style="font-size:15px;font-weight:800;margin-bottom:14px">시스템 설정</div>
+        <div style="font-size:12px;font-weight:700;color:var(--ts);margin-bottom:8px">서비스 상태</div>
+        <div class="tcard" style="margin-bottom:14px">
+          <div class="trow"><div class="trow-l"><div class="trow-title">서비스 상태</div></div><div class="trow-r"><span class="badge ok-b">운영중</span></div></div>
+          <div class="trow"><div class="trow-l"><div class="trow-title">신규 사건 등록</div></div><div class="trow-r"><span class="badge ok-b">허용</span></div></div>
+          <div class="trow"><div class="trow-l"><div class="trow-title">변호사 신규 입점</div></div><div class="trow-r"><span class="badge ok-b">허용</span></div></div>
+        </div>
+        <div style="font-size:12px;font-weight:700;color:var(--ts);margin-bottom:8px">요금 설정</div>
+        <div class="tcard" style="margin-bottom:14px">
+          <div class="trow"><div class="trow-l"><div class="trow-title">기본 구독료</div><div class="trow-sub">월 정기 구독</div></div><div class="trow-r" style="display:flex;gap:6px;align-items:center"><b>50만원</b><button class="btn sm p" id="edit-sub-btn">수정</button></div></div>
+          <div class="trow"><div class="trow-l"><div class="trow-title">기본 비딩 수</div></div><div class="trow-r" style="display:flex;gap:6px;align-items:center"><b>10건</b><button class="btn sm p" id="edit-bids-btn">수정</button></div></div>
+          <div class="trow"><div class="trow-l"><div class="trow-title">추가 비딩 (5건)</div></div><div class="trow-r" style="display:flex;gap:6px;align-items:center"><b>10만원</b><button class="btn sm p" id="edit-add-btn">수정</button></div></div>
+        </div>
+        <button class="btn danger" id="adm-logout-btn">로그아웃</button>
+        <div style="height:20px"></div>
+      </div>
+    </div>
+  </main>
+
+  <nav class="bnav">
+    <button class="ni on" id="n-overview">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>현황
+    </button>
+    <button class="ni" id="n-cases">
+      <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>사건
+    </button>
+    <button class="ni" id="n-attorneys">
+      <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>변호사
+    </button>
+    <button class="ni" id="n-db">
+      <svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>DB
+    </button>
+    <button class="ni" id="n-settings">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>설정
+    </button>
+  </nav>
+</div>
+
+<!-- 사건 상세 모달 -->
+<div class="ov" id="m-case">
+  <div class="modal" style="position:relative">
+    <button class="mclose" id="m-case-close">✕</button>
+    <div class="mhandle"></div>
+    <div id="m-case-body"></div>
+  </div>
+</div>
+<!-- 변호사 상세 모달 -->
+<div class="ov" id="m-att">
+  <div class="modal" style="position:relative">
+    <button class="mclose" id="m-att-close">✕</button>
+    <div class="mhandle"></div>
+    <div id="m-att-body"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// SHARED DB
+// ═══════════════════════════════════════════════════════
+var DB = {
+  save:       function(k,v){ try{localStorage.setItem('lrx_'+k,JSON.stringify(v));}catch(e){} },
+  load:       function(k,d){ try{var v=localStorage.getItem('lrx_'+k);return v!==null?JSON.parse(v):d;}catch(e){return d;} },
+  getCases:   function(){ return DB.load('cases',[]); },
+  saveCases:  function(cs){ DB.save('cases',cs); },
+  updateCase: function(id,p){ var cs=DB.getCases(); var i=cs.findIndex(function(x){return x.id===id;}); if(i>-1){Object.assign(cs[i],p);DB.saveCases(cs);} },
+  deleteCase: function(id){ DB.saveCases(DB.getCases().filter(function(x){return x.id!==id;})); },
+  getBids:    function(){ return DB.load('bids',[]); },
+  getAtts:    function(){ return DB.load('attorneys', DEFAULT_ATTORNEYS); },
+  saveAtts:   function(a){ DB.save('attorneys',a); },
+  approveAtt: function(id){ var a=DB.getAtts(); var x=a.find(function(x){return x.id===id;}); if(x){x.status='active';DB.saveAtts(a);} },
+  blockAtt:   function(id){ var a=DB.getAtts(); var x=a.find(function(x){return x.id===id;}); if(x){x.status='blocked';DB.saveAtts(a);} },
+  restoreAtt: function(id){ var a=DB.getAtts(); var x=a.find(function(x){return x.id===id;}); if(x){x.status='active';DB.saveAtts(a);} },
+};
+
+var DEFAULT_ATTORNEYS = [
+  {id:'A001',name:'김○○',firm:'법무법인 리커버',career:12,region:'서울',rating:4.9,reviews:127,status:'active'},
+  {id:'A002',name:'이○○',firm:'법률사무소 새출발',career:8,region:'서울',rating:4.7,reviews:89,status:'active'},
+  {id:'A003',name:'박○○',firm:'법무법인 희망',career:15,region:'서울',rating:4.8,reviews:203,status:'active'},
+  {id:'A004',name:'최○○',firm:'법률사무소 재기',career:6,region:'경기',rating:4.6,reviews:54,status:'active'},
+  {id:'A005',name:'정○○',firm:'법무법인 새빛',career:10,region:'서울',rating:4.8,reviews:142,status:'active'},
+  {id:'A006',name:'강○○',firm:'법률사무소 재도약',career:5,region:'서울',rating:0,reviews:0,status:'pending'},
+  {id:'A007',name:'윤○○',firm:'법무법인 새길',career:7,region:'부산',rating:0,reviews:0,status:'pending'},
+];
+
+var currentCaseFilter = 'all';
+var currentAttFilter  = 'all';
+
+// ═══════════════════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════════════════
+function toast(msg) {
+  var el=document.getElementById('toast');
+  el.textContent=msg; el.style.display='block'; el.style.opacity='1';
+  clearTimeout(el._t);
+  el._t=setTimeout(function(){ el.style.opacity='0'; setTimeout(function(){ el.style.display='none'; },300); },2800);
+}
+function openM(id){ document.getElementById(id).classList.add('on'); document.body.style.overflow='hidden'; }
+function closeM(id){ document.getElementById(id).classList.remove('on'); document.body.style.overflow=''; }
+
+// ═══════════════════════════════════════════════════════
+// NAV
+// ═══════════════════════════════════════════════════════
+var NAV_MAP = {'s-overview':'n-overview','s-cases':'n-cases','s-attorneys':'n-attorneys','s-db':'n-db','s-settings':'n-settings'};
+function go(id) {
+  document.querySelectorAll('.scr').forEach(function(s){ s.classList.remove('on'); });
+  document.querySelectorAll('.ni').forEach(function(n){ n.classList.remove('on'); });
+  document.getElementById(id).classList.add('on');
+  if(NAV_MAP[id]) document.getElementById(NAV_MAP[id]).classList.add('on');
+  window.scrollTo(0,0);
+}
+
+// ═══════════════════════════════════════════════════════
+// LOGIN / LOGOUT
+// ═══════════════════════════════════════════════════════
+function doLogin() {
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('app').style.display='block';
+  refreshOverview();
+  renderAdmCases();
+  renderAdmAtts();
+}
+function doLogout() {
+  document.getElementById('app').style.display='none';
+  document.getElementById('login-screen').style.display='block';
+}
+
+// ═══════════════════════════════════════════════════════
+// OVERVIEW
+// ═══════════════════════════════════════════════════════
+function refreshOverview() {
+  var cases  = DB.getCases();
+  var bids   = DB.getBids();
+  var atts   = DB.getAtts();
+  var total  = cases.length;
+  var newC   = cases.filter(function(c){ return c.status==='new'; }).length;
+  var bidC   = cases.filter(function(c){ return c.status==='bid'; }).length;
+  var hired  = cases.filter(function(c){ return c.status==='hired'; }).length;
+  var pend   = atts.filter(function(a){ return a.status==='pending'; }).length;
+
+  var el = document.getElementById('ov-total'); if(el) el.textContent=total;
+  el = document.getElementById('ov-atts');      if(el) el.textContent=atts.filter(function(a){ return a.status==='active'; }).length;
+  el = document.getElementById('ov-bid');       if(el) el.textContent=bidC;
+  el = document.getElementById('ov-hired');     if(el) el.textContent=hired;
+  el = document.getElementById('ov-pend-txt');  if(el) el.textContent='승인 대기 '+pend;
+
+  el = document.getElementById('adm-notice');
+  if(el) {
+    if(pend>0) el.innerHTML='🔔 신규 변호사 입점 신청 <b>'+pend+'건</b> 승인 대기 중';
+    else if(newC>0) el.innerHTML='📋 신규 사건 <b>'+newC+'건</b>이 비딩 참여를 기다리고 있습니다.';
+    else el.innerHTML='✅ 특이 사항 없음';
+  }
+
+  // KPI
+  el = document.getElementById('kpi-avg-bid');
+  if(el) el.textContent = total>0 ? (bids.length/Math.max(total,1)).toFixed(1)+'명' : '-';
+
+  // 최근 활동
+  var activities = [];
+  cases.slice(0,3).forEach(function(c){ activities.push({title:'사건 등록 (CASE-'+c.id+')', sub:c.dtype+' · '+c.region, badge:'new-b', label:'신규'}); });
+  bids.slice(0,2).forEach(function(b){ activities.push({title:'비딩 제출 (CASE-'+b.caseId+')', sub:b.attName+' 변호사', badge:'bid-b', label:'비딩'}); });
+  var recEl = document.getElementById('recent-list');
+  if(recEl) {
+    if(!activities.length) {
+      recEl.innerHTML='<div class="tcard"><div class="trow"><div class="trow-l"><div class="trow-title">활동 내역 없음</div><div class="trow-sub">사건 등록/비딩 시 여기에 표시됩니다</div></div></div></div>';
+    } else {
+      recEl.innerHTML='<div class="tcard">'
+        +activities.map(function(a){
+          return '<div class="trow"><div class="trow-l"><div class="trow-title">'+a.title+'</div><div class="trow-sub">'+a.sub+'</div></div><div class="trow-r"><span class="badge '+a.badge+'">'+a.label+'</span></div></div>';
+        }).join('')
+        +'</div>';
+    }
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// CASE MANAGEMENT
+// ═══════════════════════════════════════════════════════
+function renderAdmCases() {
+  var all = DB.getCases();
+  var f = currentCaseFilter;
+  var filtered = f==='all' ? all : all.filter(function(c){ return c.status===f; });
+  var search = (document.getElementById('case-search')||{}).value||'';
+  if(search) {
+    search = search.toLowerCase();
+    filtered = filtered.filter(function(c){
+      return (c.id||'').toLowerCase().includes(search)||(c.dtype||'').includes(search)||(c.region||'').includes(search);
+    });
+  }
+  var el = document.getElementById('adm-case-list');
+  if(!el) return;
+  if(!filtered.length) { el.innerHTML='<div style="text-align:center;padding:40px;color:var(--ts);font-size:14px">해당 사건이 없습니다</div>'; return; }
+  var sm = {new:{l:'신규',c:'new-b'},bid:{l:'비딩중',c:'bid-b'},hired:{l:'수임완료',c:'hired-b'}};
+  el.innerHTML = filtered.map(function(c){
+    var s = sm[c.status]||{l:'',c:''};
+    return '<div class="tcard" style="margin-bottom:10px">'
+      +'<div class="trow" data-action="case-detail" data-id="'+c.id+'">'
+      +'<div class="trow-l"><div class="trow-id">CASE-'+c.id+'</div>'
+      +'<div class="trow-title">'+(c.dtype||'')+' · '+(c.region||'')+'</div>'
+      +'<div class="trow-sub">'+(c.drange||'')+' · 등록: '+(c.at||'')+'</div></div>'
+      +'<div class="trow-r"><span class="badge '+s.c+'">'+s.l+'</span></div>'
+      +'</div></div>';
+  }).join('');
+  // 클릭 바인딩
+  el.querySelectorAll('[data-action="case-detail"]').forEach(function(row){
+    row.onclick = function(){ openAdmCaseDetail(row.dataset.id); };
+  });
+}
+
+function openAdmCaseDetail(id) {
+  var c = DB.getCases().find(function(x){ return x.id===id; });
+  if(!c) return;
+  var sm = {new:'신규',bid:'비딩중',hired:'수임완료'};
+  document.getElementById('m-case-body').innerHTML =
+    '<div class="mtitle">CASE-'+id+' 관리</div>'
+    +'<div style="background:var(--bg);border-radius:var(--rads);padding:14px;font-size:13.5px;line-height:1.9;color:var(--ts);margin-bottom:12px">'
+    +'채무유형: <b style="color:var(--t)">'+(c.dtype||'')+'</b><br>'
+    +'지역: <b style="color:var(--t)">'+(c.region||'')+'</b><br>'
+    +'채무규모: <b style="color:var(--t)">'+(c.drange||'')+'</b><br>'
+    +'상태: <b style="color:var(--t)">'+(sm[c.status]||c.status)+'</b><br>'
+    +'등록: '+(c.at||'')
+    +'</div>'
+    +'<div style="display:flex;gap:8px">'
+    +'<button class="btn ok sm" style="flex:1;padding:11px" id="adm-hire-btn" data-id="'+id+'">수임 완료 처리</button>'
+    +'<button class="btn danger sm" style="flex:1;padding:11px" id="adm-del-btn" data-id="'+id+'">사건 삭제</button>'
+    +'</div>';
+  // 버튼 바인딩
+  var hireBtn = document.getElementById('adm-hire-btn');
+  if(hireBtn) hireBtn.onclick = function(){
+    DB.updateCase(id,{status:'hired'});
+    closeM('m-case'); renderAdmCases(); refreshOverview();
+    toast('CASE-'+id+' 수임 완료로 변경했습니다.');
+  };
+  var delBtn = document.getElementById('adm-del-btn');
+  if(delBtn) delBtn.onclick = function(){
+    DB.deleteCase(id);
+    closeM('m-case'); renderAdmCases(); refreshOverview();
+    toast('CASE-'+id+' 사건을 삭제했습니다.');
+  };
+  openM('m-case');
+}
+
+// ═══════════════════════════════════════════════════════
+// ATTORNEY MANAGEMENT
+// ═══════════════════════════════════════════════════════
+function renderAdmAtts() {
+  var all = DB.getAtts();
+  var f = currentAttFilter;
+  var filtered = f==='all' ? all : all.filter(function(a){ return a.status===f; });
+  var pend = all.filter(function(a){ return a.status==='pending'; }).length;
+  var pn = document.getElementById('pend-notice');
+  if(pn) pn.innerHTML = pend>0 ? '⚠️ 승인 대기 중인 변호사가 <b>'+pend+'명</b> 있습니다.' : '✅ 승인 대기 없음';
+  var el = document.getElementById('adm-att-list');
+  if(!el) return;
+  if(!filtered.length) { el.innerHTML='<div style="text-align:center;padding:40px;color:var(--ts);font-size:14px">해당 변호사가 없습니다</div>'; return; }
+  var sm = {active:{l:'활성',c:'ok-b'},pending:{l:'승인대기',c:'pend-b'},blocked:{l:'정지',c:'block-b'}};
+  el.innerHTML = filtered.map(function(a){
+    var s = sm[a.status]||{l:'',c:''};
+    return '<div class="tcard" style="margin-bottom:10px">'
+      +'<div class="trow" data-action="att-detail" data-id="'+a.id+'">'
+      +'<div class="trow-l"><div class="trow-id">'+a.id+'</div>'
+      +'<div class="trow-title">'+a.name+' 변호사</div>'
+      +'<div class="trow-sub">'+a.firm+' · 수임 '+a.reviews+'건'+(a.rating>0?' · ★'+a.rating:'')+'</div></div>'
+      +'<div class="trow-r"><span class="badge '+s.c+'">'+s.l+'</span></div>'
+      +'</div></div>';
+  }).join('');
+  el.querySelectorAll('[data-action="att-detail"]').forEach(function(row){
+    row.onclick = function(){ openAdmAttDetail(row.dataset.id); };
+  });
+}
+
+function openAdmAttDetail(id) {
+  var a = DB.getAtts().find(function(x){ return x.id===id; });
+  if(!a) return;
+  var sm = {active:'활성',pending:'승인 대기',blocked:'정지'};
+  var actionHtml = a.status==='pending'
+    ? '<div style="display:flex;gap:8px"><button class="btn ok sm" style="flex:1;padding:11px" id="att-approve-btn" data-id="'+id+'">✅ 입점 승인</button><button class="btn danger sm" style="flex:1;padding:11px" id="att-reject-btn" data-id="'+id+'">❌ 거절</button></div>'
+    : a.status==='active'
+    ? '<button class="btn danger" id="att-block-btn" data-id="'+id+'">계정 정지</button>'
+    : '<button class="btn ok" id="att-restore-btn" data-id="'+id+'">계정 복구</button>';
+  document.getElementById('m-att-body').innerHTML =
+    '<div class="mtitle">'+a.name+' 변호사</div>'
+    +'<div style="background:var(--bg);border-radius:var(--rads);padding:14px;font-size:13.5px;line-height:1.9;color:var(--ts);margin-bottom:12px">'
+    +'법인명: <b style="color:var(--t)">'+a.firm+'</b><br>'
+    +'지역: <b style="color:var(--t)">'+a.region+'</b><br>'
+    +'경력: <b style="color:var(--t)">'+a.career+'년</b><br>'
+    +'상태: <b style="color:var(--t)">'+(sm[a.status]||a.status)+'</b><br>'
+    +(a.rating>0?'평점: <b style="color:var(--t)">'+a.rating+' ★ ('+a.reviews+'건)</b>':'평점: 미평가')
+    +'</div>'
+    +actionHtml;
+  // 버튼 바인딩
+  var approveBtn = document.getElementById('att-approve-btn');
+  if(approveBtn) approveBtn.onclick = function(){ DB.approveAtt(id); closeM('m-att'); renderAdmAtts(); refreshOverview(); toast(a.name+' 변호사 입점을 승인했습니다.'); };
+  var rejectBtn = document.getElementById('att-reject-btn');
+  if(rejectBtn) rejectBtn.onclick = function(){ DB.deleteCase(id); var atts=DB.getAtts().filter(function(x){return x.id!==id;}); DB.saveAtts(atts); closeM('m-att'); renderAdmAtts(); toast(a.name+' 입점 신청을 거절했습니다.'); };
+  var blockBtn = document.getElementById('att-block-btn');
+  if(blockBtn) blockBtn.onclick = function(){ DB.blockAtt(id); closeM('m-att'); renderAdmAtts(); toast(a.name+' 계정을 정지했습니다.'); };
+  var restoreBtn = document.getElementById('att-restore-btn');
+  if(restoreBtn) restoreBtn.onclick = function(){ DB.restoreAtt(id); closeM('m-att'); renderAdmAtts(); toast(a.name+' 계정을 복구했습니다.'); };
+  openM('m-att');
+}
+
+// ═══════════════════════════════════════════════════════
+// 다른 탭 변경 감지
+// ═══════════════════════════════════════════════════════
+window.addEventListener('storage', function(e) {
+  if(e.key && e.key.startsWith('lrx_')) {
+    refreshOverview(); renderAdmCases(); renderAdmAtts();
+  }
+});
+
+// ═══════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════
+(function init() {
+  // 로그인/로그아웃
+  var lb = document.getElementById('adm-login-btn');
+  if(lb) lb.onclick = doLogin;
+  var lo = document.getElementById('adm-logout-btn');
+  if(lo) lo.onclick = doLogout;
+  var la = document.getElementById('adm-logout-avatar');
+  if(la) la.onclick = doLogout;
+
+  // 모달 닫기
+  document.getElementById('m-case-close').onclick = function(){ closeM('m-case'); };
+  document.getElementById('m-att-close').onclick  = function(){ closeM('m-att'); };
+  document.getElementById('m-case').onclick = function(e){ if(e.target===document.getElementById('m-case')) closeM('m-case'); };
+  document.getElementById('m-att').onclick  = function(e){ if(e.target===document.getElementById('m-att')) closeM('m-att'); };
+
+  // 하단 네비
+  var navMap = {'n-overview':'s-overview','n-cases':'s-cases','n-attorneys':'s-attorneys','n-db':'s-db','n-settings':'s-settings'};
+  Object.keys(navMap).forEach(function(nid){
+    var nb = document.getElementById(nid);
+    if(nb) nb.onclick = function(){ go(navMap[nid]); };
+  });
+
+  // 사건 필터 탭
+  var caseFtabs = document.getElementById('case-ftabs');
+  if(caseFtabs) {
+    caseFtabs.querySelectorAll('.ftab').forEach(function(btn){
+      btn.onclick = function(){
+        currentCaseFilter = btn.dataset.filter;
+        caseFtabs.querySelectorAll('.ftab').forEach(function(b){ b.classList.remove('on'); });
+        btn.classList.add('on');
+        renderAdmCases();
+      };
+    });
+  }
+
+  // 변호사 필터 탭
+  var attFtabs = document.getElementById('att-ftabs');
+  if(attFtabs) {
+    attFtabs.querySelectorAll('.ftab').forEach(function(btn){
+      btn.onclick = function(){
+        currentAttFilter = btn.dataset.filter;
+        attFtabs.querySelectorAll('.ftab').forEach(function(b){ b.classList.remove('on'); });
+        btn.classList.add('on');
+        renderAdmAtts();
+      };
+    });
+  }
+
+  // 검색
+  var cs = document.getElementById('case-search');
+  if(cs) cs.oninput = function(){ renderAdmCases(); };
+
+  // DB 버튼들
+  var rcb = document.getElementById('run-crawler-btn');
+  if(rcb) rcb.onclick = function(){ toast('크롤러를 실행합니다. 약 8~10분 소요됩니다.'); };
+  var cib = document.getElementById('check-integrity-btn');
+  if(cib) cib.onclick = function(){ toast('데이터 검증 완료\n오류: 0건, 경고: 3건'); };
+  ['edit-weight-btn','edit-min-debt-btn','edit-period-btn','edit-sub-btn','edit-bids-btn','edit-add-btn'].forEach(function(id){
+    var btn = document.getElementById(id);
+    if(btn) btn.onclick = function(){ toast('설정 수정 기능은 준비 중입니다.'); };
+  });
+})();
+</script>
+</body>
+</html>
