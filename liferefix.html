@@ -221,7 +221,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
     <button class="hero-btn" onclick="go('s-diag')">⚡ 무료 채무 진단 시작하기</button>
   </div>
   <div class="stats">
-    <div class="stat"><span class="stat-n">3,000+</span><span class="stat-l">판결문 DB</span></div>
+    <div class="stat"><span class="stat-n">33+</span><span class="stat-l">판결문 DB</span></div>
     <div class="stat"><span class="stat-n">92%</span><span class="stat-l">진단 정확도</span></div>
     <div class="stat"><span class="stat-n">30명+</span><span class="stat-l">파트너 변호사</span></div>
   </div>
@@ -578,9 +578,9 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
       <div style="font-size:13px;color:var(--ts);margin-bottom:20px">등록된 파트너 변호사만 접근 가능합니다.</div>
       <input type="email" class="finput" id="att-email" placeholder="이메일 주소" value="kim@lawfirm.com">
       <input type="password" class="finput" id="att-pw" placeholder="비밀번호" value="12345678">
-      <button class="btn p" id="att-login-btn">로그인</button>
+      <button class="btn p" id="att-login-btn" onclick="attDoLogin()">로그인</button>
       <button class="btn o" onclick="go('s-my')" style="margin-top:10px">← 돌아가기</button>
-      <div style="text-align:center;margin-top:14px;font-size:13px;color:var(--ts)">입점 문의: <span style="color:var(--p);font-weight:700">partner@liferefix.com</span></div>
+      <div style="text-align:center;margin-top:14px;font-size:13px;color:var(--ts)">입점 문의: <span style="color:var(--p);font-weight:700"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="cabaabb8bea4afb88aa6a3acafb8afaca3b2e4a9a5a7">[email&#160;protected]</a></span></div>
     </div>
   </div>
 </div>
@@ -677,7 +677,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
       <div style="font-size:13px;color:var(--ts);margin-bottom:18px">관리자 전용 접근입니다.</div>
       <input type="email" class="finput" id="adm-email" placeholder="관리자 이메일" value="admin@liferefix.com">
       <input type="password" class="finput" id="adm-pw" placeholder="비밀번호" value="admin1234">
-      <button class="btn p" id="adm-login-btn">로그인</button>
+      <button class="btn p" id="adm-login-btn" onclick="admDoLogin()">로그인</button>
       <button class="btn o" onclick="go('s-my')" style="margin-top:10px">← 돌아가기</button>
     </div>
   </div>
@@ -726,7 +726,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
   <!-- DB -->
   <div id="dtp-db" style="padding:14px;display:none">
     <div style="font-size:14px;font-weight:800;margin-bottom:10px">판례 DB 관리</div>
-    <div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-weight:700">총 판결문 DB</div><div style="font-size:12px;color:var(--ts)">law-story.com 수집</div></div><b style="font-size:16px;color:var(--p)">3,218건</b></div></div>
+    <div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-weight:700">총 판결문 DB</div><div style="font-size:12px;color:var(--ts)">law-story.com 수집</div></div><b style="font-size:16px;color:var(--p)">33건</b></div></div>
     <div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-weight:700">평균 탕감률</div></div><b style="font-size:16px;color:var(--a)">67.3%</b></div></div>
     <button class="btn p" style="padding:12px" onclick="toast('크롤러를 실행합니다. 약 8~10분 소요됩니다.')">🔄 크롤러 실행</button>
     <button class="btn o" style="padding:12px" onclick="toast('데이터 검증 완료 — 오류: 0건')">✅ 무결성 검사</button>
@@ -766,7 +766,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
 <div class="ov" id="m-about" onclick="ovClose(event,'m-about')"><div class="modal" style="position:relative"><button class="mclose" onclick="closeM('m-about')">✕</button><div class="mhandle"></div><div class="mtitle">Liferefix 소개</div><div style="font-size:14px;line-height:1.8;color:var(--ts)"><b style="color:var(--t)">Liferefix</b>는 채무 해결을 위한 데이터 기반 원스톱 플랫폼입니다.<br><br>3,000건 개인회생 판결문 DB 기반 독자적 진단 알고리즘(가출원 특허 10-2026-0039619)으로 채무자에게 투명한 정보를 제공하고, 변호사 비딩 시스템으로 합리적인 법률 서비스를 연결합니다.<br><br><b style="color:var(--t)">미션:</b> 금융 취약 계층의 정보 비대칭 해소와 재무적 재기 지원</div></div></div>
 
 <div class="toast" id="toast"></div>
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script type="text/javascript">
 
 // ═══════════════════════════════════════════════════════
 //  SHARED DATA LAYER — localStorage 기반 실시간 연동
@@ -812,6 +812,39 @@ var DB = {
   unreadCount:   function(){ return DB.getNotifs().filter(function(n){return !n.read;}).length; },
 };
 
+// 전역 함수 명시적 노출 (모바일/iframe 호환)
+window.go           = function(id){ go(id); };
+window.sel          = function(el,gid){ sel(el,gid); };
+window.slid         = function(el,lid){ slid(el,lid); };
+window.gofs         = function(n){ gofs(n); };
+window.runDiag      = function(){ runDiag(); };
+window.resetDiag    = function(){ resetDiag(); };
+window.switchTab    = function(t){ switchTab(t); };
+window.sortAtt      = function(s,el){ sortAtt(s,el); };
+window.openAtt      = function(id){ openAtt(id); };
+window.toggleCmp    = function(id){ toggleCmp(id); };
+window.openCompare  = function(){ openCompare(); };
+window.submitCase   = function(){ submitCase(); };
+window.simBid       = function(){ simBid(); };
+window.faq          = function(el){ faq(el); };
+window.openM        = function(id){ openM(id); };
+window.closeM       = function(id){ closeM(id); };
+window.ovClose      = function(e,id){ ovClose(e,id); };
+window.enterAttorney= function(){ enterAttorney(); };
+window.enterAdmin   = function(){ enterAdmin(); };
+window.switchAttTab = function(t){ switchAttTab(t); };
+window.switchAdmTab = function(t){ switchAdmTab(t); };
+window.attDoLogin   = function(){ attDoLogin(); };
+window.admDoLogin   = function(){ admDoLogin(); };
+window.attSubmitBid = function(){ attSubmitBid(); };
+window.attOpenBidForm=function(id){ attOpenBidForm(id); };
+window.admDeleteCase= function(id){ admDeleteCase(id); };
+window.admApproveAtt= function(id){ admApproveAtt(id); };
+window.admBlockAtt  = function(id){ admBlockAtt(id); };
+window.admRestoreAtt= function(id){ admRestoreAtt(id); };
+window.reqConsult   = function(id){ reqConsult(id); };
+window.toast        = function(msg){ toast(msg); };
+
 // 다른 탭 변경 감지
 window.addEventListener('storage', function(e) {
   if(e.key && e.key.startsWith('lrx_')) {
@@ -825,16 +858,39 @@ window.addEventListener('storage', function(e) {
 // CASE DB (law-story.com no.571~580)
 // ═══════════════════════════════════════
 const CASE_DB=[
-  {no:580,court:"서울회생법원",relief_rate:84,debt_type:"신용대출",debt_amount:5000,net_income:250,dependents:0},
-  {no:579,court:"서울회생법원",relief_rate:86,debt_type:"신용대출",debt_amount:6000,net_income:230,dependents:1},
-  {no:576,court:"서울회생법원",relief_rate:76,debt_type:"카드채무",debt_amount:2500,net_income:200,dependents:0},
-  {no:575,court:"서울회생법원",relief_rate:49,debt_type:"신용대출",debt_amount:4500,net_income:350,dependents:0},
-  {no:571,court:"서울회생법원",relief_rate:64,debt_type:"신용대출",debt_amount:4800,net_income:280,dependents:0},
-  {no:577,court:"수원지방법원",relief_rate:50,debt_type:"담보대출",debt_amount:8000,net_income:400,dependents:2},
-  {no:578,court:"대구지방법원",relief_rate:54,debt_type:"복합채무",debt_amount:3800,net_income:300,dependents:0},
-  {no:574,court:"대구지방법원",relief_rate:46,debt_type:"복합채무",debt_amount:5500,net_income:380,dependents:1},
-  {no:573,court:"전주지방법원",relief_rate:39,debt_type:"신용대출",debt_amount:7000,net_income:450,dependents:2},
-  {no:572,court:"창원지방법원",relief_rate:50,debt_type:"복합채무",debt_amount:6000,net_income:320,dependents:1},
+  {no:580,court:"서울회생법원",relief_rate:84,age_group:"30대",gender:"남",region:"서울"},
+  {no:579,court:"서울회생법원",relief_rate:86,age_group:"40대",gender:"여",region:"서울"},
+  {no:578,court:"대구지방법원",relief_rate:54,age_group:"30대",gender:"여",region:"대구"},
+  {no:577,court:"수원지방법원",relief_rate:50,age_group:"40대",gender:"남",region:"수원"},
+  {no:576,court:"서울회생법원",relief_rate:76,age_group:"20대",gender:"남",region:"서울"},
+  {no:575,court:"서울회생법원",relief_rate:49,age_group:"20대",gender:"남",region:"서울"},
+  {no:574,court:"대구지방법원",relief_rate:46,age_group:"30대",gender:"남",region:"대구"},
+  {no:573,court:"전주지방법원",relief_rate:39,age_group:"40대",gender:"여",region:"전주"},
+  {no:572,court:"창원지방법원",relief_rate:50,age_group:"50대",gender:"여",region:"창원"},
+  {no:571,court:"서울회생법원",relief_rate:64,age_group:"30대",gender:"남",region:"서울"},
+  {no:570,court:"서울회생법원",relief_rate:86,age_group:"30대",gender:"여",region:"서울"},
+  {no:569,court:"서울회생법원",relief_rate:28,age_group:"40대",gender:"여",region:"서울"},
+  {no:567,court:"부산지방법원",relief_rate:60,age_group:"20대",gender:"남",region:"부산"},
+  {no:566,court:"서울회생법원",relief_rate:94,age_group:"40대",gender:"남",region:"서울"},
+  {no:565,court:"서울회생법원",relief_rate:79,age_group:"20대",gender:"여",region:"서울"},
+  {no:564,court:"서울회생법원",relief_rate:78,age_group:"50대",gender:"남",region:"서울"},
+  {no:562,court:"서울회생법원",relief_rate:94,age_group:"20대",gender:"남",region:"서울"},
+  {no:561,court:"대전지방법원",relief_rate:72,age_group:"40대",gender:"남",region:"대전"},
+  {no:558,court:"서울회생법원",relief_rate:83,age_group:"40대",gender:"남",region:"서울"},
+  {no:557,court:"대전지방법원",relief_rate:93,age_group:"30대",gender:"남",region:"대전"},
+  {no:556,court:"대전지방법원",relief_rate:38,age_group:"50대",gender:"남",region:"대전"},
+  {no:555,court:"대전지방법원",relief_rate:38,age_group:"50대",gender:"남",region:"대전"},
+  {no:554,court:"대전지방법원",relief_rate:81,age_group:"40대",gender:"여",region:"대전"},
+  {no:553,court:"대전지방법원",relief_rate:81,age_group:"40대",gender:"여",region:"대전"},
+  {no:552,court:"광주지방법원",relief_rate:54,age_group:"30대",gender:"남",region:"광주"},
+  {no:551,court:"광주지방법원",relief_rate:54,age_group:"30대",gender:"남",region:"광주"},
+  {no:548,court:"서울회생법원",relief_rate:53,age_group:"30대",gender:"남",region:"서울"},
+  {no:547,court:"서울회생법원",relief_rate:75,age_group:"20대",gender:"여",region:"서울"},
+  {no:546,court:"청주지방법원",relief_rate:58,age_group:"20대",gender:"남",region:"청주"},
+  {no:545,court:"서울회생법원",relief_rate:75,age_group:"40대",gender:"남",region:"서울"},
+  {no:542,court:"인천지방법원",relief_rate:31,age_group:"20대",gender:"남",region:"인천"},
+  {no:541,court:"인천지방법원",relief_rate:77,age_group:"40대",gender:"여",region:"인천"},
+  {no:540,court:"서울회생법원",relief_rate:57,age_group:"50대",gender:"여",region:"서울"}
 ];
 
 // ═══════════════════════════════════════
@@ -1545,21 +1601,3 @@ function bindRoleBtns() {
         btn.onclick = function(){
           g.querySelectorAll('.tb').forEach(function(b){ b.classList.remove('on'); });
           btn.classList.add('on');
-        };
-      });
-    });
-  }
-
-(function bindOnReady() {
-  if(document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', bindRoleBtns);
-  } else {
-    bindRoleBtns();
-  }
-})();
-
-
-
-</script>
-</body>
-</html>
