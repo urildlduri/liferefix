@@ -580,7 +580,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
       <input type="password" class="finput" id="att-pw" placeholder="비밀번호" value="12345678">
       <button class="btn p" id="att-login-btn">로그인</button>
       <button class="btn o" onclick="go('s-my')" style="margin-top:10px">← 돌아가기</button>
-      <div style="text-align:center;margin-top:14px;font-size:13px;color:var(--ts)">입점 문의: <span style="color:var(--p);font-weight:700"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="b8c8d9caccd6ddcaf8d4d1deddcaddded1c096dbd7d5">[email&#160;protected]</a></span></div>
+      <div style="text-align:center;margin-top:14px;font-size:13px;color:var(--ts)">입점 문의: <span style="color:var(--p);font-weight:700">partner@liferefix.com</span></div>
     </div>
   </div>
 </div>
@@ -767,6 +767,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
 
 <div class="toast" id="toast"></div>
 <script>
+
 // ═══════════════════════════════════════════════════════
 //  SHARED DATA LAYER — localStorage 기반 실시간 연동
 // ═══════════════════════════════════════════════════════
@@ -1493,8 +1494,9 @@ function admDoLogin() {
 // ══════════════════════════════════════════════
 // INIT 후킹 — 버튼 바인딩
 // ══════════════════════════════════════════════
-(function() {
-  function bindRoleBtns() {
+
+// ── 로그인 버튼 바인딩 (전역, 안전하게) ──
+function bindRoleBtns() {
     // 변호사 로그인
     var al = document.getElementById('att-login-btn');
     if(al) al.onclick = attDoLogin;
@@ -1540,12 +1542,16 @@ function admDoLogin() {
       });
     });
   }
-  if(document.readyState==='loading'){
+
+(function bindOnReady() {
+  if(document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', bindRoleBtns);
   } else {
     bindRoleBtns();
   }
 })();
+
+
 
 </script>
 </body>
