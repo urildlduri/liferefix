@@ -3707,6 +3707,86 @@ function applyAttCaseFilter() {
   renderAttCaseList(filtered);
 }
 window.filterAttCases = filterAttCases;
+
+// ── 인라인 제안 제출 ──────────────────────────────────────
+function submitInlineBid() {
+  if(!attBidId){ toast('사건을 먼저 선택해주세요.'); return; }
+
+  // 입찰 제한 체크
+  if(window.FB_DB && window.FB_FUNCS) {
+    window.FB_FUNCS.getDoc(
+      window.FB_FUNCS.doc(window.FB_DB,'cases',attBidId)
+    ).then(function(snap){
+      if(snap.exists()) {
+        var cData = snap.data();
+        if((cData.bidCnt||0) >= 10 || cData.status==='closed') {
+          toast('❌ 이 사건은 입찰이 마감되었습니다.');
+          return;
+        }
+      }
+      _doInlineBid();
+    }).catch(function(){ _doInlineBid(); });
+  } else {
+    _doInlineBid();
+  }
+}
+
+function _doInlineBid() {
+  var retEl    = document.querySelector('#il-ret .tb.on');
+  var instEl   = document.querySelector('#il-inst .tb.on');
+  var sucEl    = document.querySelector('#il-suc .tb.on');
+  var probEl   = document.querySelector('#il-prob .tb.on');
+  var strategy = (document.getElementById('il-strategy')||{}).value||'성실히 도와드리겠습니다.';
+  var retainer = retEl  ? parseInt(retEl.dataset.v||'120')  : 120;
+  var install  = instEl ? instEl.dataset.v                  : 'none';
+  var success  = sucEl  ? parseInt(sucEl.dataset.v||'0')    : 0;
+  var prob     = probEl ? parseInt(probEl.dataset.v||'85')  : 85;
+  var attName  = window.FB_USER
+    ? (window.FB_USER.displayName||window.FB_USER.email.split('@')[0])
+    : '변호사';
+
+  var bid = {
+    id:       'BID-'+Date.now().toString(36).toUpperCase().slice(-5),
+    caseId:   attBidId,
+    attId:    window.FB_USER ? window.FB_USER.uid   : '',
+    attName:  attName,
+    attEmail: window.FB_USER ? window.FB_USER.email : '',
+    retainer: retainer,
+    install:  install,
+    success:  success,
+    prob:     prob,
+    strategy: strategy,
+    period:   36,
+    at:       new Date().toLocaleString('ko-KR')
+  };
+
+  DB.addBid(bid);
+  DB.updateCase(attBidId, {status:'bid'});
+
+  if(window.submitBidFirebase) {
+    window.submitBidFirebase(bid).then(function(id){
+      toast(id ? '✅ 제안이 제출됐습니다! 채무자에게 전달됩니다.' : '✅ 제안이 제출됐습니다!');
+    });
+  } else {
+    toast('✅ 제안이 제출됐습니다!');
+  }
+
+  // 인라인 폼 제거
+  var form = document.getElementById('inline-bid-form');
+  if(form) form.remove();
+
+  // 비딩중 탭으로 이동
+  _attCaseFilter = 'bid';
+  var bidTab = document.querySelector('#g-case-filter .tb[data-f="bid"]');
+  if(bidTab) {
+    var g = document.getElementById('g-case-filter');
+    if(g) g.querySelectorAll('.tb').forEach(function(b){b.classList.remove('on');});
+    bidTab.classList.add('on');
+  }
+  updateAttStats();
+  if(window.applyAttCaseFilter) applyAttCaseFilter();
+}
+
 window.submitInlineBid = submitInlineBid;
 window.openBidModal = openBidModal;
 window.applyAttCaseFilter = applyAttCaseFilter;
@@ -4864,6 +4944,86 @@ function applyAttCaseFilter() {
   renderAttCaseList(filtered);
 }
 window.filterAttCases = filterAttCases;
+
+// ── 인라인 제안 제출 ──────────────────────────────────────
+function submitInlineBid() {
+  if(!attBidId){ toast('사건을 먼저 선택해주세요.'); return; }
+
+  // 입찰 제한 체크
+  if(window.FB_DB && window.FB_FUNCS) {
+    window.FB_FUNCS.getDoc(
+      window.FB_FUNCS.doc(window.FB_DB,'cases',attBidId)
+    ).then(function(snap){
+      if(snap.exists()) {
+        var cData = snap.data();
+        if((cData.bidCnt||0) >= 10 || cData.status==='closed') {
+          toast('❌ 이 사건은 입찰이 마감되었습니다.');
+          return;
+        }
+      }
+      _doInlineBid();
+    }).catch(function(){ _doInlineBid(); });
+  } else {
+    _doInlineBid();
+  }
+}
+
+function _doInlineBid() {
+  var retEl    = document.querySelector('#il-ret .tb.on');
+  var instEl   = document.querySelector('#il-inst .tb.on');
+  var sucEl    = document.querySelector('#il-suc .tb.on');
+  var probEl   = document.querySelector('#il-prob .tb.on');
+  var strategy = (document.getElementById('il-strategy')||{}).value||'성실히 도와드리겠습니다.';
+  var retainer = retEl  ? parseInt(retEl.dataset.v||'120')  : 120;
+  var install  = instEl ? instEl.dataset.v                  : 'none';
+  var success  = sucEl  ? parseInt(sucEl.dataset.v||'0')    : 0;
+  var prob     = probEl ? parseInt(probEl.dataset.v||'85')  : 85;
+  var attName  = window.FB_USER
+    ? (window.FB_USER.displayName||window.FB_USER.email.split('@')[0])
+    : '변호사';
+
+  var bid = {
+    id:       'BID-'+Date.now().toString(36).toUpperCase().slice(-5),
+    caseId:   attBidId,
+    attId:    window.FB_USER ? window.FB_USER.uid   : '',
+    attName:  attName,
+    attEmail: window.FB_USER ? window.FB_USER.email : '',
+    retainer: retainer,
+    install:  install,
+    success:  success,
+    prob:     prob,
+    strategy: strategy,
+    period:   36,
+    at:       new Date().toLocaleString('ko-KR')
+  };
+
+  DB.addBid(bid);
+  DB.updateCase(attBidId, {status:'bid'});
+
+  if(window.submitBidFirebase) {
+    window.submitBidFirebase(bid).then(function(id){
+      toast(id ? '✅ 제안이 제출됐습니다! 채무자에게 전달됩니다.' : '✅ 제안이 제출됐습니다!');
+    });
+  } else {
+    toast('✅ 제안이 제출됐습니다!');
+  }
+
+  // 인라인 폼 제거
+  var form = document.getElementById('inline-bid-form');
+  if(form) form.remove();
+
+  // 비딩중 탭으로 이동
+  _attCaseFilter = 'bid';
+  var bidTab = document.querySelector('#g-case-filter .tb[data-f="bid"]');
+  if(bidTab) {
+    var g = document.getElementById('g-case-filter');
+    if(g) g.querySelectorAll('.tb').forEach(function(b){b.classList.remove('on');});
+    bidTab.classList.add('on');
+  }
+  updateAttStats();
+  if(window.applyAttCaseFilter) applyAttCaseFilter();
+}
+
 window.submitInlineBid = submitInlineBid;
 window.openBidModal = openBidModal;
 window.applyAttCaseFilter = applyAttCaseFilter;
@@ -5187,6 +5347,86 @@ function applyAttCaseFilter() {
   renderAttCaseList(filtered);
 }
 window.filterAttCases = filterAttCases;
+
+// ── 인라인 제안 제출 ──────────────────────────────────────
+function submitInlineBid() {
+  if(!attBidId){ toast('사건을 먼저 선택해주세요.'); return; }
+
+  // 입찰 제한 체크
+  if(window.FB_DB && window.FB_FUNCS) {
+    window.FB_FUNCS.getDoc(
+      window.FB_FUNCS.doc(window.FB_DB,'cases',attBidId)
+    ).then(function(snap){
+      if(snap.exists()) {
+        var cData = snap.data();
+        if((cData.bidCnt||0) >= 10 || cData.status==='closed') {
+          toast('❌ 이 사건은 입찰이 마감되었습니다.');
+          return;
+        }
+      }
+      _doInlineBid();
+    }).catch(function(){ _doInlineBid(); });
+  } else {
+    _doInlineBid();
+  }
+}
+
+function _doInlineBid() {
+  var retEl    = document.querySelector('#il-ret .tb.on');
+  var instEl   = document.querySelector('#il-inst .tb.on');
+  var sucEl    = document.querySelector('#il-suc .tb.on');
+  var probEl   = document.querySelector('#il-prob .tb.on');
+  var strategy = (document.getElementById('il-strategy')||{}).value||'성실히 도와드리겠습니다.';
+  var retainer = retEl  ? parseInt(retEl.dataset.v||'120')  : 120;
+  var install  = instEl ? instEl.dataset.v                  : 'none';
+  var success  = sucEl  ? parseInt(sucEl.dataset.v||'0')    : 0;
+  var prob     = probEl ? parseInt(probEl.dataset.v||'85')  : 85;
+  var attName  = window.FB_USER
+    ? (window.FB_USER.displayName||window.FB_USER.email.split('@')[0])
+    : '변호사';
+
+  var bid = {
+    id:       'BID-'+Date.now().toString(36).toUpperCase().slice(-5),
+    caseId:   attBidId,
+    attId:    window.FB_USER ? window.FB_USER.uid   : '',
+    attName:  attName,
+    attEmail: window.FB_USER ? window.FB_USER.email : '',
+    retainer: retainer,
+    install:  install,
+    success:  success,
+    prob:     prob,
+    strategy: strategy,
+    period:   36,
+    at:       new Date().toLocaleString('ko-KR')
+  };
+
+  DB.addBid(bid);
+  DB.updateCase(attBidId, {status:'bid'});
+
+  if(window.submitBidFirebase) {
+    window.submitBidFirebase(bid).then(function(id){
+      toast(id ? '✅ 제안이 제출됐습니다! 채무자에게 전달됩니다.' : '✅ 제안이 제출됐습니다!');
+    });
+  } else {
+    toast('✅ 제안이 제출됐습니다!');
+  }
+
+  // 인라인 폼 제거
+  var form = document.getElementById('inline-bid-form');
+  if(form) form.remove();
+
+  // 비딩중 탭으로 이동
+  _attCaseFilter = 'bid';
+  var bidTab = document.querySelector('#g-case-filter .tb[data-f="bid"]');
+  if(bidTab) {
+    var g = document.getElementById('g-case-filter');
+    if(g) g.querySelectorAll('.tb').forEach(function(b){b.classList.remove('on');});
+    bidTab.classList.add('on');
+  }
+  updateAttStats();
+  if(window.applyAttCaseFilter) applyAttCaseFilter();
+}
+
 window.submitInlineBid = submitInlineBid;
 window.openBidModal = openBidModal;
 window.applyAttCaseFilter = applyAttCaseFilter;
