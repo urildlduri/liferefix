@@ -742,6 +742,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
     <button class="att-tab" id="dtab-cases" onclick="switchAdmTab('cases')">사건</button>
     <button class="att-tab" id="dtab-users" onclick="switchAdmTab('users')">회원</button>
     <button class="att-tab" id="dtab-atts" onclick="switchAdmTab('atts')">변호사</button>
+    <button class="att-tab" id="dtab-revenue" onclick="switchAdmTab('revenue')">수익</button>
     <button class="att-tab" id="dtab-db" onclick="switchAdmTab('db')">DB</button>
     <button class="att-tab" id="dtab-cfg" onclick="switchAdmTab('cfg')">설정</button>
   </div>
@@ -752,6 +753,8 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
       <div style="background:#fff;border-radius:var(--rad);padding:14px;border:1px solid var(--bd);box-shadow:var(--shs)"><div style="font-size:22px;font-weight:900;color:var(--a)">5</div><div style="font-size:11px;color:var(--ts)">파트너 변호사</div></div>
       <div style="background:#fff;border-radius:var(--rad);padding:14px;border:1px solid var(--bd);box-shadow:var(--shs)"><div style="font-size:22px;font-weight:900;color:var(--o)" id="adm-bid-cnt">0</div><div style="font-size:11px;color:var(--ts)">비딩 진행중</div></div>
       <div style="background:#fff;border-radius:var(--rad);padding:14px;border:1px solid var(--bd);box-shadow:var(--shs)"><div style="font-size:22px;font-weight:900;color:#005945" id="adm-hired-cnt">0</div><div style="font-size:11px;color:var(--ts)">수임 완료</div></div>
+      <div style="background:linear-gradient(135deg,var(--p),var(--pd));border-radius:var(--rad);padding:14px;cursor:pointer" onclick="switchAdmTab('revenue')"><div style="font-size:18px;font-weight:900;color:#fff" id="adm-rev-total">-</div><div style="font-size:11px;color:rgba(255,255,255,.8)">총 수익 (원) ›</div></div>
+      <div style="background:linear-gradient(135deg,var(--a),#009B7E);border-radius:var(--rad);padding:14px;cursor:pointer" onclick="switchAdmTab('revenue')"><div style="font-size:18px;font-weight:900;color:#fff" id="adm-rev-pending">-</div><div style="font-size:11px;color:rgba(255,255,255,.8)">대기 결제 (건) ›</div></div>
     </div>
     <div id="adm-recent"><div class="card" style="font-size:13px;color:var(--ts)">활동 내역 없음</div></div>
   </div>
@@ -773,7 +776,61 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
   <div id="adm-user-list"><div style="text-align:center;padding:30px;color:var(--ts)">불러오는 중...</div></div>
 </div>
 <div id="dtp-atts" style="padding:14px;display:none"><div id="adm-att-list"></div></div>
-  <div id="dtp-db" style="padding:14px;display:none">
+  
+<!-- 수익 관리 패널 -->
+<div id="dtp-revenue" style="padding:14px;display:none">
+  <div style="font-size:15px;font-weight:800;margin-bottom:4px">💰 수익 현황</div>
+  <div style="font-size:12px;color:var(--ts);margin-bottom:14px">Firestore payments 컬렉션 기준</div>
+
+  <!-- 기간 필터 -->
+  <div class="tg" id="g-rev-period" style="margin-bottom:14px">
+    <button class="tb on" data-period="all" onclick="sel(this,'g-rev-period');loadRevenue()">전체</button>
+    <button class="tb" data-period="month" onclick="sel(this,'g-rev-period');loadRevenue()">이번달</button>
+    <button class="tb" data-period="3month" onclick="sel(this,'g-rev-period');loadRevenue()">3개월</button>
+    <button class="tb" data-period="year" onclick="sel(this,'g-rev-period');loadRevenue()">올해</button>
+  </div>
+
+  <!-- 수익 요약 카드 -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:16px">
+    <div style="background:linear-gradient(135deg,var(--p),var(--pd));border-radius:var(--rad);padding:16px;color:#fff">
+      <div style="font-size:11px;opacity:.8;margin-bottom:4px">총 수익</div>
+      <div style="font-size:24px;font-weight:900" id="rev-total">-</div>
+      <div style="font-size:11px;opacity:.7;margin-top:2px">원</div>
+    </div>
+    <div style="background:linear-gradient(135deg,var(--a),#009B7E);border-radius:var(--rad);padding:16px;color:#fff">
+      <div style="font-size:11px;opacity:.8;margin-bottom:4px">결제 건수</div>
+      <div style="font-size:24px;font-weight:900" id="rev-count">-</div>
+      <div style="font-size:11px;opacity:.7;margin-top:2px">건</div>
+    </div>
+    <div style="background:#fff;border-radius:var(--rad);padding:14px;border:1px solid var(--bd);box-shadow:var(--shs)">
+      <div style="font-size:11px;color:var(--ts);margin-bottom:3px">구독료 수익</div>
+      <div style="font-size:20px;font-weight:900;color:var(--p)" id="rev-sub">-</div>
+      <div style="font-size:11px;color:var(--ts)">원</div>
+    </div>
+    <div style="background:#fff;border-radius:var(--rad);padding:14px;border:1px solid var(--bd);box-shadow:var(--shs)">
+      <div style="font-size:11px;color:var(--ts);margin-bottom:3px">비딩권 수익</div>
+      <div style="font-size:20px;font-weight:900;color:var(--a)" id="rev-bid">-</div>
+      <div style="font-size:11px;color:var(--ts)">원</div>
+    </div>
+  </div>
+
+  <!-- 검색 -->
+  <div style="position:relative;margin-bottom:12px">
+    <input type="text" class="finput" id="rev-search" style="margin-bottom:0;padding-right:80px" placeholder="🔍 이메일 / 플랜 검색" oninput="filterRevenue()">
+    <button onclick="loadRevenue()" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:12px;font-weight:700;color:var(--p);background:var(--pl);border:none;padding:5px 12px;border-radius:20px;cursor:pointer;font-family:inherit">새로고침</button>
+  </div>
+
+  <!-- 결제 목록 -->
+  <div id="rev-list"><div style="text-align:center;padding:30px;color:var(--ts)">불러오는 중...</div></div>
+
+  <!-- 대기 결제 승인 -->
+  <div style="margin-top:16px">
+    <div style="font-size:14px;font-weight:800;margin-bottom:10px">⏳ 승인 대기 결제</div>
+    <div id="rev-pending"><div style="font-size:13px;color:var(--ts)">없음</div></div>
+  </div>
+</div>
+
+<div id="dtp-db" style="padding:14px;display:none">
     <div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-weight:700">총 판결문 DB</div><div style="font-size:12px;color:var(--ts)">law-story.com 수집</div></div><b style="font-size:16px;color:var(--p)">33건</b></div></div>
     <button class="btn p" style="padding:12px" onclick="toast('크롤러를 실행합니다. 약 8~10분 소요됩니다.')">🔄 크롤러 실행</button>
   </div>
@@ -1727,7 +1784,7 @@ function admDoLogin(){
   var srch=document.getElementById('adm-search');if(srch)srch.oninput=admRenderCases;
 }
 function switchAdmTab(t){
-  ['overview','cases','users','atts','db','cfg'].forEach(function(x){
+  ['overview','cases','users','atts','revenue','db','cfg'].forEach(function(x){
     var btn=document.getElementById('dtab-'+x);var panel=document.getElementById('dtp-'+x);
     if(btn)btn.classList.toggle('on',x===t);
     if(panel)panel.style.display=x===t?'block':'none';
@@ -1736,6 +1793,7 @@ function switchAdmTab(t){
   if(t==='cases')admRenderCases();
   if(t==='users')admRenderUsers();
   if(t==='atts')admRenderAtts();
+  if(t==='revenue')loadRevenue();
   window.scrollTo(0,0);
 }
 function admRefresh(){
@@ -1764,6 +1822,26 @@ function admRefresh(){
   var acts=cases.slice(0,3).map(function(c){return '📋 사건 등록 CASE-'+c.id+' · '+c.dtype+' · '+(c.at||'');});
   var recEl=document.getElementById('adm-recent');
   if(recEl)recEl.innerHTML=acts.length?acts.map(function(a){return '<div class="card" style="font-size:13px;color:var(--ts);padding:11px 14px;margin-bottom:8px">'+a+'</div>';}).join(''):'<div class="card" style="font-size:13px;color:var(--ts)">활동 내역 없음</div>';
+
+  // 수익 요약 로드
+  if(window.FB_DB && window.FB_FUNCS) {
+    window.FB_FUNCS.getDocs(
+      window.FB_FUNCS.query(
+        window.FB_FUNCS.collection(window.FB_DB,'payments'),
+        window.FB_FUNCS.orderBy('createdAt','desc')
+      )
+    ).then(function(snap){
+      var pays = snap.docs.map(function(d){return d.data();});
+      var total = pays.reduce(function(s,p){return s+(p.amount||0);},0);
+      var pendCnt = pays.filter(function(p){return p.status==='pending';}).length;
+      var el1=document.getElementById('adm-rev-total'); if(el1) el1.textContent=total.toLocaleString();
+      var el2=document.getElementById('adm-rev-pending'); if(el2) el2.textContent=pendCnt;
+      if(pendCnt > 0) {
+        var noticeEl=document.getElementById('adm-notice');
+        if(noticeEl) noticeEl.innerHTML='💰 대기 결제 <b>'+pendCnt+'건</b> 승인 필요 · 사건 <b>'+total2+'건</b>';
+      }
+    }).catch(function(){});
+  }
 }
 function admRenderCases(){
   var cases=DB.getCases();
@@ -1924,6 +2002,8 @@ document.addEventListener('click',function(e){
   if(e.target.classList.contains('adm-app-btn')){admApproveAtt(e.target.dataset.aid);}
   if(e.target.classList.contains('adm-app-att-btn')){admApproveAttApp(e.target.dataset.aid);}
   if(e.target.classList.contains('adm-rej-att-btn')){admRejectAttApp(e.target.dataset.aid);}
+  if(e.target.classList.contains('rev-approve-btn')){admApprovePayment(e.target.dataset.pid, e.target.dataset.uid, e.target.dataset.plan);}
+  if(e.target.classList.contains('rev-reject-btn')){admRejectPayment(e.target.dataset.pid);}
   if(e.target.classList.contains('adm-blk-btn')){admBlockAtt(e.target.dataset.aid);}
   if(e.target.classList.contains('adm-rst-btn')){admRestoreAtt(e.target.dataset.aid);}
 });
@@ -1986,7 +2066,134 @@ window.doSignup = doSignup;
 window.doLogout = doLogout;
 window.doGoogleLogin = doGoogleLogin;
 
-  window.go=go; window.sel=sel; window.slid=slid; window.gofs=gofs;
+  
+// ── 수익 관리 ──────────────────────────────────────────────
+var _allPayments = [];
+
+function loadRevenue() {
+  var listEl = document.getElementById('rev-list');
+  if(listEl) listEl.innerHTML = '<div style="text-align:center;padding:20px;color:var(--ts)">🔄 불러오는 중...</div>';
+  if(!window.FB_DB || !window.FB_FUNCS) {
+    if(listEl) listEl.innerHTML = '<div style="text-align:center;padding:20px;color:var(--r)">Firebase 연결 필요</div>';
+    return;
+  }
+  window.FB_FUNCS.getDocs(
+    window.FB_FUNCS.query(
+      window.FB_FUNCS.collection(window.FB_DB, 'payments'),
+      window.FB_FUNCS.orderBy('createdAt', 'desc')
+    )
+  ).then(function(snap) {
+    _allPayments = snap.docs.map(function(d) {
+      var data = d.data();
+      if(data.createdAt && data.createdAt.toDate) {
+        data.dateStr = data.createdAt.toDate().toLocaleDateString('ko-KR');
+        data.dateObj = data.createdAt.toDate();
+      } else { data.dateStr = '-'; data.dateObj = new Date(0); }
+      return Object.assign({ id: d.id }, data);
+    });
+    var period = '';
+    var periodEl = document.querySelector('#g-rev-period .tb.on');
+    if(periodEl && periodEl.dataset) period = periodEl.dataset.period || 'all';
+    var now = new Date();
+    var filtered = _allPayments.filter(function(p) {
+      if(period==='all' || !period) return true;
+      var d = p.dateObj;
+      if(period==='month') return d.getFullYear()===now.getFullYear() && d.getMonth()===now.getMonth();
+      if(period==='3month') return (now - d) <= 90*24*60*60*1000;
+      if(period==='year') return d.getFullYear()===now.getFullYear();
+      return true;
+    });
+    renderRevenueList(filtered);
+  }).catch(function(e) {
+    if(listEl) listEl.innerHTML = '<div style="text-align:center;padding:20px;color:var(--r)">오류: '+e.message+'</div>';
+  });
+}
+
+function renderRevenueList(payments) {
+  var total    = payments.reduce(function(s,p){ return s+(p.amount||0); }, 0);
+  var subTotal = payments.filter(function(p){ return p.type==='subscription'; }).reduce(function(s,p){ return s+(p.amount||0); }, 0);
+  var bidTotal = payments.filter(function(p){ return p.type==='bid_addon'; }).reduce(function(s,p){ return s+(p.amount||0); }, 0);
+  var pending  = payments.filter(function(p){ return p.status==='pending'; });
+
+  var e1=document.getElementById('rev-total');    if(e1) e1.textContent=total.toLocaleString();
+  var e2=document.getElementById('rev-count');    if(e2) e2.textContent=payments.length;
+  var e3=document.getElementById('rev-sub');      if(e3) e3.textContent=subTotal.toLocaleString();
+  var e4=document.getElementById('rev-bid');      if(e4) e4.textContent=bidTotal.toLocaleString();
+
+  var listEl = document.getElementById('rev-list'); if(!listEl) return;
+  if(!payments.length) {
+    listEl.innerHTML = '<div style="text-align:center;padding:30px;color:var(--ts)">결제 내역 없음</div>';
+  } else {
+    var typeMap   = { subscription:'구독료', bid_addon:'비딩권 추가' };
+    var planMap   = { basic:'기본 플랜', premium:'프리미엄 플랜' };
+    var statusMap = { pending:{l:'대기',c:'var(--o)'}, approved:{l:'승인',c:'var(--a)'}, completed:{l:'완료',c:'var(--a)'}, rejected:{l:'거절',c:'var(--r)'} };
+    listEl.innerHTML = payments.map(function(p) {
+      var s  = statusMap[p.status]||{l:p.status||'-',c:'var(--ts)'};
+      var detail = p.type==='subscription' ? (planMap[p.plan]||p.plan||'-') : (p.bids ? p.bids+'건' : '-');
+      return '<div style="background:#fff;border-radius:var(--rad);padding:13px 15px;border:1px solid var(--bd);margin-bottom:8px;box-shadow:var(--shs)">'
+        +'<div style="display:flex;justify-content:space-between;align-items:flex-start">'
+        +'<div style="flex:1">'
+        +'<div style="font-size:13px;font-weight:700">'+(typeMap[p.type]||p.type||'-')+' · '+detail+'</div>'
+        +'<div style="font-size:12px;color:var(--ts);margin-top:2px">'+(p.email||'-')+' · '+p.dateStr+'</div>'
+        +'</div>'
+        +'<div style="text-align:right;flex-shrink:0;margin-left:10px">'
+        +'<div style="font-size:15px;font-weight:800;color:var(--p)">'+(p.amount||0).toLocaleString()+'원</div>'
+        +'<div style="font-size:11px;font-weight:700;color:'+s.c+'">'+s.l+'</div>'
+        +'</div></div>'
+        +(p.status==='pending'
+          ? '<div style="margin-top:8px;display:flex;gap:6px">'
+            +'<button class="rev-approve-btn" data-pid="'+p.id+'" data-uid="'+(p.uid||'')+'" data-plan="'+(p.plan||'')+'" style="font-size:11px;font-weight:700;background:var(--al);color:#005945;border:none;padding:5px 12px;border-radius:20px;cursor:pointer;font-family:inherit">✅ 승인</button>'
+            +'<button class="rev-reject-btn" data-pid="'+p.id+'" style="font-size:11px;font-weight:700;background:#FFF0F0;color:var(--r);border:none;padding:5px 12px;border-radius:20px;cursor:pointer;font-family:inherit">❌ 거절</button>'
+            +'</div>' : '')
+        +'</div>';
+    }).join('');
+  }
+  var pendEl = document.getElementById('rev-pending');
+  if(pendEl) pendEl.innerHTML = pending.length
+    ? '<div class="alert warn">⚠️ 승인 대기 <b>'+pending.length+'건</b> — 목록에서 승인하세요.</div>'
+    : '<div style="font-size:13px;color:var(--ts);padding:8px 0">없음</div>';
+}
+
+function filterRevenue() {
+  var q = (document.getElementById('rev-search')||{}).value||'';
+  if(!q){ loadRevenue(); return; }
+  q = q.toLowerCase();
+  var filtered = _allPayments.filter(function(p) {
+    return (p.email||'').toLowerCase().includes(q)
+        || (p.type||'').includes(q)
+        || (p.plan||'').includes(q)
+        || (p.status||'').includes(q);
+  });
+  renderRevenueList(filtered);
+}
+
+function admApprovePayment(pid, uid, plan) {
+  if(!window.FB_DB||!window.FB_FUNCS){toast('Firebase 연결 필요');return;}
+  window.FB_FUNCS.updateDoc(
+    window.FB_FUNCS.doc(window.FB_DB,'payments',pid), {status:'approved'}
+  ).then(function(){
+    if(uid && plan) {
+      window.FB_FUNCS.updateDoc(
+        window.FB_FUNCS.doc(window.FB_DB,'users',uid),
+        {plan:plan, planActivatedAt:window.FB_FUNCS.serverTimestamp()}
+      ).catch(function(){});
+    }
+    toast('✅ 결제 승인 완료!'); loadRevenue();
+  }).catch(function(e){toast('오류: '+e.message);});
+}
+
+function admRejectPayment(pid) {
+  if(!window.FB_DB||!window.FB_FUNCS){toast('Firebase 연결 필요');return;}
+  window.FB_FUNCS.updateDoc(
+    window.FB_FUNCS.doc(window.FB_DB,'payments',pid), {status:'rejected'}
+  ).then(function(){
+    toast('결제를 거절했습니다.'); loadRevenue();
+  }).catch(function(e){toast('오류: '+e.message);});
+}
+window.loadRevenue=loadRevenue; window.filterRevenue=filterRevenue;
+window.admApprovePayment=admApprovePayment; window.admRejectPayment=admRejectPayment;
+
+window.go=go; window.sel=sel; window.slid=slid; window.gofs=gofs;
   window.runDiag=runDiag; window.resetDiag=resetDiag; window.renderAtts=renderAtts;
   window.sortAtt=sortAtt; window.openAtt=openAtt; window.toggleCmp=toggleCmp;
   window.openCompare=openCompare; window.switchTab=switchTab; window.loadRegPrev=loadRegPrev;
@@ -2065,6 +2272,133 @@ function submitAttApply() {
 }
 
 // ── window 전역 노출 (전체) ──────────────────────────────
+
+// ── 수익 관리 ──────────────────────────────────────────────
+var _allPayments = [];
+
+function loadRevenue() {
+  var listEl = document.getElementById('rev-list');
+  if(listEl) listEl.innerHTML = '<div style="text-align:center;padding:20px;color:var(--ts)">🔄 불러오는 중...</div>';
+  if(!window.FB_DB || !window.FB_FUNCS) {
+    if(listEl) listEl.innerHTML = '<div style="text-align:center;padding:20px;color:var(--r)">Firebase 연결 필요</div>';
+    return;
+  }
+  window.FB_FUNCS.getDocs(
+    window.FB_FUNCS.query(
+      window.FB_FUNCS.collection(window.FB_DB, 'payments'),
+      window.FB_FUNCS.orderBy('createdAt', 'desc')
+    )
+  ).then(function(snap) {
+    _allPayments = snap.docs.map(function(d) {
+      var data = d.data();
+      if(data.createdAt && data.createdAt.toDate) {
+        data.dateStr = data.createdAt.toDate().toLocaleDateString('ko-KR');
+        data.dateObj = data.createdAt.toDate();
+      } else { data.dateStr = '-'; data.dateObj = new Date(0); }
+      return Object.assign({ id: d.id }, data);
+    });
+    var period = '';
+    var periodEl = document.querySelector('#g-rev-period .tb.on');
+    if(periodEl && periodEl.dataset) period = periodEl.dataset.period || 'all';
+    var now = new Date();
+    var filtered = _allPayments.filter(function(p) {
+      if(period==='all' || !period) return true;
+      var d = p.dateObj;
+      if(period==='month') return d.getFullYear()===now.getFullYear() && d.getMonth()===now.getMonth();
+      if(period==='3month') return (now - d) <= 90*24*60*60*1000;
+      if(period==='year') return d.getFullYear()===now.getFullYear();
+      return true;
+    });
+    renderRevenueList(filtered);
+  }).catch(function(e) {
+    if(listEl) listEl.innerHTML = '<div style="text-align:center;padding:20px;color:var(--r)">오류: '+e.message+'</div>';
+  });
+}
+
+function renderRevenueList(payments) {
+  var total    = payments.reduce(function(s,p){ return s+(p.amount||0); }, 0);
+  var subTotal = payments.filter(function(p){ return p.type==='subscription'; }).reduce(function(s,p){ return s+(p.amount||0); }, 0);
+  var bidTotal = payments.filter(function(p){ return p.type==='bid_addon'; }).reduce(function(s,p){ return s+(p.amount||0); }, 0);
+  var pending  = payments.filter(function(p){ return p.status==='pending'; });
+
+  var e1=document.getElementById('rev-total');    if(e1) e1.textContent=total.toLocaleString();
+  var e2=document.getElementById('rev-count');    if(e2) e2.textContent=payments.length;
+  var e3=document.getElementById('rev-sub');      if(e3) e3.textContent=subTotal.toLocaleString();
+  var e4=document.getElementById('rev-bid');      if(e4) e4.textContent=bidTotal.toLocaleString();
+
+  var listEl = document.getElementById('rev-list'); if(!listEl) return;
+  if(!payments.length) {
+    listEl.innerHTML = '<div style="text-align:center;padding:30px;color:var(--ts)">결제 내역 없음</div>';
+  } else {
+    var typeMap   = { subscription:'구독료', bid_addon:'비딩권 추가' };
+    var planMap   = { basic:'기본 플랜', premium:'프리미엄 플랜' };
+    var statusMap = { pending:{l:'대기',c:'var(--o)'}, approved:{l:'승인',c:'var(--a)'}, completed:{l:'완료',c:'var(--a)'}, rejected:{l:'거절',c:'var(--r)'} };
+    listEl.innerHTML = payments.map(function(p) {
+      var s  = statusMap[p.status]||{l:p.status||'-',c:'var(--ts)'};
+      var detail = p.type==='subscription' ? (planMap[p.plan]||p.plan||'-') : (p.bids ? p.bids+'건' : '-');
+      return '<div style="background:#fff;border-radius:var(--rad);padding:13px 15px;border:1px solid var(--bd);margin-bottom:8px;box-shadow:var(--shs)">'
+        +'<div style="display:flex;justify-content:space-between;align-items:flex-start">'
+        +'<div style="flex:1">'
+        +'<div style="font-size:13px;font-weight:700">'+(typeMap[p.type]||p.type||'-')+' · '+detail+'</div>'
+        +'<div style="font-size:12px;color:var(--ts);margin-top:2px">'+(p.email||'-')+' · '+p.dateStr+'</div>'
+        +'</div>'
+        +'<div style="text-align:right;flex-shrink:0;margin-left:10px">'
+        +'<div style="font-size:15px;font-weight:800;color:var(--p)">'+(p.amount||0).toLocaleString()+'원</div>'
+        +'<div style="font-size:11px;font-weight:700;color:'+s.c+'">'+s.l+'</div>'
+        +'</div></div>'
+        +(p.status==='pending'
+          ? '<div style="margin-top:8px;display:flex;gap:6px">'
+            +'<button class="rev-approve-btn" data-pid="'+p.id+'" data-uid="'+(p.uid||'')+'" data-plan="'+(p.plan||'')+'" style="font-size:11px;font-weight:700;background:var(--al);color:#005945;border:none;padding:5px 12px;border-radius:20px;cursor:pointer;font-family:inherit">✅ 승인</button>'
+            +'<button class="rev-reject-btn" data-pid="'+p.id+'" style="font-size:11px;font-weight:700;background:#FFF0F0;color:var(--r);border:none;padding:5px 12px;border-radius:20px;cursor:pointer;font-family:inherit">❌ 거절</button>'
+            +'</div>' : '')
+        +'</div>';
+    }).join('');
+  }
+  var pendEl = document.getElementById('rev-pending');
+  if(pendEl) pendEl.innerHTML = pending.length
+    ? '<div class="alert warn">⚠️ 승인 대기 <b>'+pending.length+'건</b> — 목록에서 승인하세요.</div>'
+    : '<div style="font-size:13px;color:var(--ts);padding:8px 0">없음</div>';
+}
+
+function filterRevenue() {
+  var q = (document.getElementById('rev-search')||{}).value||'';
+  if(!q){ loadRevenue(); return; }
+  q = q.toLowerCase();
+  var filtered = _allPayments.filter(function(p) {
+    return (p.email||'').toLowerCase().includes(q)
+        || (p.type||'').includes(q)
+        || (p.plan||'').includes(q)
+        || (p.status||'').includes(q);
+  });
+  renderRevenueList(filtered);
+}
+
+function admApprovePayment(pid, uid, plan) {
+  if(!window.FB_DB||!window.FB_FUNCS){toast('Firebase 연결 필요');return;}
+  window.FB_FUNCS.updateDoc(
+    window.FB_FUNCS.doc(window.FB_DB,'payments',pid), {status:'approved'}
+  ).then(function(){
+    if(uid && plan) {
+      window.FB_FUNCS.updateDoc(
+        window.FB_FUNCS.doc(window.FB_DB,'users',uid),
+        {plan:plan, planActivatedAt:window.FB_FUNCS.serverTimestamp()}
+      ).catch(function(){});
+    }
+    toast('✅ 결제 승인 완료!'); loadRevenue();
+  }).catch(function(e){toast('오류: '+e.message);});
+}
+
+function admRejectPayment(pid) {
+  if(!window.FB_DB||!window.FB_FUNCS){toast('Firebase 연결 필요');return;}
+  window.FB_FUNCS.updateDoc(
+    window.FB_FUNCS.doc(window.FB_DB,'payments',pid), {status:'rejected'}
+  ).then(function(){
+    toast('결제를 거절했습니다.'); loadRevenue();
+  }).catch(function(e){toast('오류: '+e.message);});
+}
+window.loadRevenue=loadRevenue; window.filterRevenue=filterRevenue;
+window.admApprovePayment=admApprovePayment; window.admRejectPayment=admRejectPayment;
+
 window.go=go; window.sel=sel; window.slid=slid; window.gofs=gofs;
 window.runDiag=runDiag; window.resetDiag=resetDiag; window.renderAtts=renderAtts;
 window.sortAtt=sortAtt; window.openAtt=openAtt; window.toggleCmp=toggleCmp;
@@ -2149,3 +2483,14 @@ window.doLogout=doLogout; window.doGoogleLogin=doGoogleLogin;
 window.switchLoginTab=switchLoginTab;
 
 // go
+
+// go() 후킹 — 화면 전환 시 후기 갱신
+var _go=go;
+window.go=function(id){
+  _go(id);
+  if(id==='s-home') loadUserReviews();
+  if(id==='s-my'){ loadMyList(); bindStarGroup(); bindReviewSubmit(); }
+};
+</script>
+</body>
+</html>
