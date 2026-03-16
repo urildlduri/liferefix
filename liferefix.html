@@ -2671,45 +2671,37 @@ function bindStarGroup(){
 // 이벤트 위임
 // ═══════════════════════════════
 document.addEventListener('click',function(e){
-  if(e.target.classList.contains('att-bid-btn')){attOpenBidForm(e.target.dataset.cid);}
-  if(e.target.classList.contains('adm-del-btn')){admDeleteCase(e.target.dataset.cid);}
-  if(e.target.classList.contains('adm-app-btn')){admApproveAtt(e.target.dataset.aid);}
-  if(e.target.classList.contains('adm-app-att-btn')){admApproveAttApp(e.target.dataset.aid);}
-  if(e.target.classList.contains('adm-rej-att-btn')){admRejectAttApp(e.target.dataset.aid);}
+  // 변호사 포털
+  if(e.target.classList.contains('att-bid-btn'))      { attOpenBidForm(e.target.dataset.cid); }
+  if(e.target.classList.contains('il-submit-btn'))    { submitInlineBid(); }
+  if(e.target.classList.contains('il-cancel-btn'))    { var f=document.getElementById('inline-bid-form'); if(f) f.remove(); }
+  if(e.target.classList.contains('att-confirm-btn'))  { confirmHire(e.target.dataset.sid); }
+  if(e.target.classList.contains('att-reject-hire-btn')){ rejectHire(e.target.dataset.sid); }
+  if(e.target.classList.contains('att-progress-btn')) { openProgressModal(e.target.dataset.sid, e.target.dataset.cid); }
+  if(e.target.classList.contains('att-done-btn'))     { markCaseDone(e.target.dataset.sid); }
+  // 관리자 포털
+  if(e.target.classList.contains('adm-del-btn'))      { admDeleteCase(e.target.dataset.cid); }
+  if(e.target.classList.contains('adm-app-btn'))      { admApproveAtt(e.target.dataset.aid); }
+  if(e.target.classList.contains('adm-app-att-btn'))  { admApproveAttApp(e.target.dataset.aid); }
+  if(e.target.classList.contains('adm-rej-att-btn'))  { admRejectAttApp(e.target.dataset.aid); }
+  if(e.target.classList.contains('adm-blk-btn'))      { admBlockAtt(e.target.dataset.aid); }
+  if(e.target.classList.contains('adm-rst-btn'))      { admRestoreAtt(e.target.dataset.aid); }
   if(e.target.classList.contains('adm-blk-att-btn')){
     if(confirm((e.target.dataset.email||'이 변호사')+' 파트너 자격을 정지하시겠습니까?')){
       if(window.FB_DB&&window.FB_FUNCS){
-        window.FB_FUNCS.updateDoc(window.FB_FUNCS.doc(window.FB_DB,'users',e.target.dataset.aid),{role:'debtor'}).then(function(){
-          window.FB_FUNCS.updateDoc(window.FB_FUNCS.doc(window.FB_DB,'att_applications',e.target.dataset.aid),{status:'rejected'}).catch(function(){});
-          toast('파트너 자격이 정지됐습니다.'); admRenderAtts();
-        }).catch(function(e2){toast('오류: '+e2.message);});
+        window.FB_FUNCS.updateDoc(window.FB_FUNCS.doc(window.FB_DB,'users',e.target.dataset.aid),{role:'debtor'})
+          .then(function(){
+            window.FB_FUNCS.updateDoc(window.FB_FUNCS.doc(window.FB_DB,'att_applications',e.target.dataset.aid),{status:'rejected'}).catch(function(){});
+            toast('파트너 자격이 정지됐습니다.'); admRenderAtts();
+          }).catch(function(e2){toast('오류: '+e2.message);});
       }
     }
   }
-  if(e.target.classList.contains('rev-approve-btn')){admApprovePayment(e.target.dataset.pid, e.target.dataset.uid, e.target.dataset.plan);}
-  if(e.target.classList.contains('rev-reject-btn')){admRejectPayment(e.target.dataset.pid);}
-  // 채무자 - 변호사 선택
-  if(e.target.classList.contains('my-go-bids-btn')){ switchMyTab('bids'); }
-  var notiItem = e.target.closest('.noti-item');
-  if(notiItem && notiItem.dataset.nid){ readNoti(notiItem.dataset.nid); }
-  if(e.target.classList.contains('my-reg-case-btn')){ go('s-bid'); switchTab('reg'); }
-  if(e.target.classList.contains('go-bid-btn')){
-    if(!window.FB_USER){ openM('m-login'); toast('로그인이 필요합니다.'); return; }
-    go('s-bid'); switchTab('reg');
-  }
-  if(e.target.classList.contains('pay-btn')){
-    attRequestPay(e.target.dataset.plan, e.target.dataset.amount);
-  }
-  if(e.target.classList.contains('il-submit-btn')){ submitInlineBid(); }
-  if(e.target.classList.contains('il-cancel-btn')){
-    var f=document.getElementById('inline-bid-form'); if(f) f.remove();
-  }
-  if(e.target.classList.contains('att-confirm-btn'))   { confirmHire(e.target.dataset.sid); }
-  if(e.target.classList.contains('att-reject-hire-btn')){ rejectHire(e.target.dataset.sid); }
-  if(e.target.classList.contains('att-progress-btn')){ openProgressModal(e.target.dataset.sid, e.target.dataset.cid); }
-  if(e.target.classList.contains('att-done-btn')){ markCaseDone(e.target.dataset.sid); }
+  if(e.target.classList.contains('rev-approve-btn'))  { admApprovePayment(e.target.dataset.pid, e.target.dataset.uid, e.target.dataset.plan); }
+  if(e.target.classList.contains('rev-reject-btn'))   { admRejectPayment(e.target.dataset.pid); }
+  // 채무자 대시보드
   if(e.target.classList.contains('my-select-bid-btn')){
-    var bidInfo = {
+    openSelectAttModal({
       name:     e.target.dataset.name     || '변호사',
       email:    e.target.dataset.email    || '',
       bidId:    e.target.dataset.bid      || '',
@@ -2720,11 +2712,18 @@ document.addEventListener('click',function(e){
       success:  parseInt(e.target.dataset.success||'0'),
       prob:     parseInt(e.target.dataset.prob||'0'),
       strategy: e.target.dataset.strategy || ''
-    };
-    openSelectAttModal(bidInfo);
+    });
   }
-  if(e.target.classList.contains('adm-blk-btn')){admBlockAtt(e.target.dataset.aid);}
-  if(e.target.classList.contains('adm-rst-btn')){admRestoreAtt(e.target.dataset.aid);}
+  if(e.target.classList.contains('my-go-bids-btn'))   { switchMyTab('bids'); }
+  if(e.target.classList.contains('my-reg-case-btn'))  { go('s-bid'); switchTab('reg'); }
+  if(e.target.classList.contains('go-bid-btn')){
+    if(!window.FB_USER){ openM('m-login'); toast('로그인이 필요합니다.'); return; }
+    go('s-bid'); switchTab('reg');
+  }
+  if(e.target.classList.contains('pay-btn'))          { attRequestPay(e.target.dataset.plan, e.target.dataset.amount); }
+  // 알림
+  var notiItem = e.target.closest('.noti-item');
+  if(notiItem && notiItem.dataset.nid){ readNoti(notiItem.dataset.nid); }
 });
 
 // ═══════════════════════════════
@@ -5644,5 +5643,62 @@ window.go=function(id){
   if(id==='s-my'){ loadMyList(); bindStarGroup(); bindReviewSubmit(); }
 };
 </script>
+<!-- 변호사 선택 모달 -->
+<div class="ov" id="m-select-att" onclick="ovClose(event,'m-select-att')">
+  <div class="modal" style="position:relative">
+    <button class="mclose" onclick="closeM('m-select-att')">✕</button>
+    <div class="mhandle"></div>
+    <div class="mtitle" id="sel-att-title">변호사 선택</div>
+    <div class="alert ok">✅ 선택하시면 변호사에게 연락처가 전달됩니다.</div>
+    <span class="flabel">연락받을 전화번호</span>
+    <div style="position:relative;margin-bottom:14px">
+      <input type="tel" id="sel-phone" class="finput" style="margin-bottom:0;padding-right:70px" placeholder="010-0000-0000">
+      <span style="position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--a);font-weight:700">🔒 암호화</span>
+    </div>
+    <span class="flabel">메모 (선택)</span>
+    <input type="text" id="sel-memo" class="finput" placeholder="예: 오후에 연락 부탁드립니다">
+    <div id="sel-err" style="font-size:12px;color:var(--r);margin-bottom:10px;display:none"></div>
+    <div style="background:var(--bg);border-radius:var(--rads);padding:12px;font-size:12px;color:var(--ts);line-height:1.7;margin-bottom:14px">
+      📌 전화번호는 선택한 변호사에게만 전달되며 암호화 보관됩니다.
+    </div>
+    <button class="btn p" onclick="confirmSelectAtt()">📞 변호사 선택 확정</button>
+  </div>
+</div>
+
+<!-- 진행상황 입력 모달 -->
+<div class="ov" id="m-progress" onclick="ovClose(event,'m-progress')">
+  <div class="modal" style="position:relative">
+    <button class="mclose" onclick="closeM('m-progress')">✕</button>
+    <div class="mhandle"></div>
+    <div class="mtitle">📋 진행상황 업데이트</div>
+    <div style="font-size:12px;font-weight:700;color:var(--p);margin-bottom:10px" id="prog-case-id">CASE-XXXX</div>
+    <span class="flabel">진행 단계</span>
+    <div class="tg" id="g-prog-stage">
+      <button class="tb on" data-v="서류준비">서류준비</button>
+      <button class="tb" data-v="법원접수">법원접수</button>
+      <button class="tb" data-v="심사중">심사중</button>
+      <button class="tb" data-v="변제계획인가">변제계획인가</button>
+      <button class="tb" data-v="변제중">변제중</button>
+      <button class="tb" data-v="면책완료">면책완료</button>
+    </div>
+    <span class="flabel">상세 내용</span>
+    <textarea class="finput" id="prog-detail" rows="3" style="resize:none" placeholder="예: 소득·재산 서류 제출 완료. 다음 주 법원 접수 예정입니다."></textarea>
+    <span class="flabel">다음 예정일 (선택)</span>
+    <input type="date" class="finput" id="prog-next-date">
+    <button class="btn p" onclick="saveProgress()">💾 저장하기</button>
+  </div>
+</div>
+
+<!-- 알림 드롭다운 -->
+<div id="m-notifications" style="display:none;position:fixed;top:56px;right:10px;width:300px;max-height:400px;background:#fff;border-radius:var(--rad);box-shadow:0 8px 30px rgba(0,0,0,.15);z-index:1000;overflow:hidden">
+  <div style="padding:14px 16px;border-bottom:1px solid var(--bd);display:flex;justify-content:space-between;align-items:center">
+    <div style="font-size:14px;font-weight:800">🔔 알림</div>
+    <button onclick="markAllNotiRead()" style="font-size:11px;color:var(--p);font-weight:600;background:none;border:none;cursor:pointer;font-family:inherit">모두 읽음</button>
+  </div>
+  <div id="noti-list" style="overflow-y:auto;max-height:340px;padding:8px"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
 </body>
 </html>
