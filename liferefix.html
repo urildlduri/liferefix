@@ -192,6 +192,10 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
 <header class="hdr">
   <div class="logo">Liferefix</div>
   <div style="display:flex;align-items:center;gap:8px">
+    <div id="hdr-noti-btn" onclick="toggleNotifications()" style="display:none;position:relative;cursor:pointer;padding:6px">
+      <span style="font-size:18px">🔔</span>
+      <span id="hdr-noti-badge" style="position:absolute;top:0;right:0;background:var(--r);color:#fff;font-size:9px;font-weight:700;width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;display:none">0</span>
+    </div>
     <button id="hdr-login-btn" onclick="openM('m-login')" style="font-size:12px;font-weight:700;background:var(--p);color:#fff;border:none;border-radius:20px;padding:6px 14px;cursor:pointer;font-family:inherit;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">로그인</button>
     <div class="hdr-badge">Beta 2026</div>
   </div>
@@ -1147,6 +1151,8 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
 <!-- Firebase SDK (module) -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getMessaging, getToken, onMessage }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,
          signOut, onAuthStateChanged, GoogleAuthProvider, signInWithPopup }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
@@ -1213,6 +1219,15 @@ onAuthStateChanged(fbAuth, function(user) {
   // MY 페이지 대시보드 갱신
   if(window.initMyDash) {
     setTimeout(function(){ window.initMyDash(); }, 100);
+  }
+  // 로그인 시 FCM 알림 권한 요청
+  if(user) {
+    if(window.requestPushPermission) {
+      setTimeout(function(){ window.requestPushPermission(); }, 2000);
+    }
+    if(window.listenNotifications) {
+      setTimeout(function(){ window.listenNotifications(); }, 1000);
+    }
   }
 });
 
@@ -1344,6 +1359,83 @@ window.submitCaseFirebase = async function(c) {
 };
 
 console.log('✅ Firebase 연결 완료 — liferefix-8f622');
+
+// ── FCM 푸시 알림 ──────────────────────────────────────────
+// VAPID 키 (Firebase 콘솔 → 프로젝트 설정 → 클라우드 메시징 → 웹 푸시 인증서)
+var VAPID_KEY = 'BO16SWmZHoTk7royqJF4KsN92HutPOgLdZUxXeGHFbAlmczPHeMEtYYeJztNPXLvy-JAqv82BINB_Yxg-at--Fg';
+
+var fbMessaging = null;
+try { fbMessaging = getMessaging(fbApp); } catch(e) { console.log('FCM 초기화 실패:', e.message); }
+
+// 알림 권한 요청 + FCM 토큰 저장
+window.requestPushPermission = async function() {
+  if(!fbMessaging) { console.log('FCM 미초기화'); return null; }
+  try {
+    var permission = await Notification.requestPermission();
+    if(permission !== 'granted') {
+      console.log('알림 권한 거부됨');
+      return null;
+    }
+    var token = await getToken(fbMessaging, { vapidKey: VAPID_KEY });
+    if(token && window.FB_USER) {
+      // Firestore users에 FCM 토큰 저장
+      await updateDoc(doc(fbDb,'users',window.FB_USER.uid), {
+        fcmToken: token,
+        fcmUpdatedAt: serverTimestamp()
+      });
+      console.log('FCM 토큰 저장 완료');
+      window.FB_FCM_TOKEN = token;
+    }
+    return token;
+  } catch(e) {
+    console.log('FCM 토큰 오류:', e.message);
+    return null;
+  }
+};
+
+// 포그라운드 메시지 수신
+if(fbMessaging) {
+  onMessage(fbMessaging, function(payload) {
+    console.log('FCM 메시지 수신:', payload);
+    var title = payload.notification && payload.notification.title || 'Liferefix';
+    var body  = payload.notification && payload.notification.body  || '';
+    // 인앱 토스트 표시
+    if(window.toast) window.toast('🔔 ' + title + (body ? ' - '+body : ''));
+    // 브라우저 알림도 표시
+    if(Notification.permission === 'granted') {
+      new Notification(title, {
+        body: body,
+        icon: '/favicon.ico',
+        badge: '/favicon.ico'
+      });
+    }
+  });
+}
+
+// 알림 전송 헬퍼 (Firestore 통해 트리거)
+window.sendPushNotification = async function(targetUid, title, body, data) {
+  if(!window.FB_DB || !window.FB_FUNCS) return;
+  try {
+    // notifications 컬렉션에 저장 → Cloud Functions로 처리 (현재는 저장만)
+    await window.FB_FUNCS.addDoc(
+      window.FB_FUNCS.collection(window.FB_DB, 'notifications'),
+      {
+        targetUid: targetUid,
+        title:     title,
+        body:      body,
+        data:      data || {},
+        read:      false,
+        createdAt: serverTimestamp()
+      }
+    );
+    // 인앱 알림 (같은 브라우저에 있으면)
+    if(window.FB_USER && window.FB_USER.uid === targetUid) {
+      if(window.toast) window.toast('🔔 ' + title);
+    }
+  } catch(e) {
+    console.log('알림 저장 실패:', e.message);
+  }
+};
 
 // ── Firestore 실시간 사건 목록 조회 ──────────────────────
 window.listenCases = function(callback) {
@@ -1727,7 +1819,29 @@ function submitCase(){
   if(window.submitCaseFirebase) window.submitCaseFirebase(c);
   myCases.unshift(c);
   switchTab('mine');
-  toast('✅ 사건이 등록되었습니다!\n파트너 변호사들이 24시간 이내에 제안을 보내드립니다.');
+  toast('✅ 사건이 등록되었습니다! 파트너 변호사들이 24시간 이내에 제안을 보내드립니다.');
+
+  // 파트너 변호사 전체에게 새 사건 알림
+  if(window.FB_DB && window.FB_FUNCS && window.sendPushNotification) {
+    window.FB_FUNCS.getDocs(window.FB_FUNCS.collection(window.FB_DB,'users'))
+      .then(function(snap){
+        var attUsers = snap.docs
+          .map(function(d){ return Object.assign({id:d.id}, d.data()); })
+          .filter(function(u){ return u.role === 'attorney'; });
+        var userName = window.FB_USER
+          ? (window.FB_USER.displayName || window.FB_USER.email.split('@')[0])
+          : '채무자';
+        attUsers.forEach(function(att){
+          window.sendPushNotification(
+            att.uid || att.id,
+            '🆕 새 사건이 등록됐습니다!',
+            userName + '님의 ' + (c.dtype||'채무') + ' 사건이 등록됐습니다. 확인해보세요.',
+            { type: 'new_case', caseId: c.id }
+          );
+        });
+        console.log('[알림] 파트너 변호사', attUsers.length, '명에게 새 사건 알림 전송');
+      }).catch(function(){});
+  }
 }
 
 // ═══════════════════════════════
@@ -2204,6 +2318,20 @@ function _doAttSubmitBid(){
     window.submitBidFirebase(bid).then(function(id){
       if(id) {
         toast('✅ 제안이 제출되었습니다! 채무자에게 전달됩니다.');
+          // 사건 등록자(채무자)에게 알림
+          if(window.FB_DB && window.FB_FUNCS && window.sendPushNotification) {
+            window.FB_FUNCS.getDoc(window.FB_FUNCS.doc(window.FB_DB,'cases',attBidId))
+              .then(function(cs){
+                if(cs.exists() && cs.data().userId) {
+                  window.sendPushNotification(
+                    cs.data().userId,
+                    '📬 새 제안이 도착했습니다!',
+                    '변호사가 사건에 제안을 보냈습니다. 확인해보세요.',
+                    { type: 'new_bid', caseId: attBidId }
+                  );
+                }
+              }).catch(function(){});
+          }
       } else {
         toast('✅ 제안이 제출되었습니다!');
       }
@@ -2554,6 +2682,8 @@ document.addEventListener('click',function(e){
   if(e.target.classList.contains('rev-reject-btn')){admRejectPayment(e.target.dataset.pid);}
   // 채무자 - 변호사 선택
   if(e.target.classList.contains('my-go-bids-btn')){ switchMyTab('bids'); }
+  var notiItem = e.target.closest('.noti-item');
+  if(notiItem && notiItem.dataset.nid){ readNoti(notiItem.dataset.nid); }
   if(e.target.classList.contains('my-reg-case-btn')){ go('s-bid'); switchTab('reg'); }
   if(e.target.classList.contains('go-bid-btn')){
     if(!window.FB_USER){ openM('m-login'); toast('로그인이 필요합니다.'); return; }
@@ -3225,8 +3355,20 @@ function confirmSelectAtt() {
       }
 
       closeM('m-select-att');
-      toast('✅ ' + _selectedBid.name + ' 변호사에게 연락처가 전달되었습니다! 빠른 시일 내 연락드릴 예정입니다.');
+      var attEmail2 = _selectedBid.email;
+      var attId2    = _selectedBid.attId || '';
+      var userName2 = window.FB_USER.displayName || window.FB_USER.email.split('@')[0];
+      toast('✅ ' + _selectedBid.name + ' 변호사에게 연락처가 전달되었습니다!');
       _selectedBid = null;
+      // 변호사에게 수임 요청 알림
+      if(attId2 && window.sendPushNotification) {
+        window.sendPushNotification(
+          attId2,
+          '🔔 새 수임 요청!',
+          userName2 + '님이 선생님을 선택했습니다. 수임탭을 확인해주세요.',
+          { type: 'hire_request' }
+        );
+      }
     }).catch(function(e){
       if(errEl){ errEl.style.display='block'; errEl.textContent='오류: '+e.message; }
     });
@@ -3392,7 +3534,19 @@ function saveProgress() {
         {currentStage:stage, progressLog:existing, updatedAt:window.FB_FUNCS.serverTimestamp()});
     }).then(function(){
       closeM('m-progress');
-      toast('진행상황이 업데이트됐습니다!');
+      toast('✅ 진행상황이 업데이트됐습니다!');
+      // 채무자에게 진행상황 알림
+      if(window.sendPushNotification && snap.exists()) {
+        var selData = snap.data();
+        if(selData.userId) {
+          window.sendPushNotification(
+            selData.userId,
+            '📋 진행상황 업데이트',
+            (window.FB_USER.displayName||'담당 변호사') + '가 사건 진행상황을 업데이트했습니다.',
+            { type: 'progress_update', stage: stage }
+          );
+        }
+      }
       _progressCaseId=null;
       loadHiredCases();
     }).catch(function(e){ toast('오류: '+e.message); });
@@ -3548,6 +3702,96 @@ window.filterAttCases = filterAttCases;
 window.submitInlineBid = submitInlineBid;
 window.openBidModal = openBidModal;
 window.applyAttCaseFilter = applyAttCaseFilter;
+
+
+// ── 알림 시스템 ──────────────────────────────────────────
+var _notiUnread = 0;
+
+function listenNotifications() {
+  if(!window.FB_USER||!window.FB_DB||!window.FB_FUNCS) return;
+  var uid = window.FB_USER.uid;
+  // 헤더 알림 아이콘 표시
+  var notiBtn = document.getElementById('hdr-noti-btn');
+  if(notiBtn) notiBtn.style.display = 'block';
+
+  // Firestore 실시간 알림 수신
+  window.FB_FUNCS.getDocs(
+    window.FB_FUNCS.collection(window.FB_DB,'notifications')
+  ).then(function(snap){
+    var notis = snap.docs.map(function(d){return Object.assign({id:d.id},d.data());})
+      .filter(function(n){ return n.targetUid===uid; })
+      .sort(function(a,b){
+        var ta=a.createdAt&&a.createdAt.toDate?a.createdAt.toDate().getTime():0;
+        var tb=b.createdAt&&b.createdAt.toDate?b.createdAt.toDate().getTime():0;
+        return tb-ta;
+      });
+
+    _notiUnread = notis.filter(function(n){return !n.read;}).length;
+    var badge = document.getElementById('hdr-noti-badge');
+    if(badge) {
+      badge.textContent = _notiUnread > 9 ? '9+' : _notiUnread;
+      badge.style.display = _notiUnread > 0 ? 'flex' : 'none';
+    }
+
+    var listEl = document.getElementById('noti-list');
+    if(!listEl) return;
+    if(!notis.length) {
+      listEl.innerHTML = '<div style="text-align:center;padding:30px;font-size:13px;color:var(--ts)">알림이 없습니다</div>';
+      return;
+    }
+    listEl.innerHTML = notis.slice(0,20).map(function(n){
+      var time = n.createdAt&&n.createdAt.toDate ? n.createdAt.toDate().toLocaleString('ko-KR') : '';
+      return '<div class="noti-item" data-nid="'+n.id+'" style="padding:12px 14px;border-bottom:1px solid var(--bd);background:'+(n.read?'#fff':'var(--pl)')+';cursor:pointer">'
+        +'<div style="font-size:13px;font-weight:'+(n.read?'400':'700')+'">'+n.title+'</div>'
+        +'<div style="font-size:12px;color:var(--ts);margin-top:3px">'+n.body+'</div>'
+        +'<div style="font-size:10px;color:var(--ts);margin-top:3px">'+time+'</div>'
+        +'</div>';
+    }).join('');
+  }).catch(function(e){ console.log('알림 조회 실패:', e.message); });
+}
+
+function toggleNotifications() {
+  var el = document.getElementById('m-notifications');
+  if(!el) return;
+  var isOpen = el.style.display !== 'none';
+  el.style.display = isOpen ? 'none' : 'block';
+  if(!isOpen) listenNotifications(); // 열 때마다 새로고침
+}
+
+function readNoti(notiId) {
+  if(!window.FB_DB||!window.FB_FUNCS) return;
+  window.FB_FUNCS.updateDoc(
+    window.FB_FUNCS.doc(window.FB_DB,'notifications',notiId), {read:true}
+  ).then(function(){ listenNotifications(); }).catch(function(){});
+}
+
+function markAllNotiRead() {
+  if(!window.FB_USER||!window.FB_DB||!window.FB_FUNCS) return;
+  window.FB_FUNCS.getDocs(window.FB_FUNCS.collection(window.FB_DB,'notifications'))
+    .then(function(snap){
+      var uid = window.FB_USER.uid;
+      snap.docs.forEach(function(d){
+        if(d.data().targetUid===uid && !d.data().read) {
+          window.FB_FUNCS.updateDoc(window.FB_FUNCS.doc(window.FB_DB,'notifications',d.id),{read:true}).catch(function(){});
+        }
+      });
+      setTimeout(listenNotifications, 500);
+    });
+}
+
+// 알림 드롭다운 외부 클릭 시 닫기
+document.addEventListener('click', function(e){
+  var notiEl = document.getElementById('m-notifications');
+  var notiBtn = document.getElementById('hdr-noti-btn');
+  if(notiEl && notiEl.style.display!=='none' && !notiEl.contains(e.target) && !notiBtn.contains(e.target)) {
+    notiEl.style.display='none';
+  }
+});
+
+window.listenNotifications = listenNotifications;
+window.toggleNotifications = toggleNotifications;
+window.readNoti             = readNoti;
+window.markAllNotiRead      = markAllNotiRead;
 
 window.loadRevenue=loadRevenue; window.filterRevenue=filterRevenue;
 window.admApprovePayment=admApprovePayment; window.admRejectPayment=admRejectPayment;
@@ -4268,8 +4512,20 @@ function confirmSelectAtt() {
       }
 
       closeM('m-select-att');
-      toast('✅ ' + _selectedBid.name + ' 변호사에게 연락처가 전달되었습니다! 빠른 시일 내 연락드릴 예정입니다.');
+      var attEmail2 = _selectedBid.email;
+      var attId2    = _selectedBid.attId || '';
+      var userName2 = window.FB_USER.displayName || window.FB_USER.email.split('@')[0];
+      toast('✅ ' + _selectedBid.name + ' 변호사에게 연락처가 전달되었습니다!');
       _selectedBid = null;
+      // 변호사에게 수임 요청 알림
+      if(attId2 && window.sendPushNotification) {
+        window.sendPushNotification(
+          attId2,
+          '🔔 새 수임 요청!',
+          userName2 + '님이 선생님을 선택했습니다. 수임탭을 확인해주세요.',
+          { type: 'hire_request' }
+        );
+      }
     }).catch(function(e){
       if(errEl){ errEl.style.display='block'; errEl.textContent='오류: '+e.message; }
     });
@@ -4435,7 +4691,19 @@ function saveProgress() {
         {currentStage:stage, progressLog:existing, updatedAt:window.FB_FUNCS.serverTimestamp()});
     }).then(function(){
       closeM('m-progress');
-      toast('진행상황이 업데이트됐습니다!');
+      toast('✅ 진행상황이 업데이트됐습니다!');
+      // 채무자에게 진행상황 알림
+      if(window.sendPushNotification && snap.exists()) {
+        var selData = snap.data();
+        if(selData.userId) {
+          window.sendPushNotification(
+            selData.userId,
+            '📋 진행상황 업데이트',
+            (window.FB_USER.displayName||'담당 변호사') + '가 사건 진행상황을 업데이트했습니다.',
+            { type: 'progress_update', stage: stage }
+          );
+        }
+      }
       _progressCaseId=null;
       loadHiredCases();
     }).catch(function(e){ toast('오류: '+e.message); });
@@ -4591,6 +4859,96 @@ window.filterAttCases = filterAttCases;
 window.submitInlineBid = submitInlineBid;
 window.openBidModal = openBidModal;
 window.applyAttCaseFilter = applyAttCaseFilter;
+
+
+// ── 알림 시스템 ──────────────────────────────────────────
+var _notiUnread = 0;
+
+function listenNotifications() {
+  if(!window.FB_USER||!window.FB_DB||!window.FB_FUNCS) return;
+  var uid = window.FB_USER.uid;
+  // 헤더 알림 아이콘 표시
+  var notiBtn = document.getElementById('hdr-noti-btn');
+  if(notiBtn) notiBtn.style.display = 'block';
+
+  // Firestore 실시간 알림 수신
+  window.FB_FUNCS.getDocs(
+    window.FB_FUNCS.collection(window.FB_DB,'notifications')
+  ).then(function(snap){
+    var notis = snap.docs.map(function(d){return Object.assign({id:d.id},d.data());})
+      .filter(function(n){ return n.targetUid===uid; })
+      .sort(function(a,b){
+        var ta=a.createdAt&&a.createdAt.toDate?a.createdAt.toDate().getTime():0;
+        var tb=b.createdAt&&b.createdAt.toDate?b.createdAt.toDate().getTime():0;
+        return tb-ta;
+      });
+
+    _notiUnread = notis.filter(function(n){return !n.read;}).length;
+    var badge = document.getElementById('hdr-noti-badge');
+    if(badge) {
+      badge.textContent = _notiUnread > 9 ? '9+' : _notiUnread;
+      badge.style.display = _notiUnread > 0 ? 'flex' : 'none';
+    }
+
+    var listEl = document.getElementById('noti-list');
+    if(!listEl) return;
+    if(!notis.length) {
+      listEl.innerHTML = '<div style="text-align:center;padding:30px;font-size:13px;color:var(--ts)">알림이 없습니다</div>';
+      return;
+    }
+    listEl.innerHTML = notis.slice(0,20).map(function(n){
+      var time = n.createdAt&&n.createdAt.toDate ? n.createdAt.toDate().toLocaleString('ko-KR') : '';
+      return '<div class="noti-item" data-nid="'+n.id+'" style="padding:12px 14px;border-bottom:1px solid var(--bd);background:'+(n.read?'#fff':'var(--pl)')+';cursor:pointer">'
+        +'<div style="font-size:13px;font-weight:'+(n.read?'400':'700')+'">'+n.title+'</div>'
+        +'<div style="font-size:12px;color:var(--ts);margin-top:3px">'+n.body+'</div>'
+        +'<div style="font-size:10px;color:var(--ts);margin-top:3px">'+time+'</div>'
+        +'</div>';
+    }).join('');
+  }).catch(function(e){ console.log('알림 조회 실패:', e.message); });
+}
+
+function toggleNotifications() {
+  var el = document.getElementById('m-notifications');
+  if(!el) return;
+  var isOpen = el.style.display !== 'none';
+  el.style.display = isOpen ? 'none' : 'block';
+  if(!isOpen) listenNotifications(); // 열 때마다 새로고침
+}
+
+function readNoti(notiId) {
+  if(!window.FB_DB||!window.FB_FUNCS) return;
+  window.FB_FUNCS.updateDoc(
+    window.FB_FUNCS.doc(window.FB_DB,'notifications',notiId), {read:true}
+  ).then(function(){ listenNotifications(); }).catch(function(){});
+}
+
+function markAllNotiRead() {
+  if(!window.FB_USER||!window.FB_DB||!window.FB_FUNCS) return;
+  window.FB_FUNCS.getDocs(window.FB_FUNCS.collection(window.FB_DB,'notifications'))
+    .then(function(snap){
+      var uid = window.FB_USER.uid;
+      snap.docs.forEach(function(d){
+        if(d.data().targetUid===uid && !d.data().read) {
+          window.FB_FUNCS.updateDoc(window.FB_FUNCS.doc(window.FB_DB,'notifications',d.id),{read:true}).catch(function(){});
+        }
+      });
+      setTimeout(listenNotifications, 500);
+    });
+}
+
+// 알림 드롭다운 외부 클릭 시 닫기
+document.addEventListener('click', function(e){
+  var notiEl = document.getElementById('m-notifications');
+  var notiBtn = document.getElementById('hdr-noti-btn');
+  if(notiEl && notiEl.style.display!=='none' && !notiEl.contains(e.target) && !notiBtn.contains(e.target)) {
+    notiEl.style.display='none';
+  }
+});
+
+window.listenNotifications = listenNotifications;
+window.toggleNotifications = toggleNotifications;
+window.readNoti             = readNoti;
+window.markAllNotiRead      = markAllNotiRead;
 
 window.loadRevenue=loadRevenue; window.filterRevenue=filterRevenue;
 window.admApprovePayment=admApprovePayment; window.admRejectPayment=admRejectPayment;
@@ -4824,6 +5182,96 @@ window.filterAttCases = filterAttCases;
 window.submitInlineBid = submitInlineBid;
 window.openBidModal = openBidModal;
 window.applyAttCaseFilter = applyAttCaseFilter;
+
+
+// ── 알림 시스템 ──────────────────────────────────────────
+var _notiUnread = 0;
+
+function listenNotifications() {
+  if(!window.FB_USER||!window.FB_DB||!window.FB_FUNCS) return;
+  var uid = window.FB_USER.uid;
+  // 헤더 알림 아이콘 표시
+  var notiBtn = document.getElementById('hdr-noti-btn');
+  if(notiBtn) notiBtn.style.display = 'block';
+
+  // Firestore 실시간 알림 수신
+  window.FB_FUNCS.getDocs(
+    window.FB_FUNCS.collection(window.FB_DB,'notifications')
+  ).then(function(snap){
+    var notis = snap.docs.map(function(d){return Object.assign({id:d.id},d.data());})
+      .filter(function(n){ return n.targetUid===uid; })
+      .sort(function(a,b){
+        var ta=a.createdAt&&a.createdAt.toDate?a.createdAt.toDate().getTime():0;
+        var tb=b.createdAt&&b.createdAt.toDate?b.createdAt.toDate().getTime():0;
+        return tb-ta;
+      });
+
+    _notiUnread = notis.filter(function(n){return !n.read;}).length;
+    var badge = document.getElementById('hdr-noti-badge');
+    if(badge) {
+      badge.textContent = _notiUnread > 9 ? '9+' : _notiUnread;
+      badge.style.display = _notiUnread > 0 ? 'flex' : 'none';
+    }
+
+    var listEl = document.getElementById('noti-list');
+    if(!listEl) return;
+    if(!notis.length) {
+      listEl.innerHTML = '<div style="text-align:center;padding:30px;font-size:13px;color:var(--ts)">알림이 없습니다</div>';
+      return;
+    }
+    listEl.innerHTML = notis.slice(0,20).map(function(n){
+      var time = n.createdAt&&n.createdAt.toDate ? n.createdAt.toDate().toLocaleString('ko-KR') : '';
+      return '<div class="noti-item" data-nid="'+n.id+'" style="padding:12px 14px;border-bottom:1px solid var(--bd);background:'+(n.read?'#fff':'var(--pl)')+';cursor:pointer">'
+        +'<div style="font-size:13px;font-weight:'+(n.read?'400':'700')+'">'+n.title+'</div>'
+        +'<div style="font-size:12px;color:var(--ts);margin-top:3px">'+n.body+'</div>'
+        +'<div style="font-size:10px;color:var(--ts);margin-top:3px">'+time+'</div>'
+        +'</div>';
+    }).join('');
+  }).catch(function(e){ console.log('알림 조회 실패:', e.message); });
+}
+
+function toggleNotifications() {
+  var el = document.getElementById('m-notifications');
+  if(!el) return;
+  var isOpen = el.style.display !== 'none';
+  el.style.display = isOpen ? 'none' : 'block';
+  if(!isOpen) listenNotifications(); // 열 때마다 새로고침
+}
+
+function readNoti(notiId) {
+  if(!window.FB_DB||!window.FB_FUNCS) return;
+  window.FB_FUNCS.updateDoc(
+    window.FB_FUNCS.doc(window.FB_DB,'notifications',notiId), {read:true}
+  ).then(function(){ listenNotifications(); }).catch(function(){});
+}
+
+function markAllNotiRead() {
+  if(!window.FB_USER||!window.FB_DB||!window.FB_FUNCS) return;
+  window.FB_FUNCS.getDocs(window.FB_FUNCS.collection(window.FB_DB,'notifications'))
+    .then(function(snap){
+      var uid = window.FB_USER.uid;
+      snap.docs.forEach(function(d){
+        if(d.data().targetUid===uid && !d.data().read) {
+          window.FB_FUNCS.updateDoc(window.FB_FUNCS.doc(window.FB_DB,'notifications',d.id),{read:true}).catch(function(){});
+        }
+      });
+      setTimeout(listenNotifications, 500);
+    });
+}
+
+// 알림 드롭다운 외부 클릭 시 닫기
+document.addEventListener('click', function(e){
+  var notiEl = document.getElementById('m-notifications');
+  var notiBtn = document.getElementById('hdr-noti-btn');
+  if(notiEl && notiEl.style.display!=='none' && !notiEl.contains(e.target) && !notiBtn.contains(e.target)) {
+    notiEl.style.display='none';
+  }
+});
+
+window.listenNotifications = listenNotifications;
+window.toggleNotifications = toggleNotifications;
+window.readNoti             = readNoti;
+window.markAllNotiRead      = markAllNotiRead;
 
 window.loadRevenue=loadRevenue; window.filterRevenue=filterRevenue;
 window.admApprovePayment=admApprovePayment; window.admRejectPayment=admRejectPayment;
