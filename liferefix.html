@@ -191,7 +191,11 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
 
 <header class="hdr">
   <div class="logo">Liferefix</div>
-  <div class="hdr-badge">Beta 2026</div>
+  <div style="display:flex;align-items:center;gap:8px">
+    <div id="hdr-user" style="font-size:12px;color:var(--ts);font-weight:600;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:none"></div>
+    <button id="hdr-login-btn" onclick="openM('m-login')" style="font-size:12px;font-weight:700;background:var(--p);color:#fff;border:none;border-radius:20px;padding:6px 14px;cursor:pointer;font-family:inherit">로그인</button>
+    <div class="hdr-badge">Beta 2026</div>
+  </div>
 </header>
 
 <main>
@@ -735,6 +739,17 @@ window.FB_READY = true;
 // 인증 상태 감지
 onAuthStateChanged(fbAuth, function(user) {
   window.FB_USER = user || null;
+
+  // 헤더 버튼 업데이트
+  var hdrBtn  = document.getElementById('hdr-login-btn');
+  var hdrUser = document.getElementById('hdr-user');
+  if (user) {
+    if(hdrBtn)  { hdrBtn.textContent='로그아웃'; hdrBtn.style.background='var(--ts)'; hdrBtn.onclick=function(){ window._doLogout&&window._doLogout(); }; }
+    if(hdrUser) { hdrUser.style.display='block'; hdrUser.textContent=user.email; }
+  } else {
+    if(hdrBtn)  { hdrBtn.textContent='로그인'; hdrBtn.style.background='var(--p)'; hdrBtn.onclick=function(){ window.openM&&window.openM('m-login'); }; }
+    if(hdrUser) { hdrUser.style.display='none'; }
+  }
   var loginBtn = document.querySelector('#s-my .btn.p');
   if (user) {
     if (loginBtn) { loginBtn.textContent='로그아웃'; loginBtn.onclick=function(){ window.doLogout&&window.doLogout(); }; }
@@ -746,7 +761,7 @@ onAuthStateChanged(fbAuth, function(user) {
 });
 
 // 로그인
-window.doLogin = function() {
+window._doLogin = function() {
   var email = (document.getElementById('login-email')||{}).value||'';
   var pw    = (document.getElementById('login-pw')||{}).value||'';
   var err   = document.getElementById('login-err');
@@ -764,7 +779,7 @@ window.doLogin = function() {
 };
 
 // 회원가입
-window.doSignup = function() {
+window._doSignup = function() {
   var email = (document.getElementById('signup-email')||{}).value||'';
   var pw    = (document.getElementById('signup-pw')||{}).value||'';
   var pw2   = (document.getElementById('signup-pw2')||{}).value||'';
@@ -775,22 +790,26 @@ window.doSignup = function() {
   createUserWithEmailAndPassword(fbAuth, email, pw)
     .then(function(){ window.closeM&&window.closeM('m-login'); window.toast&&window.toast('🎉 회원가입 완료!'); })
     .catch(function(e){
+      console.error('회원가입 오류 코드:', e.code);
+      console.error('회원가입 오류 메시지:', e.message);
       if(err) err.style.display='block';
-      var msg='회원가입에 실패했습니다.';
+      var msg='회원가입에 실패했습니다. ('+e.code+')';
       if(e.code==='auth/email-already-in-use') msg='이미 사용 중인 이메일입니다.';
       else if(e.code==='auth/invalid-email') msg='이메일 형식이 올바르지 않습니다.';
       else if(e.code==='auth/weak-password') msg='비밀번호는 6자 이상이어야 합니다.';
+      else if(e.code==='auth/network-request-failed') msg='네트워크 오류입니다. 인터넷 연결을 확인해주세요.';
+      else if(e.code==='auth/operation-not-allowed') msg='이메일 로그인이 비활성화되어 있습니다. Firebase 콘솔을 확인해주세요.';
       if(err) err.textContent=msg;
     });
 };
 
 // 로그아웃
-window.doLogout = function() {
+window._doLogout = function() {
   signOut(fbAuth).then(function(){ window.toast&&window.toast('로그아웃 되었습니다.'); });
 };
 
 // 탭 전환
-window.switchLoginTab = function(tab) {
+window._switchLoginTab = function(tab) {
   var isLogin = tab==='login';
   var fl=document.getElementById('form-login'), fs=document.getElementById('form-signup');
   var tl=document.getElementById('tab-login'), ts=document.getElementById('tab-signup');
@@ -1315,6 +1334,35 @@ document.addEventListener('click',function(e){
     });
   });
   // window 전역 노출 (모바일/iframe 호환)
+
+// ── 로그인/회원가입 함수 (Firebase module 로드 전 대비 래퍼) ──
+function switchLoginTab(tab) {
+  var isLogin = tab === 'login';
+  var fl = document.getElementById('form-login');
+  var fs = document.getElementById('form-signup');
+  var tl = document.getElementById('tab-login');
+  var ts = document.getElementById('tab-signup');
+  if(fl) fl.style.display = isLogin ? 'block' : 'none';
+  if(fs) fs.style.display = isLogin ? 'none' : 'block';
+  if(tl){ tl.style.color = isLogin?'var(--p)':'var(--ts)'; tl.style.borderBottomColor = isLogin?'var(--p)':'transparent'; }
+  if(ts){ ts.style.color = isLogin?'var(--ts)':'var(--p)'; ts.style.borderBottomColor = isLogin?'transparent':'var(--p)'; }
+}
+function doLogin() {
+  if(window._doLogin){ window._doLogin(); return; }
+  toast('Firebase 로딩 중입니다. 잠시 후 다시 시도해주세요.');
+}
+function doSignup() {
+  if(window._doSignup){ window._doSignup(); return; }
+  toast('Firebase 로딩 중입니다. 잠시 후 다시 시도해주세요.');
+}
+function doLogout() {
+  if(window._doLogout){ window._doLogout(); return; }
+}
+window.switchLoginTab = switchLoginTab;
+window.doLogin  = doLogin;
+window.doSignup = doSignup;
+window.doLogout = doLogout;
+
   window.go=go; window.sel=sel; window.slid=slid; window.gofs=gofs;
   window.runDiag=runDiag; window.resetDiag=resetDiag; window.renderAtts=renderAtts;
   window.sortAtt=sortAtt; window.openAtt=openAtt; window.toggleCmp=toggleCmp;
