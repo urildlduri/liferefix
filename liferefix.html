@@ -438,45 +438,144 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
 </div>
 
 <!-- MY -->
+<!-- MY / 채무자 대시보드 -->
 <div class="scr" id="s-my">
-  <div style="padding:20px">
+  <!-- 비로그인 상태 -->
+  <div id="my-guest" style="padding:20px">
     <div class="sec-t" style="margin-bottom:18px">👤 마이페이지</div>
     <div class="card" style="display:flex;align-items:center;gap:15px;margin-bottom:16px">
       <div style="width:54px;height:54px;border-radius:50%;background:var(--pl);display:flex;align-items:center;justify-content:center;font-size:22px">👤</div>
       <div><div style="font-size:16px;font-weight:700">로그인이 필요합니다</div><div style="font-size:13px;color:var(--ts);margin-top:3px">사건 관리 및 진단 결과 저장</div></div>
     </div>
     <button class="btn p" onclick="openM('m-login')">로그인 / 회원가입</button>
-    <div style="font-size:13px;font-weight:700;color:var(--ts);margin-top:22px;margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px">다른 역할로 접속</div>
+    <div style="font-size:13px;font-weight:700;color:var(--ts);margin-top:22px;margin-bottom:10px">다른 역할로 접속</div>
     <div class="my-row" style="border:2px solid var(--p);background:var(--pl)" onclick="enterAttorney()">
-      <div><span class="my-row-l" style="color:var(--p)">⚖️ 변호사 포털 접속</span><div style="font-size:12px;color:var(--ts);margin-top:2px">파트너 변호사 전용 · 비딩 제안 작성</div></div>
+      <div><span class="my-row-l" style="color:var(--p)">⚖️ 변호사 포털 접속</span><div style="font-size:12px;color:var(--ts);margin-top:2px">파트너 변호사 전용</div></div>
       <span class="my-row-r">›</span>
     </div>
     <div class="my-row" style="border:2px solid #0D1B2A;background:#F0F4FF" onclick="enterAdmin()">
-      <div><span class="my-row-l" style="color:#0D1B2A">🔐 관리자 포털 접속</span><div style="font-size:12px;color:var(--ts);margin-top:2px">관리자 전용 · 사건·변호사 통합 관리</div></div>
+      <div><span class="my-row-l" style="color:#0D1B2A">🔐 관리자 포털 접속</span><div style="font-size:12px;color:var(--ts);margin-top:2px">관리자 전용</div></div>
       <span class="my-row-r">›</span>
     </div>
-    <div class="sec-t" style="margin-top:22px;margin-bottom:12px">서비스 안내</div>
-    <div class="my-row" onclick="openM('m-about')"><span class="my-row-l">🏢 Liferefix 소개</span><span class="my-row-r">›</span></div>
-    <div class="my-row"><span class="my-row-l">📞 고객센터</span><span class="my-row-r">›</span></div>
-    <div class="my-row" onclick="openAttApply()"><span class="my-row-l">⚖️ 변호사 입점 신청</span><span class="my-row-r">›</span></div>
-    <div class="sec-t" style="margin-top:22px;margin-bottom:4px">💬 나의 경험담</div>
-    <div style="font-size:13px;color:var(--ts);margin-bottom:12px">한 줄 작성하면 홈 화면 후기에 표시됩니다</div>
-    <div class="rv-input-wrap" style="margin-bottom:0">
-      <textarea id="rv-input" class="rv-input" rows="2" placeholder="Liferefix를 이용한 솔직한 경험을 남겨주세요 (최대 60자)" maxlength="60" style="resize:none"></textarea>
-      <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
-        <div class="tg" id="rv-star-group" style="margin-bottom:0;gap:4px">
-          <button class="tb" data-star="1" style="padding:6px 10px;font-size:13px">★</button>
-          <button class="tb" data-star="2" style="padding:6px 10px;font-size:13px">★★</button>
-          <button class="tb" data-star="3" style="padding:6px 10px;font-size:13px">★★★</button>
-          <button class="tb on" data-star="4" style="padding:6px 10px;font-size:13px">★★★★</button>
-          <button class="tb" data-star="5" style="padding:6px 10px;font-size:13px">★★★★★</button>
+  </div>
+
+  <!-- 로그인 상태 - 채무자 대시보드 -->
+  <div id="my-dash" style="display:none">
+    <!-- 헤더 -->
+    <div style="background:linear-gradient(135deg,var(--p),var(--pd));padding:24px 20px 20px;color:#fff">
+      <div style="font-size:12px;opacity:.8;margin-bottom:4px">채무자 대시보드</div>
+      <div style="font-size:20px;font-weight:900;margin-bottom:2px" id="my-name">안녕하세요 👋</div>
+      <div style="font-size:13px;opacity:.75" id="my-email">-</div>
+    </div>
+
+    <!-- 탭 -->
+    <div style="display:flex;background:#fff;border-bottom:2px solid var(--bd)">
+      <button class="btab on" id="myt-diag" onclick="switchMyTab('diag')">진단결과</button>
+      <button class="btab" id="myt-case" onclick="switchMyTab('case')">내 사건</button>
+      <button class="btab" id="myt-bids" class="my-go-bids-btn">받은 제안</button>
+      <button class="btab" id="myt-set" onclick="switchMyTab('set')">설정</button>
+    </div>
+
+    <!-- 진단결과 탭 -->
+    <div id="myp-diag" style="padding:16px">
+      <div id="my-diag-empty" style="text-align:center;padding:40px 16px">
+        <div style="font-size:44px;margin-bottom:12px">📊</div>
+        <div style="font-size:15px;font-weight:700;margin-bottom:8px">아직 진단 결과가 없습니다</div>
+        <div style="font-size:13px;color:var(--ts);margin-bottom:20px">AI 채무 진단을 받아보세요</div>
+        <button class="btn p" style="width:auto;padding:12px 24px" onclick="go('s-diag')">무료 진단 받기</button>
+      </div>
+      <div id="my-diag-result" style="display:none">
+        <!-- 진단 요약 카드 -->
+        <div style="background:linear-gradient(135deg,#0B5FFF,#00C6A2);border-radius:var(--rad);padding:20px;color:#fff;margin-bottom:14px;position:relative;overflow:hidden">
+          <div style="position:absolute;width:150px;height:150px;background:rgba(255,255,255,.07);border-radius:50%;top:-40px;right:-40px"></div>
+          <div style="font-size:12px;opacity:.8;margin-bottom:4px">AI 진단 결과</div>
+          <div style="font-size:32px;font-weight:900;margin-bottom:2px">개인회생 가능 ✓</div>
+          <div style="font-size:13px;opacity:.8">판례 DB <span id="my-db-cnt">20</span>건 기반 분석</div>
+        </div>
+        <!-- 핵심 수치 -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+          <div style="background:#fff;border-radius:var(--rad);padding:14px;border:1px solid var(--bd);box-shadow:var(--shs)">
+            <div style="font-size:11px;color:var(--ts);margin-bottom:3px">채무액</div>
+            <div style="font-size:20px;font-weight:900;color:var(--r)" id="my-debt">-</div>
+          </div>
+          <div style="background:#fff;border-radius:var(--rad);padding:14px;border:1px solid var(--bd);box-shadow:var(--shs)">
+            <div style="font-size:11px;color:var(--ts);margin-bottom:3px">탕감 가능액</div>
+            <div style="font-size:20px;font-weight:900;color:var(--a)" id="my-relief-amt">-</div>
+          </div>
+          <div style="background:#fff;border-radius:var(--rad);padding:14px;border:1px solid var(--bd);box-shadow:var(--shs)">
+            <div style="font-size:11px;color:var(--ts);margin-bottom:3px">탕감률</div>
+            <div style="font-size:20px;font-weight:900;color:var(--p)" id="my-relief">-</div>
+          </div>
+          <div style="background:#fff;border-radius:var(--rad);padding:14px;border:1px solid var(--bd);box-shadow:var(--shs)">
+            <div style="font-size:11px;color:var(--ts);margin-bottom:3px">월 변제금</div>
+            <div style="font-size:20px;font-weight:900;color:var(--o)" id="my-monthly">-</div>
+          </div>
+          <div style="background:#fff;border-radius:var(--rad);padding:14px;border:1px solid var(--bd);box-shadow:var(--shs)">
+            <div style="font-size:11px;color:var(--ts);margin-bottom:3px">월 소득</div>
+            <div style="font-size:20px;font-weight:900;color:var(--t)" id="my-income">-</div>
+          </div>
+          <div style="background:#fff;border-radius:var(--rad);padding:14px;border:1px solid var(--bd);box-shadow:var(--shs)">
+            <div style="font-size:11px;color:var(--ts);margin-bottom:3px">재산</div>
+            <div style="font-size:20px;font-weight:900;color:var(--t)" id="my-assets">-</div>
+          </div>
+        </div>
+        <div class="breakdown" id="my-breakdown" style="font-size:12.5px;color:var(--ts);line-height:1.9"></div>
+        <button class="btn p" onclick="switchMyTab('case')">⚖️ 변호사 비딩 신청하기</button>
+        <button class="btn o" onclick="go('s-diag')" style="margin-top:8px">🔄 다시 진단하기</button>
+      </div>
+    </div>
+
+    <!-- 내 사건 탭 -->
+    <div id="myp-case" style="padding:16px;display:none">
+      <div id="my-case-empty" style="text-align:center;padding:40px 16px">
+        <div style="font-size:44px;margin-bottom:12px">📂</div>
+        <div style="font-size:15px;font-weight:700;margin-bottom:8px">등록된 사건이 없습니다</div>
+        <div style="font-size:13px;color:var(--ts);margin-bottom:20px">사건을 등록하면 변호사 제안을 받을 수 있어요</div>
+        <button class="btn p" style="width:auto;padding:12px 24px" onclick="go('s-bid');switchTab('reg')">사건 등록하기</button>
+      </div>
+      <div id="my-case-list"></div>
+    </div>
+
+    <!-- 받은 제안 탭 -->
+    <div id="myp-bids" style="padding:16px;display:none">
+      <div id="my-bids-empty" style="text-align:center;padding:40px 16px">
+        <div style="font-size:44px;margin-bottom:12px">📬</div>
+        <div style="font-size:15px;font-weight:700;margin-bottom:8px">받은 제안이 없습니다</div>
+        <div style="font-size:13px;color:var(--ts);margin-bottom:20px">사건 등록 후 변호사들의 제안을 기다려보세요</div>
+        <button class="btn p" style="width:auto;padding:12px 24px" onclick="go('s-bid');switchTab('reg')">사건 등록하기</button>
+      </div>
+      <div id="my-bids-list"></div>
+    </div>
+
+    <!-- 설정 탭 -->
+    <div id="myp-set" style="padding:16px;display:none">
+      <div class="card" style="margin-bottom:12px">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+          <div id="my-avatar" style="width:52px;height:52px;border-radius:50%;background:var(--pl);color:var(--p);font-size:20px;font-weight:900;display:flex;align-items:center;justify-content:center">?</div>
+          <div>
+            <div style="font-size:15px;font-weight:700" id="my-name2">-</div>
+            <div style="font-size:12px;color:var(--ts)" id="my-email2">-</div>
+          </div>
         </div>
       </div>
-      <button class="rv-submit" id="rv-submit-btn">홈에 등록하기</button>
+      <div style="font-size:13px;font-weight:700;color:var(--ts);margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px">다른 역할로 접속</div>
+      <div class="my-row" style="border:2px solid var(--p);background:var(--pl)" onclick="enterAttorney()">
+        <div><span class="my-row-l" style="color:var(--p)">⚖️ 변호사 포털 접속</span><div style="font-size:12px;color:var(--ts);margin-top:2px">파트너 변호사 전용</div></div>
+        <span class="my-row-r">›</span>
+      </div>
+      <div class="my-row" style="border:2px solid #0D1B2A;background:#F0F4FF" onclick="enterAdmin()">
+        <div><span class="my-row-l" style="color:#0D1B2A">🔐 관리자 포털 접속</span><div style="font-size:12px;color:var(--ts);margin-top:2px">관리자 전용</div></div>
+        <span class="my-row-r">›</span>
+      </div>
+      <div class="my-row" onclick="openAttApply()"><span class="my-row-l">⚖️ 변호사 입점 신청</span><span class="my-row-r">›</span></div>
+      <div class="my-row" onclick="openM('m-about')"><span class="my-row-l">🏢 Liferefix 소개</span><span class="my-row-r">›</span></div>
+      <button class="btn o" onclick="doLogout()" style="margin-top:16px">로그아웃</button>
+      <div style="text-align:center;margin-top:20px;font-size:12px;color:var(--ts);line-height:1.7">
+        Liferefix · 가출원 특허 10-2026-0039619<br>
+        <span style="color:var(--r)">본 서비스는 베타 버전이며 법률 자문을 제공하지 않습니다.</span>
+      </div>
+      <div style="height:20px"></div>
     </div>
-    <div id="rv-my-list" style="margin-top:12px"></div>
-    <div style="text-align:center;margin-top:24px;font-size:12px;color:var(--ts);line-height:1.7">Liferefix (예비)창업기업 · 가출원 특허 10-2026-0039619<br><span style="color:var(--r)">본 서비스는 베타 버전이며 법률 자문을 제공하지 않습니다.</span></div>
-    <div style="height:20px"></div>
   </div>
 </div>
 
@@ -1067,6 +1166,29 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
   </div>
 </div>
 
+
+<!-- 변호사 선택 모달 -->
+<div class="ov" id="m-select-att" onclick="ovClose(event,'m-select-att')">
+  <div class="modal" style="position:relative">
+    <button class="mclose" onclick="closeM('m-select-att')">✕</button>
+    <div class="mhandle"></div>
+    <div class="mtitle" id="sel-att-title">변호사 선택</div>
+    <div class="alert ok">✅ 선택하시면 변호사에게 연락처가 전달됩니다.</div>
+    <span class="flabel">연락받을 전화번호</span>
+    <div style="position:relative;margin-bottom:14px">
+      <input type="tel" id="sel-phone" class="finput" style="margin-bottom:0;padding-right:70px" placeholder="010-0000-0000">
+      <span style="position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--a);font-weight:700">🔒 암호화</span>
+    </div>
+    <span class="flabel">메모 (선택)</span>
+    <input type="text" id="sel-memo" class="finput" placeholder="예: 오후에 연락 부탁드립니다">
+    <div id="sel-err" style="font-size:12px;color:var(--r);margin-bottom:10px;display:none"></div>
+    <div style="background:var(--bg);border-radius:var(--rads);padding:12px;font-size:12px;color:var(--ts);line-height:1.7;margin-bottom:14px">
+      📌 전화번호는 선택한 변호사에게만 전달되며 암호화 보관됩니다.
+    </div>
+    <button class="btn p" onclick="confirmSelectAtt()">📞 변호사 선택 확정</button>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <!-- 로그인/회원가입 모달 -->
@@ -1177,13 +1299,9 @@ onAuthStateChanged(fbAuth, function(user) {
       hdrBtn.onclick = function(){ window.openM&&window.openM('m-login'); };
     }
   }
-  var loginBtn = document.querySelector('#s-my .btn.p');
-  if (user) {
-    if (loginBtn) { loginBtn.textContent='로그아웃'; loginBtn.onclick=function(){ window.doLogout&&window.doLogout(); }; }
-    var cardDiv = document.querySelector('#s-my .card div:nth-child(2)');
-    if (cardDiv) cardDiv.innerHTML='<div style="font-size:16px;font-weight:700">'+user.email+'</div><div style="font-size:13px;color:var(--ts);margin-top:3px">로그인 완료 ✅</div>';
-  } else {
-    if (loginBtn) { loginBtn.textContent='로그인 / 회원가입'; loginBtn.onclick=function(){ window.openM&&window.openM('m-login'); }; }
+  // MY 페이지 대시보드 갱신
+  if(window.initMyDash) {
+    setTimeout(function(){ window.initMyDash(); }, 100);
   }
 });
 
@@ -1556,6 +1674,13 @@ function renderDiag(r){
   if(r.astAdj)bd+='<br>⚠️ 재산 채무의 30% 초과 → 탕감률 10%p 차감';
   document.getElementById('d-breakdown').innerHTML=bd;
   document.getElementById('d-ok').style.display='block';
+  // Firestore에 진단 결과 저장
+  if(window.FB_USER && window.FB_DB && window.FB_FUNCS) {
+    window.FB_FUNCS.updateDoc(
+      window.FB_FUNCS.doc(window.FB_DB,'users',window.FB_USER.uid),
+      { lastDiag: r, lastDiagAt: window.FB_FUNCS.serverTimestamp() }
+    ).catch(function(){});
+  }
 }
 
 // ═══════════════════════════════
@@ -2394,6 +2519,14 @@ document.addEventListener('click',function(e){
   if(e.target.classList.contains('adm-rej-att-btn')){admRejectAttApp(e.target.dataset.aid);}
   if(e.target.classList.contains('rev-approve-btn')){admApprovePayment(e.target.dataset.pid, e.target.dataset.uid, e.target.dataset.plan);}
   if(e.target.classList.contains('rev-reject-btn')){admRejectPayment(e.target.dataset.pid);}
+  // 채무자 - 변호사 선택
+  if(e.target.classList.contains('my-go-bids-btn')){ switchMyTab('bids'); }
+  if(e.target.classList.contains('my-select-bid-btn')){
+    var bName  = e.target.dataset.name  || '변호사';
+    var bEmail = e.target.dataset.email || '';
+    var bidId  = e.target.dataset.bid   || '';
+    openSelectAttModal(bName, bEmail, bidId);
+  }
   if(e.target.classList.contains('adm-blk-btn')){admBlockAtt(e.target.dataset.aid);}
   if(e.target.classList.contains('adm-rst-btn')){admRestoreAtt(e.target.dataset.aid);}
 });
@@ -2627,6 +2760,322 @@ function updateBidPreview() {
     +'변제기간 <b>'+per+'</b> · 예상 승인율 <b style="color:var(--a)">'+prob+'% 이상</b>';
 }
 window.updateBidPreview = updateBidPreview;
+
+
+// ── 채무자 대시보드 ──────────────────────────────────────
+function initMyDash() {
+  if(!window.FB_USER) {
+    document.getElementById('my-guest').style.display='block';
+    document.getElementById('my-dash').style.display='none';
+    return;
+  }
+  document.getElementById('my-guest').style.display='none';
+  document.getElementById('my-dash').style.display='block';
+
+  var nick = window.FB_USER.displayName || window.FB_USER.email.split('@')[0];
+  var nameEl = document.getElementById('my-name');
+  if(nameEl) nameEl.textContent = nick + '님 👋';
+  var emailEl = document.getElementById('my-email');
+  if(emailEl) emailEl.textContent = window.FB_USER.email;
+  var name2El = document.getElementById('my-name2');
+  if(name2El) name2El.textContent = nick;
+  var email2El = document.getElementById('my-email2');
+  if(email2El) email2El.textContent = window.FB_USER.email;
+  var avEl = document.getElementById('my-avatar');
+  if(avEl) avEl.textContent = nick.charAt(0).toUpperCase();
+
+  switchMyTab('diag');
+}
+
+function switchMyTab(t) {
+  ['diag','case','bids','set'].forEach(function(x){
+    var btn = document.getElementById('myt-'+x);
+    var panel = document.getElementById('myp-'+x);
+    if(btn) btn.classList.toggle('on', x===t);
+    if(panel) panel.style.display = x===t ? 'block' : 'none';
+  });
+  if(t==='diag')  loadMyDiag();
+  if(t==='case')  loadMyCases();
+  if(t==='bids')  loadMyBids();
+  window.scrollTo(0,0);
+}
+
+// 진단 결과 로드
+function loadMyDiag() {
+  function fw(v){ if(!v&&v!==0) return '-'; return v>=10000?(v/10000).toFixed(1)+'억':Math.round(v).toLocaleString()+'만'; }
+
+  // lastDiag 있으면 표시
+  if(lastDiag && lastDiag.ok) {
+    showMyDiag(lastDiag);
+    return;
+  }
+  // Firestore에서 최근 진단 로드
+  if(window.FB_USER && window.FB_DB && window.FB_FUNCS) {
+    window.FB_FUNCS.getDocs(
+      window.FB_FUNCS.query(
+        window.FB_FUNCS.collection(window.FB_DB,'cases'),
+        window.FB_FUNCS.orderBy('createdAt','desc')
+      )
+    ).then(function(snap){
+      var cases = snap.docs.map(function(d){return Object.assign({id:d.id},d.data());})
+        .filter(function(c){ return c.userId===window.FB_USER.uid && c.diag && c.diag.ok; });
+      if(cases.length) {
+        showMyDiag(cases[0].diag);
+      }
+    }).catch(function(){});
+  }
+}
+
+function showMyDiag(diag) {
+  function fw(v){ if(!v&&v!==0) return '-'; return v>=10000?(v/10000).toFixed(1)+'억':Math.round(v).toLocaleString()+'만'; }
+  document.getElementById('my-diag-empty').style.display='none';
+  document.getElementById('my-diag-result').style.display='block';
+  var dbEl=document.getElementById('my-db-cnt'); if(dbEl) dbEl.textContent=typeof CASE_DB!=='undefined'?CASE_DB.length:'-';
+  var debtEl=document.getElementById('my-debt'); if(debtEl) debtEl.textContent=fw(diag.debt);
+  var raEl=document.getElementById('my-relief-amt'); if(raEl) raEl.textContent=fw(diag.debt-diag.ramt);
+  var rEl=document.getElementById('my-relief'); if(rEl) rEl.textContent=Math.round(diag.final*100)+'%';
+  var mEl=document.getElementById('my-monthly'); if(mEl) mEl.textContent=fw(diag.monthly);
+  var iEl=document.getElementById('my-income'); if(iEl) iEl.textContent=fw(diag.inc);
+  var aEl=document.getElementById('my-assets'); if(aEl) aEl.textContent=diag.ast?fw(diag.ast):'없음';
+  var bEl=document.getElementById('my-breakdown');
+  if(bEl) bEl.innerHTML='📌 <b>계산 근거</b><br>실수령액 '+fw(diag.inc)+' — 최저생계비 '+fw(diag.minC)+' = <b>가용소득 '+fw(diag.disp)+'</b><br>판례 DB 기반 탕감률 <b>'+Math.round(diag.final*100)+'%</b>';
+}
+
+// 내 사건 목록 로드
+function loadMyCases() {
+  var listEl = document.getElementById('my-case-list');
+  var emptyEl = document.getElementById('my-case-empty');
+  if(!listEl) return;
+
+  var allCases = DB.getCases().filter(function(c){ return !window.FB_USER || c.userId===window.FB_USER.uid||!c.userId; });
+
+  // Firestore에서도 로드
+  if(window.FB_USER && window.FB_DB && window.FB_FUNCS) {
+    window.FB_FUNCS.getDocs(
+      window.FB_FUNCS.query(
+        window.FB_FUNCS.collection(window.FB_DB,'cases'),
+        window.FB_FUNCS.orderBy('createdAt','desc')
+      )
+    ).then(function(snap){
+      var fbCases = snap.docs.map(function(d){return Object.assign({id:d.id},d.data());})
+        .filter(function(c){ return c.userId===window.FB_USER.uid; });
+      var ids = fbCases.map(function(c){return c.id;});
+      var local = allCases.filter(function(c){return ids.indexOf(c.id)<0;});
+      renderMyCaseList(fbCases.concat(local));
+    }).catch(function(){ renderMyCaseList(allCases); });
+  } else {
+    renderMyCaseList(allCases);
+  }
+}
+
+function renderMyCaseList(cases) {
+  var listEl = document.getElementById('my-case-list');
+  var emptyEl = document.getElementById('my-case-empty');
+  if(!listEl) return;
+  if(!cases.length){
+    if(emptyEl) emptyEl.style.display='block';
+    listEl.innerHTML=''; return;
+  }
+  if(emptyEl) emptyEl.style.display='none';
+  var sm={new:{l:'비딩 대기',c:'var(--p)'},bid:{l:'제안 수신',c:'var(--a)'},hired:{l:'수임 완료',c:'#005945'},closed:{l:'마감',c:'var(--ts)'}};
+  listEl.innerHTML = cases.map(function(c){
+    var s = sm[c.status]||{l:'대기',c:'#999'};
+    var diag = c.diag;
+    var diagHtml = diag&&diag.ok
+      ? '<div style="background:var(--pl);border-radius:8px;padding:10px;margin:10px 0;font-size:12px;line-height:1.9">'
+        +'채무액 <b>'+fw2(diag.debt)+'</b> · 탕감률 <b style="color:var(--p)">'+Math.round(diag.final*100)+'%</b> · 월변제금 <b>'+fw2(diag.monthly)+'</b>'
+        +'</div>' : '';
+    return '<div style="background:#fff;border-radius:var(--rad);padding:16px;border:2px solid '+(c.status==='bid'?'var(--a)':'var(--bd)')+';margin-bottom:12px;box-shadow:var(--shs)">'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'
+      +'<div style="font-size:11px;font-weight:800;color:var(--p)">'+c.id+'</div>'
+      +'<span style="font-size:11px;font-weight:700;background:var(--pl);color:'+s.c+';padding:3px 10px;border-radius:20px">'+s.l+'</span>'
+      +'</div>'
+      +'<div style="font-size:14px;font-weight:700">'+(c.dtype||'-')+' · '+(c.region||'-')+'</div>'
+      +'<div style="font-size:12px;color:var(--ts);margin-top:2px">'+(c.drange||'')+' · 희망착수금 '+(c.budget||'-')+'</div>'
+      +diagHtml
+      +(c.status==='bid'
+        ? '<button class="my-go-bids-btn" style="width:100%;padding:10px;background:var(--a);color:#fff;border:none;border-radius:var(--rads);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:8px">📬 받은 제안 확인하기</button>'
+        : '')
+      +'</div>';
+  }).join('');
+}
+
+function fw2(v){ if(!v&&v!==0) return '-'; return v>=10000?(v/10000).toFixed(1)+'억':Math.round(v).toLocaleString()+'만'; }
+
+// 받은 제안 로드
+function loadMyBids() {
+  var listEl = document.getElementById('my-bids-list');
+  var emptyEl = document.getElementById('my-bids-empty');
+  if(!listEl) return;
+
+  if(!window.FB_USER || !window.FB_DB || !window.FB_FUNCS) {
+    var localBids = DB.getBids();
+    renderMyBidList(localBids);
+    return;
+  }
+
+  // 내 사건 ID 목록 먼저 가져오기
+  window.FB_FUNCS.getDocs(
+    window.FB_FUNCS.query(
+      window.FB_FUNCS.collection(window.FB_DB,'cases'),
+      window.FB_FUNCS.orderBy('createdAt','desc')
+    )
+  ).then(function(snap){
+    var myCaseIds = snap.docs
+      .map(function(d){return Object.assign({id:d.id},d.data());})
+      .filter(function(c){return c.userId===window.FB_USER.uid;})
+      .map(function(c){return c.id;});
+
+    if(!myCaseIds.length){ renderMyBidList([]); return; }
+
+    // 해당 사건들의 비딩 조회
+    window.FB_FUNCS.getDocs(
+      window.FB_FUNCS.query(
+        window.FB_FUNCS.collection(window.FB_DB,'bids'),
+        window.FB_FUNCS.orderBy('createdAt','desc')
+      )
+    ).then(function(bSnap){
+      var bids = bSnap.docs.map(function(d){return Object.assign({id:d.id},d.data());})
+        .filter(function(b){return myCaseIds.indexOf(b.caseId)>-1;});
+      renderMyBidList(bids);
+    }).catch(function(){ renderMyBidList(DB.getBids()); });
+  }).catch(function(){ renderMyBidList(DB.getBids()); });
+}
+
+function renderMyBidList(bids) {
+  var listEl = document.getElementById('my-bids-list');
+  var emptyEl = document.getElementById('my-bids-empty');
+  if(!listEl) return;
+  if(!bids.length){
+    if(emptyEl) emptyEl.style.display='block';
+    listEl.innerHTML=''; return;
+  }
+  if(emptyEl) emptyEl.style.display='none';
+
+  listEl.innerHTML = bids.map(function(b){
+    var installStr = !b.install||b.install==='none' ? '일시불' : b.install+'개월 할부';
+    var probStr = b.prob ? b.prob+'% 이상' : '-';
+    return '<div style="background:#fff;border-radius:var(--rad);padding:16px;border:1px solid var(--bd);margin-bottom:12px;box-shadow:var(--shs)">'
+      // 변호사 정보
+      +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">'
+      +'<div style="width:42px;height:42px;border-radius:50%;background:var(--pl);color:var(--p);font-size:16px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0">'+(b.attName?b.attName.charAt(0):'변')+'</div>'
+      +'<div>'
+      +'<div style="font-size:14px;font-weight:700">'+(b.attName||'변호사')+'</div>'
+      +'<div style="font-size:12px;color:var(--ts)">사건: '+b.caseId+'</div>'
+      +'<div style="font-size:11px;color:var(--ts)">'+(b.at||'-')+'</div>'
+      +'</div>'
+      +'</div>'
+      // 제안 내용
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">'
+      +'<div style="background:var(--pl);border-radius:8px;padding:10px;text-align:center">'
+        +'<div style="font-size:10px;color:var(--ts)">착수금</div>'
+        +'<div style="font-size:16px;font-weight:800;color:var(--p)">'+(b.retainer||'-')+'만원</div>'
+        +'<div style="font-size:11px;color:var(--ts)">'+installStr+'</div>'
+      +'</div>'
+      +'<div style="background:var(--al);border-radius:8px;padding:10px;text-align:center">'
+        +'<div style="font-size:10px;color:var(--ts)">성공보수</div>'
+        +'<div style="font-size:16px;font-weight:800;color:var(--a)">'+(b.success>0?b.success+'만원':'없음')+'</div>'
+        +'<div style="font-size:11px;color:var(--ts)">승인율 '+probStr+'</div>'
+      +'</div>'
+      +'</div>'
+      // 전략
+      +(b.strategy?'<div style="font-size:13px;color:var(--ts);line-height:1.65;background:var(--bg);border-radius:8px;padding:10px;margin-bottom:12px">'+b.strategy+'</div>':'')
+      // 선택 버튼
+      +'<button class="my-select-bid-btn" data-bid="'+b.id+'" data-email="'+(b.attEmail||'')+'" data-name="'+(b.attName||'')+'" style="width:100%;padding:12px;background:var(--p);color:#fff;border:none;border-radius:var(--rads);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">✅ 이 변호사 선택하기</button>'
+      +'</div>';
+  }).join('');
+}
+
+window.initMyDash   = initMyDash;
+window.switchMyTab  = switchMyTab;
+window.loadMyDiag   = loadMyDiag;
+window.showMyDiag   = showMyDiag;
+window.loadMyCases  = loadMyCases;
+window.loadMyBids   = loadMyBids;
+window.renderMyBidList = renderMyBidList;
+
+// ── 변호사 선택 ──────────────────────────────────────────
+var _selectedBid = null;
+
+function openSelectAttModal(name, email, bidId) {
+  _selectedBid = { name:name, email:email, bidId:bidId };
+  var titleEl = document.getElementById('sel-att-title');
+  if(titleEl) titleEl.textContent = name + ' 변호사 선택';
+  // 기존 전화번호 자동 입력 (로그인 정보에서)
+  var phoneEl = document.getElementById('sel-phone');
+  if(phoneEl && window.FB_USER) {
+    if(window.FB_DB && window.FB_FUNCS) {
+      window.FB_FUNCS.getDoc(
+        window.FB_FUNCS.doc(window.FB_DB,'users',window.FB_USER.uid)
+      ).then(function(snap){
+        if(snap.exists() && snap.data().phone) {
+          phoneEl.value = snap.data().phone;
+        }
+      }).catch(function(){});
+    }
+  }
+  openM('m-select-att');
+}
+
+function confirmSelectAtt() {
+  if(!_selectedBid){ closeM('m-select-att'); return; }
+  var phone = (document.getElementById('sel-phone')||{}).value||'';
+  var memo  = (document.getElementById('sel-memo')||{}).value||'';
+  var errEl = document.getElementById('sel-err');
+
+  if(!phone || phone.replace(/[^0-9]/g,'').length < 10) {
+    if(errEl){ errEl.style.display='block'; errEl.textContent='올바른 전화번호를 입력해주세요.'; }
+    return;
+  }
+  if(errEl) errEl.style.display='none';
+
+  if(!window.FB_USER){ toast('로그인이 필요합니다.'); return; }
+
+  // Firestore에 선택 정보 저장
+  if(window.FB_DB && window.FB_FUNCS) {
+    // 1. 연락처 정보 저장 (선택 기록)
+    window.FB_FUNCS.addDoc(
+      window.FB_FUNCS.collection(window.FB_DB,'selections'),
+      {
+        userId:    window.FB_USER.uid,
+        userEmail: window.FB_USER.email,
+        phone:     phone,
+        memo:      memo,
+        bidId:     _selectedBid.bidId,
+        attName:   _selectedBid.name,
+        attEmail:  _selectedBid.email,
+        status:    'selected',
+        createdAt: window.FB_FUNCS.serverTimestamp()
+      }
+    ).then(function(){
+      // 2. 유저 프로필에 전화번호 저장
+      window.FB_FUNCS.updateDoc(
+        window.FB_FUNCS.doc(window.FB_DB,'users',window.FB_USER.uid),
+        { phone: phone }
+      ).catch(function(){});
+
+      // 3. 비딩 상태 업데이트
+      if(_selectedBid.bidId) {
+        window.FB_FUNCS.updateDoc(
+          window.FB_FUNCS.doc(window.FB_DB,'bids',_selectedBid.bidId),
+          { status:'selected', selectedAt: window.FB_FUNCS.serverTimestamp() }
+        ).catch(function(){});
+      }
+
+      closeM('m-select-att');
+      toast('✅ ' + _selectedBid.name + ' 변호사에게 연락처가 전달되었습니다! 빠른 시일 내 연락드릴 예정입니다.');
+      _selectedBid = null;
+    }).catch(function(e){
+      if(errEl){ errEl.style.display='block'; errEl.textContent='오류: '+e.message; }
+    });
+  } else {
+    closeM('m-select-att');
+    toast('✅ ' + _selectedBid.name + ' 변호사를 선택했습니다!');
+    _selectedBid = null;
+  }
+}
+window.openSelectAttModal = openSelectAttModal;
+window.confirmSelectAtt   = confirmSelectAtt;
 
 window.loadRevenue=loadRevenue; window.filterRevenue=filterRevenue;
 window.admApprovePayment=admApprovePayment; window.admRejectPayment=admRejectPayment;
@@ -2917,6 +3366,322 @@ function updateBidPreview() {
     +'변제기간 <b>'+per+'</b> · 예상 승인율 <b style="color:var(--a)">'+prob+'% 이상</b>';
 }
 window.updateBidPreview = updateBidPreview;
+
+
+// ── 채무자 대시보드 ──────────────────────────────────────
+function initMyDash() {
+  if(!window.FB_USER) {
+    document.getElementById('my-guest').style.display='block';
+    document.getElementById('my-dash').style.display='none';
+    return;
+  }
+  document.getElementById('my-guest').style.display='none';
+  document.getElementById('my-dash').style.display='block';
+
+  var nick = window.FB_USER.displayName || window.FB_USER.email.split('@')[0];
+  var nameEl = document.getElementById('my-name');
+  if(nameEl) nameEl.textContent = nick + '님 👋';
+  var emailEl = document.getElementById('my-email');
+  if(emailEl) emailEl.textContent = window.FB_USER.email;
+  var name2El = document.getElementById('my-name2');
+  if(name2El) name2El.textContent = nick;
+  var email2El = document.getElementById('my-email2');
+  if(email2El) email2El.textContent = window.FB_USER.email;
+  var avEl = document.getElementById('my-avatar');
+  if(avEl) avEl.textContent = nick.charAt(0).toUpperCase();
+
+  switchMyTab('diag');
+}
+
+function switchMyTab(t) {
+  ['diag','case','bids','set'].forEach(function(x){
+    var btn = document.getElementById('myt-'+x);
+    var panel = document.getElementById('myp-'+x);
+    if(btn) btn.classList.toggle('on', x===t);
+    if(panel) panel.style.display = x===t ? 'block' : 'none';
+  });
+  if(t==='diag')  loadMyDiag();
+  if(t==='case')  loadMyCases();
+  if(t==='bids')  loadMyBids();
+  window.scrollTo(0,0);
+}
+
+// 진단 결과 로드
+function loadMyDiag() {
+  function fw(v){ if(!v&&v!==0) return '-'; return v>=10000?(v/10000).toFixed(1)+'억':Math.round(v).toLocaleString()+'만'; }
+
+  // lastDiag 있으면 표시
+  if(lastDiag && lastDiag.ok) {
+    showMyDiag(lastDiag);
+    return;
+  }
+  // Firestore에서 최근 진단 로드
+  if(window.FB_USER && window.FB_DB && window.FB_FUNCS) {
+    window.FB_FUNCS.getDocs(
+      window.FB_FUNCS.query(
+        window.FB_FUNCS.collection(window.FB_DB,'cases'),
+        window.FB_FUNCS.orderBy('createdAt','desc')
+      )
+    ).then(function(snap){
+      var cases = snap.docs.map(function(d){return Object.assign({id:d.id},d.data());})
+        .filter(function(c){ return c.userId===window.FB_USER.uid && c.diag && c.diag.ok; });
+      if(cases.length) {
+        showMyDiag(cases[0].diag);
+      }
+    }).catch(function(){});
+  }
+}
+
+function showMyDiag(diag) {
+  function fw(v){ if(!v&&v!==0) return '-'; return v>=10000?(v/10000).toFixed(1)+'억':Math.round(v).toLocaleString()+'만'; }
+  document.getElementById('my-diag-empty').style.display='none';
+  document.getElementById('my-diag-result').style.display='block';
+  var dbEl=document.getElementById('my-db-cnt'); if(dbEl) dbEl.textContent=typeof CASE_DB!=='undefined'?CASE_DB.length:'-';
+  var debtEl=document.getElementById('my-debt'); if(debtEl) debtEl.textContent=fw(diag.debt);
+  var raEl=document.getElementById('my-relief-amt'); if(raEl) raEl.textContent=fw(diag.debt-diag.ramt);
+  var rEl=document.getElementById('my-relief'); if(rEl) rEl.textContent=Math.round(diag.final*100)+'%';
+  var mEl=document.getElementById('my-monthly'); if(mEl) mEl.textContent=fw(diag.monthly);
+  var iEl=document.getElementById('my-income'); if(iEl) iEl.textContent=fw(diag.inc);
+  var aEl=document.getElementById('my-assets'); if(aEl) aEl.textContent=diag.ast?fw(diag.ast):'없음';
+  var bEl=document.getElementById('my-breakdown');
+  if(bEl) bEl.innerHTML='📌 <b>계산 근거</b><br>실수령액 '+fw(diag.inc)+' — 최저생계비 '+fw(diag.minC)+' = <b>가용소득 '+fw(diag.disp)+'</b><br>판례 DB 기반 탕감률 <b>'+Math.round(diag.final*100)+'%</b>';
+}
+
+// 내 사건 목록 로드
+function loadMyCases() {
+  var listEl = document.getElementById('my-case-list');
+  var emptyEl = document.getElementById('my-case-empty');
+  if(!listEl) return;
+
+  var allCases = DB.getCases().filter(function(c){ return !window.FB_USER || c.userId===window.FB_USER.uid||!c.userId; });
+
+  // Firestore에서도 로드
+  if(window.FB_USER && window.FB_DB && window.FB_FUNCS) {
+    window.FB_FUNCS.getDocs(
+      window.FB_FUNCS.query(
+        window.FB_FUNCS.collection(window.FB_DB,'cases'),
+        window.FB_FUNCS.orderBy('createdAt','desc')
+      )
+    ).then(function(snap){
+      var fbCases = snap.docs.map(function(d){return Object.assign({id:d.id},d.data());})
+        .filter(function(c){ return c.userId===window.FB_USER.uid; });
+      var ids = fbCases.map(function(c){return c.id;});
+      var local = allCases.filter(function(c){return ids.indexOf(c.id)<0;});
+      renderMyCaseList(fbCases.concat(local));
+    }).catch(function(){ renderMyCaseList(allCases); });
+  } else {
+    renderMyCaseList(allCases);
+  }
+}
+
+function renderMyCaseList(cases) {
+  var listEl = document.getElementById('my-case-list');
+  var emptyEl = document.getElementById('my-case-empty');
+  if(!listEl) return;
+  if(!cases.length){
+    if(emptyEl) emptyEl.style.display='block';
+    listEl.innerHTML=''; return;
+  }
+  if(emptyEl) emptyEl.style.display='none';
+  var sm={new:{l:'비딩 대기',c:'var(--p)'},bid:{l:'제안 수신',c:'var(--a)'},hired:{l:'수임 완료',c:'#005945'},closed:{l:'마감',c:'var(--ts)'}};
+  listEl.innerHTML = cases.map(function(c){
+    var s = sm[c.status]||{l:'대기',c:'#999'};
+    var diag = c.diag;
+    var diagHtml = diag&&diag.ok
+      ? '<div style="background:var(--pl);border-radius:8px;padding:10px;margin:10px 0;font-size:12px;line-height:1.9">'
+        +'채무액 <b>'+fw2(diag.debt)+'</b> · 탕감률 <b style="color:var(--p)">'+Math.round(diag.final*100)+'%</b> · 월변제금 <b>'+fw2(diag.monthly)+'</b>'
+        +'</div>' : '';
+    return '<div style="background:#fff;border-radius:var(--rad);padding:16px;border:2px solid '+(c.status==='bid'?'var(--a)':'var(--bd)')+';margin-bottom:12px;box-shadow:var(--shs)">'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'
+      +'<div style="font-size:11px;font-weight:800;color:var(--p)">'+c.id+'</div>'
+      +'<span style="font-size:11px;font-weight:700;background:var(--pl);color:'+s.c+';padding:3px 10px;border-radius:20px">'+s.l+'</span>'
+      +'</div>'
+      +'<div style="font-size:14px;font-weight:700">'+(c.dtype||'-')+' · '+(c.region||'-')+'</div>'
+      +'<div style="font-size:12px;color:var(--ts);margin-top:2px">'+(c.drange||'')+' · 희망착수금 '+(c.budget||'-')+'</div>'
+      +diagHtml
+      +(c.status==='bid'
+        ? '<button class="my-go-bids-btn" style="width:100%;padding:10px;background:var(--a);color:#fff;border:none;border-radius:var(--rads);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:8px">📬 받은 제안 확인하기</button>'
+        : '')
+      +'</div>';
+  }).join('');
+}
+
+function fw2(v){ if(!v&&v!==0) return '-'; return v>=10000?(v/10000).toFixed(1)+'억':Math.round(v).toLocaleString()+'만'; }
+
+// 받은 제안 로드
+function loadMyBids() {
+  var listEl = document.getElementById('my-bids-list');
+  var emptyEl = document.getElementById('my-bids-empty');
+  if(!listEl) return;
+
+  if(!window.FB_USER || !window.FB_DB || !window.FB_FUNCS) {
+    var localBids = DB.getBids();
+    renderMyBidList(localBids);
+    return;
+  }
+
+  // 내 사건 ID 목록 먼저 가져오기
+  window.FB_FUNCS.getDocs(
+    window.FB_FUNCS.query(
+      window.FB_FUNCS.collection(window.FB_DB,'cases'),
+      window.FB_FUNCS.orderBy('createdAt','desc')
+    )
+  ).then(function(snap){
+    var myCaseIds = snap.docs
+      .map(function(d){return Object.assign({id:d.id},d.data());})
+      .filter(function(c){return c.userId===window.FB_USER.uid;})
+      .map(function(c){return c.id;});
+
+    if(!myCaseIds.length){ renderMyBidList([]); return; }
+
+    // 해당 사건들의 비딩 조회
+    window.FB_FUNCS.getDocs(
+      window.FB_FUNCS.query(
+        window.FB_FUNCS.collection(window.FB_DB,'bids'),
+        window.FB_FUNCS.orderBy('createdAt','desc')
+      )
+    ).then(function(bSnap){
+      var bids = bSnap.docs.map(function(d){return Object.assign({id:d.id},d.data());})
+        .filter(function(b){return myCaseIds.indexOf(b.caseId)>-1;});
+      renderMyBidList(bids);
+    }).catch(function(){ renderMyBidList(DB.getBids()); });
+  }).catch(function(){ renderMyBidList(DB.getBids()); });
+}
+
+function renderMyBidList(bids) {
+  var listEl = document.getElementById('my-bids-list');
+  var emptyEl = document.getElementById('my-bids-empty');
+  if(!listEl) return;
+  if(!bids.length){
+    if(emptyEl) emptyEl.style.display='block';
+    listEl.innerHTML=''; return;
+  }
+  if(emptyEl) emptyEl.style.display='none';
+
+  listEl.innerHTML = bids.map(function(b){
+    var installStr = !b.install||b.install==='none' ? '일시불' : b.install+'개월 할부';
+    var probStr = b.prob ? b.prob+'% 이상' : '-';
+    return '<div style="background:#fff;border-radius:var(--rad);padding:16px;border:1px solid var(--bd);margin-bottom:12px;box-shadow:var(--shs)">'
+      // 변호사 정보
+      +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">'
+      +'<div style="width:42px;height:42px;border-radius:50%;background:var(--pl);color:var(--p);font-size:16px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0">'+(b.attName?b.attName.charAt(0):'변')+'</div>'
+      +'<div>'
+      +'<div style="font-size:14px;font-weight:700">'+(b.attName||'변호사')+'</div>'
+      +'<div style="font-size:12px;color:var(--ts)">사건: '+b.caseId+'</div>'
+      +'<div style="font-size:11px;color:var(--ts)">'+(b.at||'-')+'</div>'
+      +'</div>'
+      +'</div>'
+      // 제안 내용
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">'
+      +'<div style="background:var(--pl);border-radius:8px;padding:10px;text-align:center">'
+        +'<div style="font-size:10px;color:var(--ts)">착수금</div>'
+        +'<div style="font-size:16px;font-weight:800;color:var(--p)">'+(b.retainer||'-')+'만원</div>'
+        +'<div style="font-size:11px;color:var(--ts)">'+installStr+'</div>'
+      +'</div>'
+      +'<div style="background:var(--al);border-radius:8px;padding:10px;text-align:center">'
+        +'<div style="font-size:10px;color:var(--ts)">성공보수</div>'
+        +'<div style="font-size:16px;font-weight:800;color:var(--a)">'+(b.success>0?b.success+'만원':'없음')+'</div>'
+        +'<div style="font-size:11px;color:var(--ts)">승인율 '+probStr+'</div>'
+      +'</div>'
+      +'</div>'
+      // 전략
+      +(b.strategy?'<div style="font-size:13px;color:var(--ts);line-height:1.65;background:var(--bg);border-radius:8px;padding:10px;margin-bottom:12px">'+b.strategy+'</div>':'')
+      // 선택 버튼
+      +'<button class="my-select-bid-btn" data-bid="'+b.id+'" data-email="'+(b.attEmail||'')+'" data-name="'+(b.attName||'')+'" style="width:100%;padding:12px;background:var(--p);color:#fff;border:none;border-radius:var(--rads);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">✅ 이 변호사 선택하기</button>'
+      +'</div>';
+  }).join('');
+}
+
+window.initMyDash   = initMyDash;
+window.switchMyTab  = switchMyTab;
+window.loadMyDiag   = loadMyDiag;
+window.showMyDiag   = showMyDiag;
+window.loadMyCases  = loadMyCases;
+window.loadMyBids   = loadMyBids;
+window.renderMyBidList = renderMyBidList;
+
+// ── 변호사 선택 ──────────────────────────────────────────
+var _selectedBid = null;
+
+function openSelectAttModal(name, email, bidId) {
+  _selectedBid = { name:name, email:email, bidId:bidId };
+  var titleEl = document.getElementById('sel-att-title');
+  if(titleEl) titleEl.textContent = name + ' 변호사 선택';
+  // 기존 전화번호 자동 입력 (로그인 정보에서)
+  var phoneEl = document.getElementById('sel-phone');
+  if(phoneEl && window.FB_USER) {
+    if(window.FB_DB && window.FB_FUNCS) {
+      window.FB_FUNCS.getDoc(
+        window.FB_FUNCS.doc(window.FB_DB,'users',window.FB_USER.uid)
+      ).then(function(snap){
+        if(snap.exists() && snap.data().phone) {
+          phoneEl.value = snap.data().phone;
+        }
+      }).catch(function(){});
+    }
+  }
+  openM('m-select-att');
+}
+
+function confirmSelectAtt() {
+  if(!_selectedBid){ closeM('m-select-att'); return; }
+  var phone = (document.getElementById('sel-phone')||{}).value||'';
+  var memo  = (document.getElementById('sel-memo')||{}).value||'';
+  var errEl = document.getElementById('sel-err');
+
+  if(!phone || phone.replace(/[^0-9]/g,'').length < 10) {
+    if(errEl){ errEl.style.display='block'; errEl.textContent='올바른 전화번호를 입력해주세요.'; }
+    return;
+  }
+  if(errEl) errEl.style.display='none';
+
+  if(!window.FB_USER){ toast('로그인이 필요합니다.'); return; }
+
+  // Firestore에 선택 정보 저장
+  if(window.FB_DB && window.FB_FUNCS) {
+    // 1. 연락처 정보 저장 (선택 기록)
+    window.FB_FUNCS.addDoc(
+      window.FB_FUNCS.collection(window.FB_DB,'selections'),
+      {
+        userId:    window.FB_USER.uid,
+        userEmail: window.FB_USER.email,
+        phone:     phone,
+        memo:      memo,
+        bidId:     _selectedBid.bidId,
+        attName:   _selectedBid.name,
+        attEmail:  _selectedBid.email,
+        status:    'selected',
+        createdAt: window.FB_FUNCS.serverTimestamp()
+      }
+    ).then(function(){
+      // 2. 유저 프로필에 전화번호 저장
+      window.FB_FUNCS.updateDoc(
+        window.FB_FUNCS.doc(window.FB_DB,'users',window.FB_USER.uid),
+        { phone: phone }
+      ).catch(function(){});
+
+      // 3. 비딩 상태 업데이트
+      if(_selectedBid.bidId) {
+        window.FB_FUNCS.updateDoc(
+          window.FB_FUNCS.doc(window.FB_DB,'bids',_selectedBid.bidId),
+          { status:'selected', selectedAt: window.FB_FUNCS.serverTimestamp() }
+        ).catch(function(){});
+      }
+
+      closeM('m-select-att');
+      toast('✅ ' + _selectedBid.name + ' 변호사에게 연락처가 전달되었습니다! 빠른 시일 내 연락드릴 예정입니다.');
+      _selectedBid = null;
+    }).catch(function(e){
+      if(errEl){ errEl.style.display='block'; errEl.textContent='오류: '+e.message; }
+    });
+  } else {
+    closeM('m-select-att');
+    toast('✅ ' + _selectedBid.name + ' 변호사를 선택했습니다!');
+    _selectedBid = null;
+  }
+}
+window.openSelectAttModal = openSelectAttModal;
+window.confirmSelectAtt   = confirmSelectAtt;
 
 window.loadRevenue=loadRevenue; window.filterRevenue=filterRevenue;
 window.admApprovePayment=admApprovePayment; window.admRejectPayment=admRejectPayment;
