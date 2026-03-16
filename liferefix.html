@@ -1518,10 +1518,20 @@ function doSignup() {
 function doLogout() {
   if(window._doLogout){ window._doLogout(); return; }
 }
+function doGoogleLogin() {
+  if(window._doGoogleLogin){ window._doGoogleLogin(); return; }
+  var tries=0;
+  var retry=setInterval(function(){
+    tries++;
+    if(window._doGoogleLogin){ clearInterval(retry); window._doGoogleLogin(); }
+    else if(tries>10){ clearInterval(retry); toast('구글 로그인 로딩 실패. 새로고침 해주세요.'); }
+  },300);
+}
 window.switchLoginTab = switchLoginTab;
 window.doLogin  = doLogin;
 window.doSignup = doSignup;
 window.doLogout = doLogout;
+window.doGoogleLogin = doGoogleLogin;
 
   window.go=go; window.sel=sel; window.slid=slid; window.gofs=gofs;
   window.runDiag=runDiag; window.resetDiag=resetDiag; window.renderAtts=renderAtts;
