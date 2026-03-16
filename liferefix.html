@@ -489,7 +489,8 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
     </div>
     <div style="background:#fff;border-radius:20px;padding:28px 24px;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,.2)">
       <div style="font-size:18px;font-weight:800;margin-bottom:4px">⚖️ 변호사 로그인</div>
-      <div style="font-size:13px;color:var(--ts);margin-bottom:20px">등록된 파트너 변호사만 접근 가능합니다.</div>
+      <div style="font-size:13px;color:var(--ts);margin-bottom:16px">파트너 변호사 전용 포털입니다.<br>승인된 변호사만 접근 가능합니다.</div>
+      <div class="alert info" style="margin-bottom:16px">💡 일반 회원이라면 먼저 MY 페이지에서 <b>변호사 입점 신청</b>을 해주세요.</div>
       <input type="email" class="finput" id="att-email" placeholder="이메일 주소" value="kim@lawfirm.com">
       <input type="password" class="finput" id="att-pw" placeholder="비밀번호" value="12345678">
       <button class="btn p" onclick="attDoLogin()">로그인</button>
@@ -1653,7 +1654,35 @@ function startTimer(){clearInterval(timerInt);var s=23*3600+59*59;timerInt=setIn
 // ═══════════════════════════════
 // 역할 전환
 // ═══════════════════════════════
-function enterAttorney(){ go('s-att-login'); }
+function enterAttorney(){
+  if(!window.FB_USER) {
+    // 로그인 안 된 상태 → 로그인 먼저
+    openM('m-login');
+    toast('변호사 포털 접근을 위해 로그인이 필요합니다.');
+    return;
+  }
+  // 로그인 된 상태 → role 바로 체크
+  if(window.FB_DB && window.FB_FUNCS) {
+    window.FB_FUNCS.getDoc(
+      window.FB_FUNCS.doc(window.FB_DB,'users',window.FB_USER.uid)
+    ).then(function(snap){
+      var role = snap.exists() ? snap.data().role : 'debtor';
+      if(role === 'attorney' || role === 'admin') {
+        go('s-att-dash');
+        updateAttStats();
+        renderAttCases();
+        loadAttProfile();
+      } else if(role === 'pending_attorney') {
+        toast('⏳ 입점 신청 검토 중입니다. 승인 후 이용 가능합니다.');
+      } else {
+        // 입점 신청 유도
+        go('s-att-login');
+      }
+    }).catch(function(){ go('s-att-login'); });
+  } else {
+    go('s-att-login');
+  }
+}
 function enterAdmin(){ go('s-adm-login'); }
 
 // ═══════════════════════════════
@@ -1665,8 +1694,71 @@ var ATT_SAMPLES=[
   {id:'SMPL-003',status:'new',dtype:'복합채무',region:'경기',drange:'3천~5천만',budget:'100~150만',at:'3시간 전'},
 ];
 var attBidId=null;
-function attDoLogin(){go('s-att-dash');updateAttStats();renderAttCases();}
+function attDoLogin(){
+  // Firebase 로그인 상태 확인
+  if(!window.FB_USER) {
+    toast('먼저 로그인이 필요합니다.');
+    go('s-my');
+    setTimeout(function(){ openM('m-login'); }, 300);
+    return;
+  }
+
+  // Firestore에서 role 확인
+  if(window.FB_DB && window.FB_FUNCS) {
+    window.FB_FUNCS.getDoc(
+      window.FB_FUNCS.doc(window.FB_DB,'users',window.FB_USER.uid)
+    ).then(function(snap){
+      if(!snap.exists()){
+        toast('계정 정보를 찾을 수 없습니다.');
+        return;
+      }
+      var role = snap.data().role || 'debtor';
+      if(role === 'attorney') {
+        // 승인된 파트너 변호사
+        go('s-att-dash');
+        updateAttStats();
+        renderAttCases();
+        loadAttProfile();
+      } else if(role === 'pending_attorney') {
+        toast('⏳ 입점 신청이 검토 중입니다. 승인 후 이용 가능합니다.');
+      } else if(role === 'admin') {
+        go('s-att-dash');
+        updateAttStats();
+        renderAttCases();
+      } else {
+        toast('⚠️ 파트너 변호사만 접근 가능합니다. MY 페이지에서 입점 신청을 해주세요.');
+      }
+    }).catch(function(){
+      toast('오류가 발생했습니다. 다시 시도해주세요.');
+    });
+  } else {
+    // Firebase 미연결 시 더미 로그인
+    var email = (document.getElementById('att-email')||{}).value||'';
+    var pw    = (document.getElementById('att-pw')||{}).value||'';
+    if(email && pw) {
+      go('s-att-dash');
+      updateAttStats();
+      renderAttCases();
+    } else {
+      toast('이메일과 비밀번호를 입력해주세요.');
+    }
+  }
+}
 function switchAttTab(t){
+  // 파트너 변호사 여부 재확인
+  if(t === 'cases' || t === 'form') {
+    if(window.FB_USER && window.FB_DB && window.FB_FUNCS) {
+      window.FB_FUNCS.getDoc(
+        window.FB_FUNCS.doc(window.FB_DB,'users',window.FB_USER.uid)
+      ).then(function(snap){
+        var role = snap.exists() ? snap.data().role : '';
+        if(role !== 'attorney' && role !== 'admin') {
+          toast('⚠️ 파트너 변호사만 접근 가능합니다.');
+          switchAttTab('dash');
+        }
+      }).catch(function(){});
+    }
+  }
   ['dash','cases','form','pay','profile'].forEach(function(x){
     var btn=document.getElementById('atab-'+x);var panel=document.getElementById('atp-'+x);
     if(btn)btn.classList.toggle('on',x===t);
