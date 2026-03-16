@@ -2521,74 +2521,102 @@ function admRenderUsers(){
 }
 
 function admRenderAtts(){
-  // ── 입점 신청 목록 (adm-apply-list2) ──
   var applyEl = document.getElementById('adm-apply-list2');
-  if(applyEl && window.FB_DB && window.FB_FUNCS) {
-    applyEl.innerHTML = '<div style="font-size:13px;color:var(--ts)">🔄 불러오는 중...</div>';
-    window.FB_FUNCS.getDocs(
-      window.FB_FUNCS.query(
-        window.FB_FUNCS.collection(window.FB_DB,'att_applications'),
-        window.FB_FUNCS.orderBy('createdAt','desc')
-      )
-    ).then(function(snap){
-      var apps = snap.docs.map(function(d){return Object.assign({id:d.id},d.data());});
-      if(!apps.length){
-        applyEl.innerHTML='<div style="font-size:13px;color:var(--ts);padding:10px 0">신청 없음</div>';
-        return;
-      }
-      var sm={pending:{l:'대기',bg:'#FFF3E0',c:'#7A3500'},approved:{l:'승인완료',bg:'var(--al)',c:'#005945'},rejected:{l:'거절',bg:'#FFF0F0',c:'var(--r)'}};
-      applyEl.innerHTML = apps.map(function(a){
-        var s=sm[a.status]||{l:'-',bg:'#EEE',c:'#999'};
-        var btns = a.status==='pending'
-          ? '<div style="display:flex;gap:6px;margin-top:8px">'
-            +'<button class="adm-app-att-btn" data-aid="'+a.id+'" style="font-size:12px;font-weight:700;background:var(--al);color:#005945;border:none;padding:6px 14px;border-radius:20px;cursor:pointer;font-family:inherit">✅ 승인</button>'
-            +'<button class="adm-rej-att-btn" data-aid="'+a.id+'" style="font-size:12px;font-weight:700;background:#FFF0F0;color:var(--r);border:none;padding:6px 14px;border-radius:20px;cursor:pointer;font-family:inherit">❌ 거절</button>'
-            +'</div>'
-          : '<span style="font-size:11px;font-weight:700;background:'+s.bg+';color:'+s.c+';padding:4px 10px;border-radius:20px;margin-top:6px;display:inline-block">'+s.l+'</span>';
-        return '<div style="background:#fff;border-radius:var(--rad);padding:14px 16px;border:1px solid var(--bd);margin-bottom:10px;box-shadow:var(--shs)">'
-          +'<div style="display:flex;justify-content:space-between;align-items:flex-start">'
-          +'<div style="flex:1">'
-          +'<div style="font-size:15px;font-weight:700">'+(a.name||'-')+' 변호사</div>'
-          +'<div style="font-size:12px;color:var(--ts);margin-top:3px">'+(a.firm||'-')+' · 경력 '+(a.career||0)+'년 · '+(a.region||'-')+'</div>'
-          +'<div style="font-size:12px;color:var(--ts);margin-top:1px">'+(a.email||'-')+'</div>'
-          +(a.type?'<div style="font-size:12px;color:var(--ts)">전문: '+a.type+'</div>':'')
-          +(a.bio?'<div style="font-size:12px;color:var(--ts);margin-top:3px;line-height:1.5">'+a.bio+'</div>':'')
-          +'<div style="font-size:11px;color:var(--ts);margin-top:3px">신청일: '+(a.appliedAt||'-')+'</div>'
-          +'</div>'
-          +'<span style="font-size:11px;font-weight:700;background:'+s.bg+';color:'+s.c+';padding:3px 9px;border-radius:20px;flex-shrink:0">'+s.l+'</span>'
-          +'</div>'
-          +btns
-          +'</div>';
-      }).join('');
-    }).catch(function(e){
-      applyEl.innerHTML='<div style="font-size:13px;color:var(--r)">오류: '+e.message+'</div>';
-    });
-  } else if(applyEl) {
-    applyEl.innerHTML='<div style="font-size:13px;color:var(--ts)">Firebase 연결 필요</div>';
-  }
+  var attEl   = document.getElementById('adm-att-list');
 
-  // ── 파트너 변호사 목록 (adm-att-list) ──
-  var atts=getAdmAtts();
-  var el=document.getElementById('adm-att-list'); if(!el) return;
-  var sc={active:{l:'활성',bg:'var(--al)',c:'#005945'},pending:{l:'승인대기',bg:'#FFF3E0',c:'#7A3500'},blocked:{l:'정지',bg:'#FFF0F0',c:'var(--r)'}};
-  if(!atts.length){
-    el.innerHTML='<div style="font-size:13px;color:var(--ts);padding:10px 0">파트너 변호사 없음</div>';
+  if(!window.FB_DB||!window.FB_FUNCS){
+    if(applyEl) applyEl.innerHTML='<div style="font-size:13px;color:var(--ts)">Firebase 연결 필요</div>';
     return;
   }
-  el.innerHTML=atts.map(function(a){
-    var s=sc[a.status]||{l:'',bg:'#EEE',c:'#999'};
-    var btn=a.status==='active'
-      ?'<button class="adm-blk-btn" data-aid="'+a.id+'" style="font-size:11px;font-weight:700;background:#FFF0F0;color:var(--r);border:none;padding:5px 11px;border-radius:20px;cursor:pointer;font-family:inherit">정지</button>'
-      :a.status==='blocked'
-      ?'<button class="adm-rst-btn" data-aid="'+a.id+'" style="font-size:11px;font-weight:700;background:var(--al);color:#005945;border:none;padding:5px 11px;border-radius:20px;cursor:pointer;font-family:inherit">복구</button>'
-      :'';
-    return '<div style="background:#fff;border-radius:var(--rad);padding:13px 15px;border:1px solid var(--bd);margin-bottom:9px;box-shadow:var(--shs);display:flex;justify-content:space-between;align-items:center">'
-      +'<div>'
-      +'<div style="font-size:14px;font-weight:700">'+a.name+' 변호사</div>'
-      +'<div style="font-size:12px;color:var(--ts);margin-top:2px">'+a.firm+' · '+a.career+'년</div>'
-      +'<span style="font-size:11px;font-weight:700;background:'+s.bg+';color:'+s.c+';padding:3px 9px;border-radius:20px;margin-top:5px;display:inline-block">'+s.l+'</span>'
-      +'</div>'+btn+'</div>';
-  }).join('');
+
+  // att_applications + users 동시 조회
+  Promise.all([
+    window.FB_FUNCS.getDocs(window.FB_FUNCS.collection(window.FB_DB,'att_applications')),
+    window.FB_FUNCS.getDocs(window.FB_FUNCS.collection(window.FB_DB,'users'))
+  ]).then(function(res){
+    var apps  = res[0].docs.map(function(d){return Object.assign({id:d.id},d.data());});
+    var users = res[1].docs.map(function(d){return Object.assign({id:d.id},d.data());});
+
+    // ── 입점 신청 대기 목록 ──
+    var pending = apps.filter(function(a){return a.status==='pending';});
+    var rejected= apps.filter(function(a){return a.status==='rejected';});
+
+    if(applyEl) {
+      if(!pending.length && !rejected.length) {
+        applyEl.innerHTML='<div style="font-size:13px;color:var(--ts);padding:8px 0">신청 없음</div>';
+      } else {
+        var allApps = pending.concat(rejected);
+        applyEl.innerHTML = allApps.map(function(a){
+          var sm={pending:{l:'대기',bg:'#FFF3E0',c:'#7A3500'},rejected:{l:'거절',bg:'#FFF0F0',c:'var(--r)'}};
+          var s=sm[a.status]||{l:a.status,bg:'#EEE',c:'#999'};
+          var btns = a.status==='pending'
+            ? '<div style="display:flex;gap:6px;margin-top:8px">'
+              +'<button class="adm-app-att-btn" data-aid="'+a.id+'" style="font-size:12px;font-weight:700;background:var(--al);color:#005945;border:none;padding:6px 14px;border-radius:20px;cursor:pointer;font-family:inherit">✅ 승인</button>'
+              +'<button class="adm-rej-att-btn" data-aid="'+a.id+'" style="font-size:12px;font-weight:700;background:#FFF0F0;color:var(--r);border:none;padding:6px 14px;border-radius:20px;cursor:pointer;font-family:inherit">❌ 거절</button>'
+              +'</div>'
+            : '<span style="font-size:11px;font-weight:700;background:'+s.bg+';color:'+s.c+';padding:3px 9px;border-radius:20px">'+s.l+'</span>';
+          return '<div style="background:#fff;border-radius:var(--rad);padding:13px 15px;border:1px solid var(--bd);margin-bottom:9px;box-shadow:var(--shs)">'
+            +'<div style="display:flex;justify-content:space-between;align-items:flex-start">'
+            +'<div style="flex:1">'
+            +'<div style="font-size:14px;font-weight:700">'+(a.name||'-')+' 변호사</div>'
+            +'<div style="font-size:12px;color:var(--ts);margin-top:2px">'+(a.firm||'-')+' · 경력 '+(a.career||0)+'년 · '+(a.region||'-')+'</div>'
+            +'<div style="font-size:12px;color:var(--ts)">'+(a.email||'-')+'</div>'
+            +(a.bio?'<div style="font-size:12px;color:var(--ts);margin-top:3px;line-height:1.5">'+a.bio+'</div>':'')
+            +'<div style="font-size:11px;color:var(--ts);margin-top:2px">신청일: '+(a.appliedAt||'-')+'</div>'
+            +'</div>'
+            +'<span style="font-size:11px;font-weight:700;background:'+s.bg+';color:'+s.c+';padding:3px 9px;border-radius:20px;flex-shrink:0">'+s.l+'</span>'
+            +'</div>'
+            +btns
+            +'</div>';
+        }).join('');
+      }
+    }
+
+    // ── 파트너 변호사 (role:attorney인 users + approved applications) ──
+    // approved된 att_applications 기준으로 파트너 변호사 목록 구성
+    var approved = apps.filter(function(a){return a.status==='approved';});
+    // users에서 role:attorney인 것도 포함 (수동으로 role 바꾼 경우)
+    var attUsers = users.filter(function(u){
+      return u.role==='attorney' && !approved.find(function(a){return a.id===u.uid||a.email===u.email;});
+    });
+
+    if(attEl) {
+      if(!approved.length && !attUsers.length) {
+        attEl.innerHTML='<div style="font-size:13px;color:var(--ts);padding:8px 0">파트너 변호사 없음</div>';
+      } else {
+        var allAtts = approved.concat(attUsers.map(function(u){
+          return {id:u.uid, name:u.nickname||u.email.split('@')[0], email:u.email,
+                  firm:'-', career:0, region:'-', status:'approved'};
+        }));
+
+        attEl.innerHTML = allAtts.map(function(a){
+          // 해당 변호사의 selections 건수 (수임 건수) - 간단히 표시
+          return '<div style="background:#fff;border-radius:var(--rad);padding:13px 15px;border:1px solid var(--bd);margin-bottom:9px;box-shadow:var(--shs)">'
+            +'<div style="display:flex;justify-content:space-between;align-items:center">'
+            +'<div>'
+            +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:3px">'
+            +'<div style="font-size:14px;font-weight:700">'+(a.name||'-')+' 변호사</div>'
+            +'<span style="font-size:11px;font-weight:700;background:var(--al);color:#005945;padding:2px 8px;border-radius:20px">파트너</span>'
+            +'</div>'
+            +'<div style="font-size:12px;color:var(--ts)">'+(a.firm&&a.firm!=='-'?a.firm+' · ':'')+'경력 '+(a.career||0)+'년 · '+(a.region&&a.region!=='-'?a.region:'')+'</div>'
+            +'<div style="font-size:12px;color:var(--ts)">'+(a.email||'-')+'</div>'
+            +'</div>'
+            +'<div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">'
+            +'<button class="adm-blk-att-btn" data-aid="'+(a.id||a.uid)+'" data-email="'+(a.email||'')+'" style="font-size:11px;font-weight:700;background:#FFF0F0;color:var(--r);border:none;padding:5px 11px;border-radius:20px;cursor:pointer;font-family:inherit">정지</button>'
+            +'</div>'
+            +'</div>'
+            +'</div>';
+        }).join('');
+      }
+    }
+
+    // 현황탭 카운트 업데이트
+    var pendCntEl = document.getElementById('adm-att-pending-cnt');
+    if(pendCntEl) pendCntEl.textContent = pending.length;
+
+  }).catch(function(e){
+    if(applyEl) applyEl.innerHTML='<div style="font-size:13px;color:var(--r)">오류: '+e.message+'</div>';
+  });
 }
 function admApproveAtt(id){var a=getAdmAtts();var x=a.find(function(x){return x.id===id;});if(x){x.status='active';saveAdmAtts(a);admRenderAtts();toast(x.name+' 변호사 입점 승인');}}
 function admBlockAtt(id){var a=getAdmAtts();var x=a.find(function(x){return x.id===id;});if(x){x.status='blocked';saveAdmAtts(a);admRenderAtts();toast(x.name+' 계정 정지');}}
@@ -2644,6 +2672,16 @@ document.addEventListener('click',function(e){
   if(e.target.classList.contains('adm-app-btn')){admApproveAtt(e.target.dataset.aid);}
   if(e.target.classList.contains('adm-app-att-btn')){admApproveAttApp(e.target.dataset.aid);}
   if(e.target.classList.contains('adm-rej-att-btn')){admRejectAttApp(e.target.dataset.aid);}
+  if(e.target.classList.contains('adm-blk-att-btn')){
+    if(confirm((e.target.dataset.email||'이 변호사')+' 파트너 자격을 정지하시겠습니까?')){
+      if(window.FB_DB&&window.FB_FUNCS){
+        window.FB_FUNCS.updateDoc(window.FB_FUNCS.doc(window.FB_DB,'users',e.target.dataset.aid),{role:'debtor'}).then(function(){
+          window.FB_FUNCS.updateDoc(window.FB_FUNCS.doc(window.FB_DB,'att_applications',e.target.dataset.aid),{status:'rejected'}).catch(function(){});
+          toast('파트너 자격이 정지됐습니다.'); admRenderAtts();
+        }).catch(function(e2){toast('오류: '+e2.message);});
+      }
+    }
+  }
   if(e.target.classList.contains('rev-approve-btn')){admApprovePayment(e.target.dataset.pid, e.target.dataset.uid, e.target.dataset.plan);}
   if(e.target.classList.contains('rev-reject-btn')){admRejectPayment(e.target.dataset.pid);}
   // 채무자 - 변호사 선택
