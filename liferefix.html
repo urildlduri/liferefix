@@ -512,6 +512,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
     <button class="att-tab on" id="atab-dash" onclick="switchAttTab('dash')">대시보드</button>
     <button class="att-tab" id="atab-cases" onclick="switchAttTab('cases')">사건목록</button>
     <button class="att-tab" id="atab-form" onclick="switchAttTab('form')">제안작성</button>
+    <button class="att-tab" id="atab-pay" onclick="switchAttTab('pay')">결제</button>
     <button class="att-tab" id="atab-profile" onclick="switchAttTab('profile')">프로필</button>
   </div>
   <div id="atp-dash" style="padding:16px">
@@ -555,20 +556,159 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
     <button class="btn p" onclick="attSubmitBid()">🎯 제안 제출하기</button>
     <button class="btn o" onclick="switchAttTab('cases')">← 사건 목록</button>
   </div>
-  <div id="atp-profile" style="display:none">
-    <div style="background:linear-gradient(135deg,var(--p),var(--pd));padding:26px 20px;color:#fff">
-      <div style="width:60px;height:60px;border-radius:50%;background:rgba(255,255,255,.2);color:#fff;font-size:22px;font-weight:900;display:flex;align-items:center;justify-content:center;margin-bottom:10px;border:3px solid rgba(255,255,255,.4)">김</div>
-      <div style="font-size:19px;font-weight:900;margin-bottom:2px">김○○ 변호사</div>
-      <div style="font-size:13px;opacity:.8">법무법인 리커버 · 경력 12년 · ★ 4.9</div>
+  
+<!-- 변호사 결제 패널 -->
+<div id="atp-pay" style="display:none">
+  <!-- 현재 플랜 현황 -->
+  <div style="background:linear-gradient(135deg,var(--p),var(--pd));padding:20px;color:#fff;margin-bottom:0">
+    <div style="font-size:13px;opacity:.8;margin-bottom:4px">현재 플랜</div>
+    <div style="font-size:22px;font-weight:900;margin-bottom:2px" id="pay-plan-name">기본 플랜</div>
+    <div style="font-size:13px;opacity:.8">월 50만원 · 비딩 <span id="pay-bid-used">9</span>/<span id="pay-bid-total">10</span>건 사용</div>
+  </div>
+  <!-- 비딩 진행 바 -->
+  <div style="background:#fff;padding:16px 18px;border-bottom:1px solid var(--bd)">
+    <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--ts);margin-bottom:6px">
+      <span>이번 달 비딩 사용량</span>
+      <span id="pay-bid-pct">90%</span>
     </div>
-    <div style="padding:16px">
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px">
-        <div style="background:var(--bg);border-radius:var(--rads);padding:12px;text-align:center"><div style="font-size:20px;font-weight:800;color:var(--p)">94%</div><div style="font-size:11px;color:var(--ts)">승인율</div></div>
-        <div style="background:var(--bg);border-radius:var(--rads);padding:12px;text-align:center"><div style="font-size:20px;font-weight:800;color:#FFBE00">4.9</div><div style="font-size:11px;color:var(--ts)">평점</div></div>
-        <div style="background:var(--bg);border-radius:var(--rads);padding:12px;text-align:center"><div style="font-size:20px;font-weight:800;color:var(--o)">127</div><div style="font-size:11px;color:var(--ts)">누적수임</div></div>
+    <div style="height:8px;border-radius:4px;background:var(--bd);overflow:hidden">
+      <div id="pay-bid-bar" style="width:90%;height:100%;border-radius:4px;background:linear-gradient(90deg,var(--p),var(--a));transition:width .5s"></div>
+    </div>
+    <div style="font-size:12px;color:var(--r);margin-top:6px;font-weight:600" id="pay-bid-warning">⚠️ 비딩 잔여 1건 — 추가 구매를 고려해보세요</div>
+  </div>
+
+  <div style="padding:16px">
+    <!-- 월 구독 플랜 -->
+    <div style="font-size:15px;font-weight:800;margin-bottom:12px">📋 월 구독 플랜</div>
+    <!-- 기본 플랜 -->
+    <div style="background:#fff;border-radius:var(--rad);border:2px solid var(--p);padding:18px;margin-bottom:10px;position:relative">
+      <div style="position:absolute;top:-1px;right:16px;background:var(--p);color:#fff;font-size:11px;font-weight:700;padding:3px 10px;border-radius:0 0 8px 8px">현재 플랜</div>
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+        <div>
+          <div style="font-size:16px;font-weight:800">기본 플랜</div>
+          <div style="font-size:12px;color:var(--ts);margin-top:2px">비딩 10건/월 포함</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:22px;font-weight:900;color:var(--p)">50만원</div>
+          <div style="font-size:11px;color:var(--ts)">/월</div>
+        </div>
       </div>
-      <button class="btn o" onclick="go('s-my')">← 나가기</button>
-      <div style="height:16px"></div>
+      <div style="font-size:13px;color:var(--ts);line-height:1.8;margin-bottom:12px">
+        ✅ 사건 목록 실시간 조회<br>
+        ✅ 월 10건 비딩 제안<br>
+        ✅ 채무자 연락처 공개<br>
+        ✅ 수임 통계 대시보드
+      </div>
+      <button onclick="attRequestPay('basic','500000')" class="btn p" style="padding:12px">갱신하기 (다음 달 자동결제)</button>
+    </div>
+    <!-- 프리미엄 플랜 -->
+    <div style="background:#fff;border-radius:var(--rad);border:1px solid var(--bd);padding:18px;margin-bottom:20px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+        <div>
+          <div style="font-size:16px;font-weight:800">프리미엄 플랜</div>
+          <div style="font-size:12px;color:var(--ts);margin-top:2px">비딩 20건/월 포함</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:22px;font-weight:900;color:var(--p)">80만원</div>
+          <div style="font-size:11px;color:var(--ts)">/월</div>
+        </div>
+      </div>
+      <div style="font-size:13px;color:var(--ts);line-height:1.8;margin-bottom:12px">
+        ✅ 기본 플랜 전체 포함<br>
+        ✅ 월 20건 비딩 제안<br>
+        ✅ 우선 노출 배지<br>
+        ✅ 추가 비딩권 할인 (8만원/5건)
+      </div>
+      <button onclick="attRequestPay('premium','800000')" class="btn o" style="padding:12px">업그레이드하기</button>
+    </div>
+
+    <!-- 추가 비딩권 -->
+    <div style="font-size:15px;font-weight:800;margin-bottom:12px">⚡ 추가 비딩 참여권</div>
+    <div style="background:#fff;border-radius:var(--rad);border:1px solid var(--bd);padding:18px;margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div>
+          <div style="font-size:15px;font-weight:800">비딩 5건 추가</div>
+          <div style="font-size:12px;color:var(--ts);margin-top:2px">이번 달 즉시 사용 가능</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:22px;font-weight:900;color:var(--p)">10만원</div>
+          <div style="font-size:11px;color:var(--ts)">/5건</div>
+        </div>
+      </div>
+      <!-- 수량 선택 -->
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+        <span style="font-size:13px;font-weight:600;color:var(--ts)">수량</span>
+        <div style="display:flex;align-items:center;gap:8px">
+          <button onclick="changeBidQty(-1)" style="width:32px;height:32px;border-radius:50%;border:2px solid var(--bd);background:#fff;font-size:16px;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center">−</button>
+          <span id="bid-qty" style="font-size:16px;font-weight:800;min-width:24px;text-align:center">1</span>
+          <button onclick="changeBidQty(1)" style="width:32px;height:32px;border-radius:50%;border:2px solid var(--bd);background:#fff;font-size:16px;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center">+</button>
+        </div>
+        <span style="font-size:13px;color:var(--ts)">→ <b id="bid-qty-total" style="color:var(--p)">5건 / 10만원</b></span>
+      </div>
+      <button onclick="attRequestBidPay()" class="btn p" style="padding:12px">결제하기</button>
+    </div>
+
+    <!-- 결제 내역 -->
+    <div style="font-size:15px;font-weight:800;margin-bottom:10px;margin-top:8px">📄 결제 내역</div>
+    <div id="pay-history">
+      <div style="background:#fff;border-radius:var(--rads);padding:13px 15px;border:1px solid var(--bd);margin-bottom:8px;display:flex;justify-content:space-between">
+        <div><div style="font-size:13px;font-weight:700">기본 플랜</div><div style="font-size:12px;color:var(--ts)">2026.03.01</div></div>
+        <div style="text-align:right"><div style="font-size:13px;font-weight:700;color:var(--p)">500,000원</div><div style="font-size:11px;color:var(--a)">결제완료</div></div>
+      </div>
+    </div>
+
+    <div style="background:var(--bg);border-radius:var(--rads);padding:13px;font-size:12px;color:var(--ts);line-height:1.7;margin-top:8px">
+      💳 결제는 토스페이먼츠를 통해 안전하게 처리됩니다.<br>
+      구독은 매월 자동 결제되며 언제든 해지 가능합니다.<br>
+      문의: partner@liferefix.com
+    </div>
+  </div>
+</div>
+
+<div id="atp-profile" style="display:none">
+    <!-- 프로필 헤더 -->
+    <div style="background:linear-gradient(135deg,var(--p),var(--pd));padding:24px 20px;color:#fff">
+      <div id="prof-avatar" style="width:60px;height:60px;border-radius:50%;background:rgba(255,255,255,.2);color:#fff;font-size:22px;font-weight:900;display:flex;align-items:center;justify-content:center;margin-bottom:10px;border:3px solid rgba(255,255,255,.4)">김</div>
+      <div style="font-size:19px;font-weight:900;margin-bottom:2px" id="prof-name">김○○ 변호사</div>
+      <div style="font-size:13px;opacity:.8" id="prof-firm-career">법무법인 리커버 · 경력 12년 · ★ 4.9</div>
+    </div>
+    <!-- 통계 -->
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;border-bottom:1px solid var(--bd)">
+      <div style="padding:14px;text-align:center;border-right:1px solid var(--bd)"><div style="font-size:20px;font-weight:800;color:var(--p)">94%</div><div style="font-size:11px;color:var(--ts)">승인율</div></div>
+      <div style="padding:14px;text-align:center;border-right:1px solid var(--bd)"><div style="font-size:20px;font-weight:800;color:#FFBE00">4.9</div><div style="font-size:11px;color:var(--ts)">평점</div></div>
+      <div style="padding:14px;text-align:center"><div style="font-size:20px;font-weight:800;color:var(--o)">127</div><div style="font-size:11px;color:var(--ts)">누적수임</div></div>
+    </div>
+    <!-- 프로필 수정 폼 -->
+    <div style="padding:16px">
+      <div style="font-size:15px;font-weight:800;margin-bottom:14px">✏️ 프로필 수정</div>
+      <span class="flabel">이름</span>
+      <input type="text" class="finput" id="prof-edit-name" placeholder="홍길동">
+      <span class="flabel">소속 법무법인/사무소</span>
+      <input type="text" class="finput" id="prof-edit-firm" placeholder="법무법인 OO">
+      <span class="flabel">경력 (년)</span>
+      <input type="number" class="finput" id="prof-edit-career" placeholder="12" min="0" max="50">
+      <span class="flabel">착수금 (만원)</span>
+      <input type="number" class="finput" id="prof-edit-retainer" placeholder="120" min="0">
+      <span class="flabel">전문 분야</span>
+      <div class="tg" id="g-prof-type">
+        <button class="tb on" onclick="sel(this,'g-prof-type')">신용대출</button>
+        <button class="tb" onclick="sel(this,'g-prof-type')">카드채무</button>
+        <button class="tb" onclick="sel(this,'g-prof-type')">담보대출</button>
+        <button class="tb" onclick="sel(this,'g-prof-type')">복합채무</button>
+      </div>
+      <span class="flabel">활동 지역</span>
+      <div class="tg" id="g-prof-region">
+        <button class="tb on" onclick="sel(this,'g-prof-region')">서울</button>
+        <button class="tb" onclick="sel(this,'g-prof-region')">경기·인천</button>
+        <button class="tb" onclick="sel(this,'g-prof-region')">부산·경남</button>
+        <button class="tb" onclick="sel(this,'g-prof-region')">기타</button>
+      </div>
+      <span class="flabel">자기소개 (채무자에게 표시)</span>
+      <textarea class="finput" id="prof-edit-bio" rows="4" style="resize:none" placeholder="개인회생 전문 경력 및 강점, 수임 전략을 자유롭게 작성해주세요."></textarea>
+      <div id="prof-edit-err" style="font-size:12px;color:var(--r);margin-bottom:10px;display:none"></div>
+      <button class="btn p" onclick="saveAttProfile()">💾 저장하기</button>
+      <button class="btn o" onclick="go('s-my')" style="margin-top:8px">← 나가기</button>
+      <div style="height:20px"></div>
     </div>
   </div>
 </div>
@@ -1444,13 +1584,15 @@ var ATT_SAMPLES=[
 var attBidId=null;
 function attDoLogin(){go('s-att-dash');updateAttStats();renderAttCases();}
 function switchAttTab(t){
-  ['dash','cases','form','profile'].forEach(function(x){
+  ['dash','cases','form','pay','profile'].forEach(function(x){
     var btn=document.getElementById('atab-'+x);var panel=document.getElementById('atp-'+x);
     if(btn)btn.classList.toggle('on',x===t);
     if(panel)panel.style.display=x===t?'block':'none';
   });
   if(t==='cases')renderAttCases();
   if(t==='dash')updateAttStats();
+  if(t==='pay')renderPayPage();
+  if(t==='profile')loadAttProfile();
   window.scrollTo(0,0);
 }
 function getAttCases(){
