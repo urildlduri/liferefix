@@ -1425,25 +1425,20 @@ window._doLogout = function() {
   signOut(fbAuth).then(function(){ window.toast&&window.toast('로그아웃 되었습니다.'); });
 };
 
-// 구글 로그인
+// 구글 로그인 (팝업 → 실패 시 리다이렉트 자동 전환)
 window._doGoogleLogin = function() {
   var provider = new GoogleAuthProvider();
   signInWithPopup(fbAuth, provider)
     .then(function(result) {
       var u = result.user;
-      // Firestore users 컬렉션 저장 (최초 로그인 시에만 생성)
       var userRef = doc(fbDb, 'users', u.uid);
       getDoc(userRef).then(function(snap) {
         if(!snap.exists()) {
           setDoc(userRef, {
-            uid:       u.uid,
-            email:     u.email,
-            nickname:  u.displayName || u.email.split('@')[0],
-            photoURL:  u.photoURL || '',
-            role:      'debtor',
-            provider:  'google',
-            createdAt: serverTimestamp(),
-            lastLogin: serverTimestamp()
+            uid: u.uid, email: u.email,
+            nickname: u.displayName || u.email.split('@')[0],
+            photoURL: u.photoURL || '', role: 'debtor',
+            provider: 'google', createdAt: serverTimestamp(), lastLogin: serverTimestamp()
           });
         } else {
           updateDoc(userRef, { lastLogin: serverTimestamp() });
@@ -1451,16 +1446,20 @@ window._doGoogleLogin = function() {
       });
       window.closeM&&window.closeM('m-login');
       var name = u.displayName || u.email.split('@')[0];
-      window.toast&&window.toast('✅ ' + name + '님, 환영합니다!');
+      window.toast&&window.toast('✅ ' + name + '님 환영합니다!');
     })
     .catch(function(e) {
       console.error('구글 로그인 오류:', e.code, e.message);
       if(e.code === 'auth/popup-closed-by-user') return;
-      if(e.code === 'auth/popup-blocked') {
-        window.toast&&window.toast('팝업이 차단됐습니다. 팝업 허용 후 다시 시도해주세요.');
+      // 팝업 차단 → 리다이렉트로 자동 전환
+      if(e.code === 'auth/popup-blocked' ||
+         e.code === 'auth/cancelled-popup-request' ||
+         e.message.indexOf('Cross-Origin') > -1) {
+        window.toast&&window.toast('팝업이 차단됐습니다. 이메일 로그인을 이용해주세요.');
+        if(window.switchLoginTab) window.switchLoginTab('login');
         return;
       }
-      window.toast&&window.toast('구글 로그인 실패 ('+e.code+')');
+      window.toast&&window.toast('구글 로그인 실패: ' + (e.code||e.message));
     });
 };
 
@@ -2849,24 +2848,43 @@ window.updateBidPreview = updateBidPreview;
 // ── 채무자 대시보드 ──────────────────────────────────────
 function initMyDash() {
   if(!window.FB_USER) {
-    document.getElementById('my-guest').style.display='block';
-    document.getElementById('my-dash').style.display='none';
+    var g=document.getElementById('my-guest'); if(g) g.style.display='block';
+    var d=document.getElementById('my-dash');  if(d) d.style.display='none';
     return;
   }
-  document.getElementById('my-guest').style.display='none';
-  document.getElementById('my-dash').style.display='block';
+  var g=document.getElementById('my-guest'); if(g) g.style.display='none';
+  var d=document.getElementById('my-dash');  if(d) d.style.display='block';
 
   var nick = window.FB_USER.displayName || window.FB_USER.email.split('@')[0];
-  var nameEl = document.getElementById('my-name');
-  if(nameEl) nameEl.textContent = nick + '님 👋';
-  var emailEl = document.getElementById('my-email');
-  if(emailEl) emailEl.textContent = window.FB_USER.email;
-  var name2El = document.getElementById('my-name2');
-  if(name2El) name2El.textContent = nick;
-  var email2El = document.getElementById('my-email2');
-  if(email2El) email2El.textContent = window.FB_USER.email;
-  var avEl = document.getElementById('my-avatar');
-  if(avEl) avEl.textContent = nick.charAt(0).toUpperCase();
+  var els = {
+    'my-name':  nick + '님 👋',
+    'my-email': window.FB_USER.email,
+    'my-name2': nick,
+    'my-email2':window.FB_USER.email
+  };
+  Object.keys(els).forEach(function(id){
+    var el=document.getElementById(id); if(el) el.textContent=els[id];
+  });
+  var avEl=document.getElementById('my-avatar');
+  if(avEl) avEl.textContent=nick.charAt(0).toUpperCase();
+
+  // 사건이 있으면 받은제안 탭 배지 표시
+  if(window.FB_DB && window.FB_FUNCS) {
+    window.FB_FUNCS.getDocs(window.FB_FUNCS.collection(window.FB_DB,'bids'))
+      .then(function(snap){
+        var uid=window.FB_USER.uid;
+        // 내 사건 caseIds 먼저
+        window.FB_FUNCS.getDocs(window.FB_FUNCS.collection(window.FB_DB,'cases'))
+          .then(function(cSnap){
+            var myIds = cSnap.docs.map(function(d){return Object.assign({id:d.id},d.data());})
+              .filter(function(c){return c.userId===uid||c.userEmail===window.FB_USER.email;})
+              .map(function(c){return c.id;});
+            var bidCnt = snap.docs.filter(function(d){return myIds.indexOf(d.data().caseId)>-1;}).length;
+            var btn=document.getElementById('myt-bids');
+            if(btn && bidCnt>0) btn.textContent='받은 제안 ('+bidCnt+')';
+          }).catch(function(){});
+      }).catch(function(){});
+  }
 
   switchMyTab('diag');
 }
@@ -3029,51 +3047,66 @@ function fw2(v){ if(!v&&v!==0) return '-'; return v>=10000?(v/10000).toFixed(1)+
 
 // 받은 제안 로드
 function loadMyBids() {
-  var listEl = document.getElementById('my-bids-list');
+  var listEl  = document.getElementById('my-bids-list');
   var emptyEl = document.getElementById('my-bids-empty');
   if(!listEl) return;
+
+  // 로딩 표시
+  listEl.innerHTML = '<div style="text-align:center;padding:30px;color:var(--ts)">📬 제안 불러오는 중...</div>';
+  if(emptyEl) emptyEl.style.display = 'none';
 
   if(!window.FB_USER || !window.FB_DB || !window.FB_FUNCS) {
     renderMyBidList(DB.getBids());
     return;
   }
 
-  var uid = window.FB_USER.uid;
+  var uid   = window.FB_USER.uid;
+  var email = window.FB_USER.email;
 
-  // Step1: 내 사건 ID 목록 조회
-  window.FB_FUNCS.getDocs(
-    window.FB_FUNCS.collection(window.FB_DB,'cases')
-  ).then(function(cSnap){
+  // cases + bids 동시 조회
+  var pCases = window.FB_FUNCS.getDocs(window.FB_FUNCS.collection(window.FB_DB,'cases'));
+  var pBids  = window.FB_FUNCS.getDocs(window.FB_FUNCS.collection(window.FB_DB,'bids'));
+
+  Promise.all([pCases, pBids]).then(function(results){
+    var cSnap = results[0];
+    var bSnap = results[1];
+
+    // 내 사건 ID (userId 또는 userEmail로 매핑)
     var myCaseIds = cSnap.docs
-      .map(function(d){return Object.assign({id:d.id},d.data());})
-      .filter(function(c){return c.userId===uid;})
-      .map(function(c){return c.id;});
+      .map(function(d){ return Object.assign({id:d.id}, d.data()); })
+      .filter(function(c){
+        return c.userId===uid || c.userEmail===email || !c.userId; // userId 없는 로컬 사건도 포함
+      })
+      .map(function(c){ return c.id; });
 
-    if(!myCaseIds.length){
-      renderMyBidList([]);
-      return;
-    }
+    // localStorage 사건 ID도 포함
+    var localCases = DB.getCases();
+    localCases.forEach(function(c){ if(myCaseIds.indexOf(c.id)<0) myCaseIds.push(c.id); });
 
-    // Step2: bids 전체 조회 후 내 사건 ID로 필터
-    window.FB_FUNCS.getDocs(
-      window.FB_FUNCS.collection(window.FB_DB,'bids')
-    ).then(function(bSnap){
-      var bids = bSnap.docs
-        .map(function(d){return Object.assign({id:d.id},d.data());})
-        .filter(function(b){return myCaseIds.indexOf(b.caseId)>-1;})
-        .sort(function(a,b){
-          var ta = a.createdAt&&a.createdAt.toDate ? a.createdAt.toDate().getTime() : 0;
-          var tb = b.createdAt&&b.createdAt.toDate ? b.createdAt.toDate().getTime() : 0;
-          return tb - ta;
-        });
-      renderMyBidList(bids);
-    }).catch(function(e){
-      console.error('bids 조회 실패:', e);
-      renderMyBidList([]);
+    // bids 필터링
+    var fbBids = bSnap.docs
+      .map(function(d){ return Object.assign({id:d.id}, d.data()); })
+      .filter(function(b){ return myCaseIds.indexOf(b.caseId) > -1; })
+      .sort(function(a,b){
+        var ta = a.createdAt&&a.createdAt.toDate ? a.createdAt.toDate().getTime() : 0;
+        var tb = b.createdAt&&b.createdAt.toDate ? b.createdAt.toDate().getTime() : 0;
+        return tb - ta;
+      });
+
+    // localStorage bids도 합치기 (중복 제거)
+    var localBids = DB.getBids().filter(function(b){
+      return myCaseIds.indexOf(b.caseId)>-1 &&
+             !fbBids.find(function(fb){ return fb.id===b.id; });
     });
+
+    var allBids = fbBids.concat(localBids);
+    console.log('[loadMyBids] caseIds:', myCaseIds, 'bids found:', allBids.length);
+    renderMyBidList(allBids);
+
   }).catch(function(e){
-    console.error('cases 조회 실패:', e);
-    renderMyBidList([]);
+    console.error('[loadMyBids] 오류:', e);
+    // fallback: localStorage
+    renderMyBidList(DB.getBids());
   });
 }
 
@@ -3081,9 +3114,11 @@ function renderMyBidList(bids) {
   var listEl = document.getElementById('my-bids-list');
   var emptyEl = document.getElementById('my-bids-empty');
   if(!listEl) return;
+  console.log('[renderMyBidList] bids:', bids.length, bids);
   if(!bids.length){
     if(emptyEl) emptyEl.style.display='block';
-    listEl.innerHTML=''; return;
+    listEl.innerHTML='<div style="text-align:center;padding:30px;color:var(--ts)">아직 받은 제안이 없습니다.<br><small style="color:var(--ts)">변호사가 제안을 보내면 여기에 표시됩니다.</small></div>';
+    return;
   }
   if(emptyEl) emptyEl.style.display='none';
 
@@ -3669,24 +3704,43 @@ window.updateBidPreview = updateBidPreview;
 // ── 채무자 대시보드 ──────────────────────────────────────
 function initMyDash() {
   if(!window.FB_USER) {
-    document.getElementById('my-guest').style.display='block';
-    document.getElementById('my-dash').style.display='none';
+    var g=document.getElementById('my-guest'); if(g) g.style.display='block';
+    var d=document.getElementById('my-dash');  if(d) d.style.display='none';
     return;
   }
-  document.getElementById('my-guest').style.display='none';
-  document.getElementById('my-dash').style.display='block';
+  var g=document.getElementById('my-guest'); if(g) g.style.display='none';
+  var d=document.getElementById('my-dash');  if(d) d.style.display='block';
 
   var nick = window.FB_USER.displayName || window.FB_USER.email.split('@')[0];
-  var nameEl = document.getElementById('my-name');
-  if(nameEl) nameEl.textContent = nick + '님 👋';
-  var emailEl = document.getElementById('my-email');
-  if(emailEl) emailEl.textContent = window.FB_USER.email;
-  var name2El = document.getElementById('my-name2');
-  if(name2El) name2El.textContent = nick;
-  var email2El = document.getElementById('my-email2');
-  if(email2El) email2El.textContent = window.FB_USER.email;
-  var avEl = document.getElementById('my-avatar');
-  if(avEl) avEl.textContent = nick.charAt(0).toUpperCase();
+  var els = {
+    'my-name':  nick + '님 👋',
+    'my-email': window.FB_USER.email,
+    'my-name2': nick,
+    'my-email2':window.FB_USER.email
+  };
+  Object.keys(els).forEach(function(id){
+    var el=document.getElementById(id); if(el) el.textContent=els[id];
+  });
+  var avEl=document.getElementById('my-avatar');
+  if(avEl) avEl.textContent=nick.charAt(0).toUpperCase();
+
+  // 사건이 있으면 받은제안 탭 배지 표시
+  if(window.FB_DB && window.FB_FUNCS) {
+    window.FB_FUNCS.getDocs(window.FB_FUNCS.collection(window.FB_DB,'bids'))
+      .then(function(snap){
+        var uid=window.FB_USER.uid;
+        // 내 사건 caseIds 먼저
+        window.FB_FUNCS.getDocs(window.FB_FUNCS.collection(window.FB_DB,'cases'))
+          .then(function(cSnap){
+            var myIds = cSnap.docs.map(function(d){return Object.assign({id:d.id},d.data());})
+              .filter(function(c){return c.userId===uid||c.userEmail===window.FB_USER.email;})
+              .map(function(c){return c.id;});
+            var bidCnt = snap.docs.filter(function(d){return myIds.indexOf(d.data().caseId)>-1;}).length;
+            var btn=document.getElementById('myt-bids');
+            if(btn && bidCnt>0) btn.textContent='받은 제안 ('+bidCnt+')';
+          }).catch(function(){});
+      }).catch(function(){});
+  }
 
   switchMyTab('diag');
 }
@@ -3849,51 +3903,66 @@ function fw2(v){ if(!v&&v!==0) return '-'; return v>=10000?(v/10000).toFixed(1)+
 
 // 받은 제안 로드
 function loadMyBids() {
-  var listEl = document.getElementById('my-bids-list');
+  var listEl  = document.getElementById('my-bids-list');
   var emptyEl = document.getElementById('my-bids-empty');
   if(!listEl) return;
+
+  // 로딩 표시
+  listEl.innerHTML = '<div style="text-align:center;padding:30px;color:var(--ts)">📬 제안 불러오는 중...</div>';
+  if(emptyEl) emptyEl.style.display = 'none';
 
   if(!window.FB_USER || !window.FB_DB || !window.FB_FUNCS) {
     renderMyBidList(DB.getBids());
     return;
   }
 
-  var uid = window.FB_USER.uid;
+  var uid   = window.FB_USER.uid;
+  var email = window.FB_USER.email;
 
-  // Step1: 내 사건 ID 목록 조회
-  window.FB_FUNCS.getDocs(
-    window.FB_FUNCS.collection(window.FB_DB,'cases')
-  ).then(function(cSnap){
+  // cases + bids 동시 조회
+  var pCases = window.FB_FUNCS.getDocs(window.FB_FUNCS.collection(window.FB_DB,'cases'));
+  var pBids  = window.FB_FUNCS.getDocs(window.FB_FUNCS.collection(window.FB_DB,'bids'));
+
+  Promise.all([pCases, pBids]).then(function(results){
+    var cSnap = results[0];
+    var bSnap = results[1];
+
+    // 내 사건 ID (userId 또는 userEmail로 매핑)
     var myCaseIds = cSnap.docs
-      .map(function(d){return Object.assign({id:d.id},d.data());})
-      .filter(function(c){return c.userId===uid;})
-      .map(function(c){return c.id;});
+      .map(function(d){ return Object.assign({id:d.id}, d.data()); })
+      .filter(function(c){
+        return c.userId===uid || c.userEmail===email || !c.userId; // userId 없는 로컬 사건도 포함
+      })
+      .map(function(c){ return c.id; });
 
-    if(!myCaseIds.length){
-      renderMyBidList([]);
-      return;
-    }
+    // localStorage 사건 ID도 포함
+    var localCases = DB.getCases();
+    localCases.forEach(function(c){ if(myCaseIds.indexOf(c.id)<0) myCaseIds.push(c.id); });
 
-    // Step2: bids 전체 조회 후 내 사건 ID로 필터
-    window.FB_FUNCS.getDocs(
-      window.FB_FUNCS.collection(window.FB_DB,'bids')
-    ).then(function(bSnap){
-      var bids = bSnap.docs
-        .map(function(d){return Object.assign({id:d.id},d.data());})
-        .filter(function(b){return myCaseIds.indexOf(b.caseId)>-1;})
-        .sort(function(a,b){
-          var ta = a.createdAt&&a.createdAt.toDate ? a.createdAt.toDate().getTime() : 0;
-          var tb = b.createdAt&&b.createdAt.toDate ? b.createdAt.toDate().getTime() : 0;
-          return tb - ta;
-        });
-      renderMyBidList(bids);
-    }).catch(function(e){
-      console.error('bids 조회 실패:', e);
-      renderMyBidList([]);
+    // bids 필터링
+    var fbBids = bSnap.docs
+      .map(function(d){ return Object.assign({id:d.id}, d.data()); })
+      .filter(function(b){ return myCaseIds.indexOf(b.caseId) > -1; })
+      .sort(function(a,b){
+        var ta = a.createdAt&&a.createdAt.toDate ? a.createdAt.toDate().getTime() : 0;
+        var tb = b.createdAt&&b.createdAt.toDate ? b.createdAt.toDate().getTime() : 0;
+        return tb - ta;
+      });
+
+    // localStorage bids도 합치기 (중복 제거)
+    var localBids = DB.getBids().filter(function(b){
+      return myCaseIds.indexOf(b.caseId)>-1 &&
+             !fbBids.find(function(fb){ return fb.id===b.id; });
     });
+
+    var allBids = fbBids.concat(localBids);
+    console.log('[loadMyBids] caseIds:', myCaseIds, 'bids found:', allBids.length);
+    renderMyBidList(allBids);
+
   }).catch(function(e){
-    console.error('cases 조회 실패:', e);
-    renderMyBidList([]);
+    console.error('[loadMyBids] 오류:', e);
+    // fallback: localStorage
+    renderMyBidList(DB.getBids());
   });
 }
 
@@ -3901,9 +3970,11 @@ function renderMyBidList(bids) {
   var listEl = document.getElementById('my-bids-list');
   var emptyEl = document.getElementById('my-bids-empty');
   if(!listEl) return;
+  console.log('[renderMyBidList] bids:', bids.length, bids);
   if(!bids.length){
     if(emptyEl) emptyEl.style.display='block';
-    listEl.innerHTML=''; return;
+    listEl.innerHTML='<div style="text-align:center;padding:30px;color:var(--ts)">아직 받은 제안이 없습니다.<br><small style="color:var(--ts)">변호사가 제안을 보내면 여기에 표시됩니다.</small></div>';
+    return;
   }
   if(emptyEl) emptyEl.style.display='none';
 
@@ -4198,6 +4269,7 @@ window.loadMyProgressInfo = loadMyProgressInfo;
 window.loadRevenue=loadRevenue; window.filterRevenue=filterRevenue;
 window.admApprovePayment=admApprovePayment; window.admRejectPayment=admRejectPayment;
 
+// ── window 전역 노출 (전체) ──
 window.go=go; window.sel=sel; window.slid=slid; window.gofs=gofs;
 window.runDiag=runDiag; window.resetDiag=resetDiag; window.renderAtts=renderAtts;
 window.sortAtt=sortAtt; window.openAtt=openAtt; window.toggleCmp=toggleCmp;
@@ -4205,11 +4277,34 @@ window.openCompare=openCompare; window.switchTab=switchTab;
 window.submitCase=submitCase; window.simBid=simBid; window.renderMy=renderMy;
 window.faq=faq; window.openM=openM; window.closeM=closeM; window.ovClose=ovClose;
 window.toast=toast; window.enterAttorney=enterAttorney; window.enterAdmin=enterAdmin;
+// 변호사 포털
 window.attDoLogin=attDoLogin; window.switchAttTab=switchAttTab;
 window.attOpenBidForm=attOpenBidForm; window.attSubmitBid=attSubmitBid;
+window.updateAttStats=updateAttStats; window.renderAttCases=renderAttCases;
+window.renderPayPage=renderPayPage; window.changeBidQty=changeBidQty;
+window.attRequestPay=attRequestPay; window.attRequestBidPay=attRequestBidPay;
+window.saveAttProfile=saveAttProfile; window.loadAttProfile=loadAttProfile;
+window.loadHiredCases=loadHiredCases; window.openProgressModal=openProgressModal;
+window.saveProgress=saveProgress; window.markCaseDone=markCaseDone;
+// 관리자 포털
 window.admDoLogin=admDoLogin; window.switchAdmTab=switchAdmTab;
 window.admRefresh=admRefresh; window.admRenderCases=admRenderCases;
 window.admDeleteCase=admDeleteCase; window.admRenderAtts=admRenderAtts;
+window.admRenderUsers=admRenderUsers; window.admApproveAtt=admApproveAtt;
+window.admBlockAtt=admBlockAtt; window.admRestoreAtt=admRestoreAtt;
+// 채무자 대시보드
+window.initMyDash=initMyDash; window.switchMyTab=switchMyTab;
+window.loadMyDiag=loadMyDiag; window.showMyDiag=showMyDiag;
+window.loadMyCases=loadMyCases; window.loadMyBids=loadMyBids;
+window.renderMyBidList=renderMyBidList; window.loadMyProgressInfo=loadMyProgressInfo;
+window.openSelectAttModal=openSelectAttModal; window.confirmSelectAtt=confirmSelectAtt;
+// 수익/결제
+window.loadRevenue=loadRevenue; window.filterRevenue=filterRevenue;
+window.admApprovePayment=admApprovePayment; window.admRejectPayment=admRejectPayment;
+// 입점 신청
+window.openAttApply=openAttApply; window.submitAttApply=submitAttApply;
+// 기타
+window.updateBidPreview=updateBidPreview;
 window.admApproveAtt=admApproveAtt;
 
 // ── 변호사 입점 승인/거절 ──────────────────────────────────
