@@ -458,7 +458,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
     <div class="sec-t" style="margin-top:22px;margin-bottom:12px">서비스 안내</div>
     <div class="my-row" onclick="openM('m-about')"><span class="my-row-l">🏢 Liferefix 소개</span><span class="my-row-r">›</span></div>
     <div class="my-row"><span class="my-row-l">📞 고객센터</span><span class="my-row-r">›</span></div>
-    <div class="my-row" onclick="go('s-bid');switchTab('reg')"><span class="my-row-l">⚖️ 변호사 입점 신청</span><span class="my-row-r">›</span></div>
+    <div class="my-row" onclick="goAttApply()"><span class="my-row-l">⚖️ 변호사 입점 신청</span><span class="my-row-r">›</span></div>
     <div class="sec-t" style="margin-top:22px;margin-bottom:4px">💬 나의 경험담</div>
     <div style="font-size:13px;color:var(--ts);margin-bottom:12px">한 줄 작성하면 홈 화면 후기에 표시됩니다</div>
     <div class="rv-input-wrap" style="margin-bottom:0">
@@ -600,6 +600,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
   <div style="display:flex;background:#fff;border-bottom:2px solid var(--bd)">
     <button class="att-tab on" id="dtab-overview" onclick="switchAdmTab('overview')">현황</button>
     <button class="att-tab" id="dtab-cases" onclick="switchAdmTab('cases')">사건</button>
+    <button class="att-tab" id="dtab-users" onclick="switchAdmTab('users')">회원</button>
     <button class="att-tab" id="dtab-atts" onclick="switchAdmTab('atts')">변호사</button>
     <button class="att-tab" id="dtab-db" onclick="switchAdmTab('db')">DB</button>
     <button class="att-tab" id="dtab-cfg" onclick="switchAdmTab('cfg')">설정</button>
@@ -618,7 +619,16 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
     <input type="text" class="finput" id="adm-search" style="margin-bottom:10px" placeholder="🔍 사건ID / 채무유형 / 지역 검색">
     <div id="adm-case-list"></div>
   </div>
-  <div id="dtp-atts" style="padding:14px;display:none"><div id="adm-att-list"></div></div>
+  <!-- 회원 관리 패널 -->
+<div id="dtp-users" style="padding:14px;display:none">
+  <div style="font-size:14px;font-weight:800;margin-bottom:10px">회원 관리</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:14px">
+    <div style="background:#fff;border-radius:var(--rad);padding:14px;border:1px solid var(--bd);box-shadow:var(--shs)"><div style="font-size:22px;font-weight:900;color:var(--p)" id="adm-user-total">-</div><div style="font-size:11px;color:var(--ts)">전체 가입자</div></div>
+    <div style="background:#fff;border-radius:var(--rad);padding:14px;border:1px solid var(--bd);box-shadow:var(--shs)"><div style="font-size:22px;font-weight:900;color:var(--a)" id="adm-user-today">-</div><div style="font-size:11px;color:var(--ts)">오늘 가입</div></div>
+  </div>
+  <div id="adm-user-list"><div style="text-align:center;padding:30px;color:var(--ts)">불러오는 중...</div></div>
+</div>
+<div id="dtp-atts" style="padding:14px;display:none"><div id="adm-att-list"></div></div>
   <div id="dtp-db" style="padding:14px;display:none">
     <div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-weight:700">총 판결문 DB</div><div style="font-size:12px;color:var(--ts)">law-story.com 수집</div></div><b style="font-size:16px;color:var(--p)">33건</b></div></div>
     <button class="btn p" style="padding:12px" onclick="toast('크롤러를 실행합니다. 약 8~10분 소요됩니다.')">🔄 크롤러 실행</button>
@@ -629,6 +639,93 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
       <div style="display:flex;justify-content:space-between;padding:8px 0"><span style="font-size:14px;font-weight:600">기본 구독료</span><b>50만원/월</b></div>
     </div>
     <button class="btn o" onclick="go('s-my')">← 나가기</button>
+  </div>
+</div>
+
+<!-- 변호사 입점 신청 화면 -->
+<div class="scr" id="s-att-apply">
+  <div style="min-height:100vh;background:var(--bg);padding-bottom:80px">
+    <!-- 헤더 -->
+    <div style="background:linear-gradient(135deg,var(--p),var(--pd));padding:28px 22px 32px">
+      <button onclick="go('s-my')" style="background:rgba(255,255,255,.2);border:none;color:#fff;border-radius:20px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:16px">← 돌아가기</button>
+      <div style="font-size:22px;font-weight:900;color:#fff;margin-bottom:6px">⚖️ 변호사 파트너 신청</div>
+      <div style="font-size:13px;color:rgba(255,255,255,.8);line-height:1.6">Liferefix 파트너 변호사로 등록하시면<br>개인회생 사건을 직접 수임할 수 있습니다.</div>
+    </div>
+
+    <!-- 플랜 안내 -->
+    <div style="padding:20px">
+      <div style="background:#fff;border-radius:var(--rad);padding:18px;border:2px solid var(--p);margin-bottom:20px">
+        <div style="font-size:13px;font-weight:800;color:var(--p);margin-bottom:10px">📦 기본 플랜 (무료 체험 3개월)</div>
+        <div style="font-size:13px;color:var(--ts);line-height:1.8">
+          ✅ 월 50만원 (체험 기간 무료)<br>
+          ✅ 기본 비딩 10건/월 포함<br>
+          ✅ 추가 비딩 2만원/건<br>
+          ✅ 채무자 사건 실시간 알림
+        </div>
+      </div>
+
+      <!-- 신청 폼 -->
+      <div style="font-size:16px;font-weight:800;margin-bottom:16px">신청 정보 입력</div>
+
+      <span class="flabel">이름 *</span>
+      <input type="text" class="finput" id="att-apply-name" placeholder="홍길동">
+
+      <span class="flabel">소속 법무법인/사무소 *</span>
+      <input type="text" class="finput" id="att-apply-firm" placeholder="법무법인 OO">
+
+      <span class="flabel">경력 연수 *</span>
+      <div class="tg" id="g-att-career">
+        <button class="tb on" onclick="sel(this,'g-att-career')">1~3년</button>
+        <button class="tb" onclick="sel(this,'g-att-career')">4~7년</button>
+        <button class="tb" onclick="sel(this,'g-att-career')">8~15년</button>
+        <button class="tb" onclick="sel(this,'g-att-career')">15년 이상</button>
+      </div>
+
+      <span class="flabel">전문 분야 *</span>
+      <div class="tg" id="g-att-type">
+        <button class="tb on" onclick="sel(this,'g-att-type')">신용대출</button>
+        <button class="tb" onclick="sel(this,'g-att-type')">카드채무</button>
+        <button class="tb" onclick="sel(this,'g-att-type')">담보대출</button>
+        <button class="tb" onclick="sel(this,'g-att-type')">복합채무</button>
+        <button class="tb" onclick="sel(this,'g-att-type')">전체</button>
+      </div>
+
+      <span class="flabel">활동 지역 *</span>
+      <div class="tg" id="g-att-region">
+        <button class="tb on" onclick="sel(this,'g-att-region')">서울</button>
+        <button class="tb" onclick="sel(this,'g-att-region')">경기·인천</button>
+        <button class="tb" onclick="sel(this,'g-att-region')">부산·경남</button>
+        <button class="tb" onclick="sel(this,'g-att-region')">대구·경북</button>
+        <button class="tb" onclick="sel(this,'g-att-region')">광주·전라</button>
+        <button class="tb" onclick="sel(this,'g-att-region')">대전·충청</button>
+        <button class="tb" onclick="sel(this,'g-att-region')">전국</button>
+      </div>
+
+      <span class="flabel">변호사 등록번호 *</span>
+      <input type="text" class="finput" id="att-apply-regnum" placeholder="예: 제12345호">
+
+      <span class="flabel">착수금 가격대</span>
+      <div class="tg" id="g-att-price">
+        <button class="tb on" onclick="sel(this,'g-att-price')">100만원 미만</button>
+        <button class="tb" onclick="sel(this,'g-att-price')">100~150만원</button>
+        <button class="tb" onclick="sel(this,'g-att-price')">150~200만원</button>
+        <button class="tb" onclick="sel(this,'g-att-price')">200만원 이상</button>
+      </div>
+
+      <span class="flabel">연락처 (이메일) *</span>
+      <input type="email" class="finput" id="att-apply-email" placeholder="lawyer@example.com">
+
+      <span class="flabel">자기소개 (선택)</span>
+      <textarea class="finput" id="att-apply-intro" rows="3" placeholder="채무자에게 표시될 간단한 소개를 입력해주세요."></textarea>
+
+      <div id="att-apply-err" style="font-size:12px;color:var(--r);margin-bottom:10px;display:none"></div>
+
+      <button class="btn p" onclick="submitAttApply()">🎯 파트너 신청하기</button>
+      <div style="font-size:12px;color:var(--ts);text-align:center;margin-top:12px;line-height:1.7">
+        신청 후 관리자 검토(1~2 영업일) 완료 시 승인 이메일이 발송됩니다.<br>
+        문의: partner@liferefix.com
+      </div>
+    </div>
   </div>
 </div>
 
@@ -742,7 +839,7 @@ import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,
          signOut, onAuthStateChanged, GoogleAuthProvider, signInWithPopup }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getFirestore, collection, addDoc, getDocs, doc, updateDoc,
-         deleteDoc, query, orderBy, onSnapshot, serverTimestamp }
+         deleteDoc, setDoc, getDoc, query, orderBy, onSnapshot, serverTimestamp }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -770,9 +867,9 @@ onAuthStateChanged(fbAuth, function(user) {
   if (user) {
     var nickname = user.displayName || user.email.split('@')[0];
     if(hdrBtn) {
-      hdrBtn.textContent = nickname;
+      hdrBtn.textContent = nickname + ' ›';
       hdrBtn.style.background = 'var(--ts)';
-      hdrBtn.onclick = function(){ window._doLogout&&window._doLogout(); };
+      hdrBtn.onclick = function(){ window.go&&window.go('s-my'); };
     }
   } else {
     if(hdrBtn) {
@@ -798,7 +895,12 @@ window._doLogin = function() {
   var err   = document.getElementById('login-err');
   if (!email||!pw) { if(err){err.style.display='block';err.textContent='이메일과 비밀번호를 입력해주세요.';} return; }
   signInWithEmailAndPassword(fbAuth, email, pw)
-    .then(function(){ window.closeM&&window.closeM('m-login'); window.toast&&window.toast('✅ 로그인 완료!'); })
+    .then(function(uc) {
+      var userRef = doc(fbDb, 'users', uc.user.uid);
+      updateDoc(userRef, { lastLogin: serverTimestamp() }).catch(function(){});
+      window.closeM&&window.closeM('m-login');
+      window.toast&&window.toast('✅ 로그인 완료!');
+    })
     .catch(function(e){
       if(err) err.style.display='block';
       var msg='로그인에 실패했습니다.';
@@ -819,7 +921,21 @@ window._doSignup = function() {
   if (pw!==pw2)    { if(err){err.style.display='block';err.textContent='비밀번호가 일치하지 않습니다.';} return; }
   if (pw.length<6) { if(err){err.style.display='block';err.textContent='비밀번호는 6자 이상이어야 합니다.';} return; }
   createUserWithEmailAndPassword(fbAuth, email, pw)
-    .then(function(){ window.closeM&&window.closeM('m-login'); window.toast&&window.toast('🎉 회원가입 완료!'); })
+    .then(function(uc) {
+      // Firestore users 컬렉션에 유저 정보 저장
+      var userRef = doc(fbDb, 'users', uc.user.uid);
+      setDoc(userRef, {
+        uid:       uc.user.uid,
+        email:     uc.user.email,
+        nickname:  uc.user.email.split('@')[0],
+        role:      'debtor',
+        provider:  'email',
+        createdAt: serverTimestamp(),
+        lastLogin: serverTimestamp()
+      });
+      window.closeM&&window.closeM('m-login');
+      window.toast&&window.toast('🎉 회원가입 완료! 환영합니다.');
+    })
     .catch(function(e){
       console.error('회원가입 오류 코드:', e.code);
       console.error('회원가입 오류 메시지:', e.message);
@@ -844,8 +960,27 @@ window._doGoogleLogin = function() {
   var provider = new GoogleAuthProvider();
   signInWithPopup(fbAuth, provider)
     .then(function(result) {
+      var u = result.user;
+      // Firestore users 컬렉션 저장 (최초 로그인 시에만 생성)
+      var userRef = doc(fbDb, 'users', u.uid);
+      getDoc(userRef).then(function(snap) {
+        if(!snap.exists()) {
+          setDoc(userRef, {
+            uid:       u.uid,
+            email:     u.email,
+            nickname:  u.displayName || u.email.split('@')[0],
+            photoURL:  u.photoURL || '',
+            role:      'debtor',
+            provider:  'google',
+            createdAt: serverTimestamp(),
+            lastLogin: serverTimestamp()
+          });
+        } else {
+          updateDoc(userRef, { lastLogin: serverTimestamp() });
+        }
+      });
       window.closeM&&window.closeM('m-login');
-      var name = result.user.displayName || result.user.email.split('@')[0];
+      var name = u.displayName || u.email.split('@')[0];
       window.toast&&window.toast('✅ ' + name + '님, 환영합니다!');
     })
     .catch(function(e) {
@@ -922,6 +1057,21 @@ window.submitBidFirebase = async function(bidData) {
 };
 
 // ── Firestore 사건별 비딩 조회 ───────────────────────────
+// Firestore 함수 window 노출 (관리자 포털용)
+window.FB_FUNCS = {
+  collection: collection,
+  addDoc: addDoc,
+  getDocs: getDocs,
+  doc: doc,
+  updateDoc: updateDoc,
+  setDoc: setDoc,
+  getDoc: getDoc,
+  query: query,
+  orderBy: orderBy,
+  onSnapshot: onSnapshot,
+  serverTimestamp: serverTimestamp
+};
+
 window.listenBidsForCase = function(caseId, callback) {
   var q = query(collection(fbDb, 'bids'),
     orderBy('createdAt', 'desc'));
@@ -1373,13 +1523,14 @@ function admDoLogin(){
   var srch=document.getElementById('adm-search');if(srch)srch.oninput=admRenderCases;
 }
 function switchAdmTab(t){
-  ['overview','cases','atts','db','cfg'].forEach(function(x){
+  ['overview','cases','users','atts','db','cfg'].forEach(function(x){
     var btn=document.getElementById('dtab-'+x);var panel=document.getElementById('dtp-'+x);
     if(btn)btn.classList.toggle('on',x===t);
     if(panel)panel.style.display=x===t?'block':'none';
   });
   if(t==='overview')admRefresh();
   if(t==='cases')admRenderCases();
+  if(t==='users')admRenderUsers();
   if(t==='atts')admRenderAtts();
   window.scrollTo(0,0);
 }
@@ -1406,6 +1557,55 @@ function admRenderCases(){
   }).join('');
 }
 function admDeleteCase(id){var cases=DB.getCases().filter(function(x){return x.id!==id;});DB.saveCases(cases);admRenderCases();admRefresh();toast('삭제되었습니다.');}
+function admRenderUsers(){
+  var el = document.getElementById('adm-user-list'); if(!el) return;
+  el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--ts)">🔄 불러오는 중...</div>';
+
+  if(window.FB_DB && window.FB_FUNCS) {
+    var q = window.FB_FUNCS.query(
+      window.FB_FUNCS.collection(window.FB_DB, 'users'),
+      window.FB_FUNCS.orderBy('createdAt', 'desc')
+    );
+    window.FB_FUNCS.getDocs(q).then(function(snap) {
+      var users = snap.docs.map(function(d){ return Object.assign({id:d.id}, d.data()); });
+      var total = document.getElementById('adm-user-total');
+      if(total) total.textContent = users.length;
+      // 오늘 가입자
+      var today = new Date(); today.setHours(0,0,0,0);
+      var todayCount = users.filter(function(u){
+        if(!u.createdAt) return false;
+        var d = u.createdAt.toDate ? u.createdAt.toDate() : new Date(u.createdAt);
+        return d >= today;
+      }).length;
+      var todayEl = document.getElementById('adm-user-today');
+      if(todayEl) todayEl.textContent = todayCount;
+
+      if(!users.length) {
+        el.innerHTML = '<div style="text-align:center;padding:30px;color:var(--ts)">가입자 없음</div>';
+        return;
+      }
+      el.innerHTML = users.map(function(u) {
+        var roleMap = {debtor:'채무자', attorney:'변호사', admin:'관리자'};
+        var providerIcon = u.provider==='google' ? '🔵 구글' : '📧 이메일';
+        var date = u.createdAt && u.createdAt.toDate ? u.createdAt.toDate().toLocaleDateString('ko-KR') : '-';
+        return '<div style="background:#fff;border-radius:var(--rad);padding:13px 15px;border:1px solid var(--bd);margin-bottom:9px;box-shadow:var(--shs)">'
+          +'<div style="display:flex;justify-content:space-between;align-items:center">'
+          +'<div>'
+          +'<div style="font-size:14px;font-weight:700">'+(u.nickname||u.email||'-')+'</div>'
+          +'<div style="font-size:12px;color:var(--ts);margin-top:2px">'+(u.email||'')+' · '+providerIcon+'</div>'
+          +'<div style="font-size:11px;color:var(--ts);margin-top:2px">가입일: '+date+'</div>'
+          +'</div>'
+          +'<span style="font-size:11px;font-weight:700;background:var(--pl);color:var(--p);padding:3px 9px;border-radius:20px">'+(roleMap[u.role]||u.role||'-')+'</span>'
+          +'</div></div>';
+      }).join('');
+    }).catch(function(e) {
+      el.innerHTML = '<div style="text-align:center;padding:30px;color:var(--r)">조회 실패: '+e.message+'</div>';
+    });
+  } else {
+    el.innerHTML = '<div style="text-align:center;padding:30px;color:var(--ts)">Firebase 연결 필요</div>';
+  }
+}
+
 function admRenderAtts(){
   var atts=getAdmAtts();var el=document.getElementById('adm-att-list');if(!el)return;
   var sc={active:{l:'활성',bg:'var(--al)',c:'#005945'},pending:{l:'승인대기',bg:'#FFF3E0',c:'#7A3500'},blocked:{l:'정지',bg:'#FFF0F0',c:'var(--r)'}};
@@ -1545,6 +1745,75 @@ window.doGoogleLogin = doGoogleLogin;
   var _go=go;
   window.go=function(id){_go(id);if(id==='s-home')loadUserReviews();if(id==='s-my'){loadMyList();bindStarGroup();bindReviewSubmit();}};
 })();
+
+// ── 변호사 입점 신청 ──────────────────────────────────────
+function goAttApply() {
+  if(!window.FB_USER) {
+    openM('m-login');
+    toast('변호사 신청을 위해 로그인이 필요합니다.');
+    return;
+  }
+  go('s-att-apply');
+}
+window.goAttApply = goAttApply;
+
+function submitAttApply() {
+  var name   = (document.getElementById('att-apply-name')||{}).value||'';
+  var firm   = (document.getElementById('att-apply-firm')||{}).value||'';
+  var regnum = (document.getElementById('att-apply-regnum')||{}).value||'';
+  var email  = (document.getElementById('att-apply-email')||{}).value||'';
+  var errEl  = document.getElementById('att-apply-err');
+
+  if(!name||!firm||!regnum||!email) {
+    if(errEl){ errEl.style.display='block'; errEl.textContent='* 표시된 항목을 모두 입력해주세요.'; }
+    return;
+  }
+
+  var careerEl = document.querySelector('#g-att-career .tb.on');
+  var typeEl   = document.querySelector('#g-att-type .tb.on');
+  var regionEl = document.querySelector('#g-att-region .tb.on');
+  var priceEl  = document.querySelector('#g-att-price .tb.on');
+  var intro    = (document.getElementById('att-apply-intro')||{}).value||'';
+
+  var applyData = {
+    uid:    window.FB_USER ? window.FB_USER.uid : '',
+    name:   name,
+    firm:   firm,
+    regnum: regnum,
+    email:  email,
+    career: careerEl ? careerEl.textContent.trim() : '',
+    type:   typeEl   ? typeEl.textContent.trim()   : '',
+    region: regionEl ? regionEl.textContent.trim() : '',
+    price:  priceEl  ? priceEl.textContent.trim()  : '',
+    intro:  intro,
+    status: 'pending',
+    appliedAt: new Date().toLocaleString('ko-KR')
+  };
+
+  // Firestore 저장
+  if(window.FB_DB && window.FB_FUNCS) {
+    var addDoc    = window.FB_FUNCS.addDoc;
+    var collection= window.FB_FUNCS.collection;
+    var srvTs     = window.FB_FUNCS.serverTimestamp;
+    addDoc(collection(window.FB_DB, 'attorney_applications'),
+      Object.assign({}, applyData, { createdAt: srvTs() })
+    ).then(function() {
+      toast('✅ 신청 완료! 1~2 영업일 내 검토 후 이메일로 안내드립니다.');
+      setTimeout(function(){ go('s-my'); }, 2000);
+    }).catch(function(e) {
+      console.error('신청 저장 실패:', e);
+      // Firestore 실패해도 localStorage에 저장
+      DB.save('att_apply_'+Date.now(), applyData);
+      toast('✅ 신청이 접수되었습니다!');
+      setTimeout(function(){ go('s-my'); }, 2000);
+    });
+  } else {
+    DB.save('att_apply_'+Date.now(), applyData);
+    toast('✅ 신청이 접수되었습니다! 빠른 시일 내 연락드립니다.');
+    setTimeout(function(){ go('s-my'); }, 2000);
+  }
+}
+window.submitAttApply = submitAttApply;
 </script>
 
 </body>
