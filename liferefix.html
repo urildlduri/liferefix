@@ -547,13 +547,46 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
       <div style="font-size:14px;font-weight:700" id="att-bf-title">사건 목록에서 제안 작성을 클릭하세요</div>
     </div>
     <span class="flabel">착수금</span>
-    <div class="tg" id="ag-ret"><button class="tb" data-v="100">100만</button><button class="tb on" data-v="120">120만</button><button class="tb" data-v="150">150만</button><button class="tb" data-v="180">180만</button></div>
+    <div class="tg" id="ag-ret">
+      <button class="tb" data-v="100">100만</button>
+      <button class="tb on" data-v="120">120만</button>
+      <button class="tb" data-v="150">150만</button>
+      <button class="tb" data-v="180">180만</button>
+      <button class="tb" data-v="200">200만</button>
+    </div>
+    <span class="flabel">수임료 할부</span>
+    <div class="tg" id="ag-install">
+      <button class="tb on" data-v="none">할부 없음</button>
+      <button class="tb" data-v="2">2개월</button>
+      <button class="tb" data-v="3">3개월</button>
+      <button class="tb" data-v="6">6개월</button>
+      <button class="tb" data-v="12">12개월</button>
+    </div>
     <span class="flabel">성공보수</span>
-    <div class="tg" id="ag-suc"><button class="tb on" data-v="0">없음</button><button class="tb" data-v="30">30만</button><button class="tb" data-v="50">50만</button></div>
-    <span class="flabel">변제 기간</span>
-    <div class="tg" id="ag-per"><button class="tb on" data-v="36">36개월</button><button class="tb" data-v="48">48개월</button><button class="tb" data-v="60">60개월</button></div>
-    <span class="flabel">제안 전략</span>
-    <textarea class="finput" id="att-strategy" rows="3" style="resize:none" placeholder="채무자에게 표시될 전략을 입력하세요."></textarea>
+    <div class="tg" id="ag-suc">
+      <button class="tb on" data-v="0">없음</button>
+      <button class="tb" data-v="30">30만</button>
+      <button class="tb" data-v="50">50만</button>
+    </div>
+    <span class="flabel">변제 기간 (예상)</span>
+    <div class="tg" id="ag-per">
+      <button class="tb on" data-v="36">36개월</button>
+      <button class="tb" data-v="48">48개월</button>
+      <button class="tb" data-v="60">60개월</button>
+    </div>
+    <span class="flabel">예상 승인 가능성</span>
+    <div class="tg" id="ag-prob">
+      <button class="tb" data-v="75">75% 이상</button>
+      <button class="tb on" data-v="85">85% 이상</button>
+      <button class="tb" data-v="90">90% 이상</button>
+      <button class="tb" data-v="95">95% 이상</button>
+    </div>
+    <span class="flabel">제안 전략 (채무자에게 표시)</span>
+    <textarea class="finput" id="att-strategy" rows="4" style="resize:none" placeholder="예: 신용대출 전문으로 12년간 서울회생법원에서 높은 승인율을 보유하고 있습니다. 착수금 분납 가능하며 빠른 처리를 약속드립니다."></textarea>
+    <!-- 요약 미리보기 -->
+    <div style="background:var(--pl);border-radius:var(--rads);padding:12px;margin-bottom:14px;font-size:12.5px;color:var(--p);line-height:1.8" id="bid-preview">
+      💡 제안 요약이 여기에 표시됩니다
+    </div>
     <button class="btn p" onclick="attSubmitBid()">🎯 제안 제출하기</button>
     <button class="btn o" onclick="switchAttTab('cases')">← 사건 목록</button>
   </div>
@@ -1791,84 +1824,104 @@ function renderAttCaseList(cases) {
     el.innerHTML='<div style="text-align:center;padding:30px;color:var(--ts)">등록된 사건이 없습니다</div>';
     return;
   }
-
-  var MAX_BIDS = 10;  // 사건당 최대 입찰자 수
+  var MAX_BIDS = 10;
   var now = Date.now();
-
-  var sm = {
-    new:    {l:'신규',  c:'var(--p)'},
-    bid:    {l:'비딩중',c:'var(--a)'},
-    closed: {l:'마감',  c:'var(--ts)'},
-    hired:  {l:'수임완료',c:'#005945'}
-  };
+  var sm = {new:{l:'신규',c:'var(--p)'},bid:{l:'비딩중',c:'var(--a)'},closed:{l:'마감',c:'var(--ts)'},hired:{l:'수임완료',c:'#005945'}};
 
   el.innerHTML = cases.map(function(c){
     var bidCnt   = c.bidCnt || 0;
     var isFull   = bidCnt >= MAX_BIDS;
-    var isClosed = c.status === 'closed' || isFull;
-
-    // 48시간 타이머 계산
-    var createdMs = c.createdAt && c.createdAt.toDate
-      ? c.createdAt.toDate().getTime()
-      : (c._createdMs || now);
-    var elapsed   = now - createdMs;
-    var remaining = (48 * 60 * 60 * 1000) - elapsed;
+    var createdMs = c.createdAt && c.createdAt.toDate ? c.createdAt.toDate().getTime() : (now - 1000);
+    var remaining = (48*60*60*1000) - (now - createdMs);
     var isExpired = remaining <= 0;
+    var isClosed  = c.status==='closed' || isFull || isExpired;
+    var s = isClosed ? {l:'마감',c:'var(--ts)'} : (sm[c.status]||{l:'대기',c:'#999'});
 
-    // 타이머 표시
+    // 타이머
     var timerStr = '';
-    if(!isClosed && !isExpired) {
-      var rh = Math.floor(remaining / 3600000);
-      var rm = Math.floor((remaining % 3600000) / 60000);
-      timerStr = '⏱ ' + rh + '시간 ' + rm + '분 남음';
-    } else if(isExpired && !isClosed) {
-      timerStr = '⏰ 시간 만료';
+    if(!isClosed) {
+      var rh=Math.floor(remaining/3600000), rm=Math.floor((remaining%3600000)/60000);
+      timerStr = '⏱ '+rh+'시간 '+rm+'분 남음';
     }
 
-    // 상태 결정
-    var status = isClosed ? 'closed' : (isExpired ? 'closed' : c.status);
-    var s = sm[status] || {l:'대기', c:'#999'};
+    // 입찰바 색상
+    var barColor = isFull?'var(--r)':bidCnt>=7?'var(--o)':'var(--p)';
+    var barPct   = Math.min(100,Math.round(bidCnt/MAX_BIDS*100));
 
-    // 입찰 바
-    var barPct  = Math.min(100, Math.round(bidCnt / MAX_BIDS * 100));
-    var barColor= isFull ? 'var(--r)' : bidCnt >= 7 ? 'var(--o)' : 'var(--p)';
+    // ── 진단 정보 파싱 ──
+    var diag = c.diag || {};
+    var hasD = diag && diag.ok;
+    var debt    = hasD ? diag.debt    : null;
+    var income  = hasD ? diag.inc     : null;
+    var assets  = hasD ? diag.ast     : null;
+    var relief  = hasD ? Math.round(diag.final*100) : null;
+    var monthly = hasD ? diag.monthly : null;
+    var reliefAmt = hasD ? (diag.debt - diag.ramt) : null;
 
-    // 내가 이미 제안했는지 (attBidId로 체크)
-    var alreadyBid = false; // Firestore 조회로 체크하면 더 정확
+    function fw2(v){ if(!v&&v!==0) return '-'; return v>=10000?(v/10000).toFixed(1)+'억':Math.round(v).toLocaleString()+'만'; }
+
+    // 진단 정보 카드
+    var diagHtml = '';
+    if(hasD) {
+      diagHtml = '<div style="background:linear-gradient(135deg,#EEF3FF,#E0FAF5);border-radius:10px;padding:12px;margin:10px 0">'
+        +'<div style="font-size:11px;font-weight:800;color:var(--p);margin-bottom:8px">📊 AI 진단 결과</div>'
+        +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px">'
+        +'<div style="background:#fff;border-radius:8px;padding:8px;text-align:center">'
+          +'<div style="font-size:10px;color:var(--ts)">채무액</div>'
+          +'<div style="font-size:14px;font-weight:800;color:var(--r)">'+fw2(debt)+'</div></div>'
+        +'<div style="background:#fff;border-radius:8px;padding:8px;text-align:center">'
+          +'<div style="font-size:10px;color:var(--ts)">탕감가능액</div>'
+          +'<div style="font-size:14px;font-weight:800;color:var(--a)">'+fw2(reliefAmt)+'</div></div>'
+        +'<div style="background:#fff;border-radius:8px;padding:8px;text-align:center">'
+          +'<div style="font-size:10px;color:var(--ts)">탕감률</div>'
+          +'<div style="font-size:14px;font-weight:800;color:var(--p)">'+(relief||'-')+'%</div></div>'
+        +'<div style="background:#fff;border-radius:8px;padding:8px;text-align:center">'
+          +'<div style="font-size:10px;color:var(--ts)">월소득</div>'
+          +'<div style="font-size:14px;font-weight:800;color:var(--t)">'+fw2(income)+'</div></div>'
+        +'<div style="background:#fff;border-radius:8px;padding:8px;text-align:center">'
+          +'<div style="font-size:10px;color:var(--ts)">재산</div>'
+          +'<div style="font-size:14px;font-weight:800;color:var(--t)">'+fw2(assets)+'</div></div>'
+        +'<div style="background:#fff;border-radius:8px;padding:8px;text-align:center">'
+          +'<div style="font-size:10px;color:var(--ts)">월변제금</div>'
+          +'<div style="font-size:14px;font-weight:800;color:var(--o)">'+fw2(monthly)+'</div></div>'
+        +'</div>'
+        +'</div>';
+    } else if(c.drange || c.budget) {
+      diagHtml = '<div style="background:var(--bg);border-radius:10px;padding:10px;margin:10px 0;font-size:12px;color:var(--ts)">'
+        +'채무규모: <b style="color:var(--t)">'+(c.drange||'-')+'</b> · 희망착수금: <b style="color:var(--p)">'+(c.budget||'-')+'</b>'
+        +'</div>';
+    }
 
     // 버튼
-    var btn;
-    if(isClosed || isExpired) {
-      btn = '<span style="font-size:11px;font-weight:700;background:#F0F0F0;color:var(--ts);padding:5px 12px;border-radius:20px">🔒 마감</span>';
-    } else {
-      btn = '<button class="att-bid-btn" data-cid="'+c.id+'" style="font-size:12px;font-weight:700;color:#fff;background:var(--p);border:none;padding:7px 14px;border-radius:20px;cursor:pointer;font-family:inherit">제안 작성</button>';
-    }
+    var btn = isClosed
+      ? '<span style="font-size:11px;font-weight:700;background:#F0F0F0;color:var(--ts);padding:5px 12px;border-radius:20px;flex-shrink:0">🔒 마감</span>'
+      : '<button class="att-bid-btn" data-cid="'+c.id+'" style="font-size:12px;font-weight:700;color:#fff;background:var(--p);border:none;padding:7px 14px;border-radius:20px;cursor:pointer;font-family:inherit;flex-shrink:0;white-space:nowrap">제안 작성</button>';
 
-    var borderColor = isClosed||isExpired ? '#ccc' : s.c;
-
-    return '<div style="background:#fff;border-radius:var(--rad);padding:14px 16px;border:1px solid var(--bd);margin-bottom:10px;border-left:4px solid '+borderColor+';opacity:'+(isClosed||isExpired?'0.7':'1')+'">'
+    return '<div style="background:#fff;border-radius:var(--rad);padding:14px 16px;border:1px solid var(--bd);margin-bottom:12px;border-left:4px solid '+(isClosed?'#ccc':s.c)+';opacity:'+(isClosed?'0.75':'1')+'">'
       // 헤더
-      +'<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">'
+      +'<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">'
       +'<div style="flex:1">'
-      +'<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">'
+      +'<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:4px">'
       +'<span style="font-size:11px;font-weight:800;color:var(--p)">'+c.id+'</span>'
-      +'<span style="font-size:11px;font-weight:700;background:'+(isClosed||isExpired?'#F0F0F0':'var(--pl)')+';color:'+(isClosed||isExpired?'var(--ts)':s.c)+';padding:2px 8px;border-radius:20px">'+(isClosed||isExpired?'마감':s.l)+'</span>'
+      +'<span style="font-size:11px;font-weight:700;background:'+(isClosed?'#F0F0F0':'var(--pl)')+';color:'+(isClosed?'var(--ts)':s.c)+';padding:2px 8px;border-radius:20px">'+(isClosed?'마감':s.l)+'</span>'
+      +(c.dtype?'<span style="font-size:11px;background:#FFF3E0;color:#7A3500;padding:2px 8px;border-radius:20px">'+c.dtype+'</span>':'')
       +'</div>'
-      +'<div style="font-size:14px;font-weight:700">'+(c.dtype||'미분류')+' · '+(c.region||'')+'</div>'
-      +'<div style="font-size:12px;color:var(--ts);margin-top:2px">'+(c.drange||'')+' · '+(c.at||'')+'</div>'
-      +(c.memo?'<div style="font-size:12px;color:var(--ts);margin-top:2px">📝 '+c.memo+'</div>':'')
-      +(timerStr?'<div style="font-size:11px;color:'+(isExpired?'var(--r)':'var(--o)')+';margin-top:3px;font-weight:600">'+timerStr+'</div>':'')
+      +'<div style="font-size:15px;font-weight:700">'+(c.region||'')+' 사건</div>'
+      +(c.memo?'<div style="font-size:12px;color:var(--ts);margin-top:3px">📝 '+c.memo+'</div>':'')
+      +(timerStr?'<div style="font-size:11px;color:var(--o);margin-top:3px;font-weight:600">'+timerStr+'</div>':'')
       +'</div>'
       +btn
       +'</div>'
-      // 입찰 현황 바
-      +'<div>'
+      // 진단 정보
+      +diagHtml
+      // 입찰 현황
+      +'<div style="margin-top:8px">'
       +'<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--ts);margin-bottom:4px">'
       +'<span>입찰 현황</span>'
-      +'<span style="font-weight:700;color:'+barColor+'">'+bidCnt+' / '+MAX_BIDS+'명'+(isFull?' (마감)':'')+'</span>'
+      +'<span style="font-weight:700;color:'+barColor+'">'+bidCnt+'/'+MAX_BIDS+'명'+(isFull?' 마감':'')+'</span>'
       +'</div>'
       +'<div style="height:6px;border-radius:3px;background:var(--bd);overflow:hidden">'
-      +'<div style="width:'+barPct+'%;height:100%;border-radius:3px;background:'+barColor+';transition:width .4s"></div>'
+      +'<div style="width:'+barPct+'%;height:100%;border-radius:3px;background:'+barColor+'"></div>'
       +'</div>'
       +'</div>'
       +'</div>';
@@ -1971,11 +2024,31 @@ function _recoverBidToken(caseId) {
 
 function _doAttSubmitBid(){
   if(!attBidId){toast('사건을 먼저 선택해주세요.');switchAttTab('cases');return;}
-  var retEl=document.querySelector('#ag-ret .tb.on');var sucEl=document.querySelector('#ag-suc .tb.on');
-  var retainer=retEl?parseInt(retEl.dataset.v||'120'):120;
-  var success=sucEl?parseInt(sucEl.dataset.v||'0'):0;
-  var strategy=(document.getElementById('att-strategy')||{}).value||'성실히 도와드리겠습니다.';
-  var bid={id:'BID-'+Date.now().toString(36).toUpperCase().slice(-5),caseId:attBidId,attName:'김○○',retainer:retainer,success:success,strategy:strategy,at:new Date().toLocaleString('ko-KR')};
+  var retEl     = document.querySelector('#ag-ret .tb.on');
+  var sucEl     = document.querySelector('#ag-suc .tb.on');
+  var instEl    = document.querySelector('#ag-install .tb.on');
+  var perEl     = document.querySelector('#ag-per .tb.on');
+  var probEl    = document.querySelector('#ag-prob .tb.on');
+  var retainer  = retEl  ? parseInt(retEl.dataset.v||'120') : 120;
+  var success   = sucEl  ? parseInt(sucEl.dataset.v||'0')   : 0;
+  var install   = instEl ? instEl.dataset.v : 'none';
+  var period    = perEl  ? parseInt(perEl.dataset.v||'36')  : 36;
+  var prob      = probEl ? parseInt(probEl.dataset.v||'85') : 85;
+  var strategy  = (document.getElementById('att-strategy')||{}).value||'성실히 도와드리겠습니다.';
+  var attName   = window.FB_USER ? (window.FB_USER.displayName||window.FB_USER.email.split('@')[0]) : '변호사';
+  var bid = {
+    id:       'BID-'+Date.now().toString(36).toUpperCase().slice(-5),
+    caseId:   attBidId,
+    attName:  attName,
+    attEmail: window.FB_USER ? window.FB_USER.email : '',
+    retainer: retainer,
+    success:  success,
+    install:  install,
+    period:   period,
+    prob:     prob,
+    strategy: strategy,
+    at:       new Date().toLocaleString('ko-KR')
+  };
   DB.addBid(bid);DB.updateCase(attBidId,{status:'bid'});
   var sc=ATT_SAMPLES.find(function(x){return x.id===attBidId;});if(sc)sc.status='bid';
 
@@ -2337,10 +2410,10 @@ document.addEventListener('click',function(e){
   });
   renderAtts();
   loadUserReviews();loadMyList();bindStarGroup();bindReviewSubmit();
-  ['ag-ret','ag-suc','ag-per'].forEach(function(gid){
+  ['ag-ret','ag-suc','ag-per','ag-install','ag-prob'].forEach(function(gid){
     var g=document.getElementById(gid);if(!g)return;
     g.querySelectorAll('.tb').forEach(function(btn){
-      btn.onclick=function(){g.querySelectorAll('.tb').forEach(function(b){b.classList.remove('on');});btn.classList.add('on');};
+      btn.onclick=function(){g.querySelectorAll('.tb').forEach(function(b){b.classList.remove('on');});btn.classList.add('on');if(window.updateBidPreview)updateBidPreview();};
     });
   });
   // window 전역 노출 (모바일/iframe 호환)
@@ -2529,6 +2602,31 @@ function checkExpiredCases(cases) {
 }
 window._recoverBidToken = _recoverBidToken;
 window.checkExpiredCases = checkExpiredCases;
+
+
+// ── 제안 미리보기 실시간 업데이트 ──
+function updateBidPreview() {
+  var retEl  = document.querySelector('#ag-ret .tb.on');
+  var instEl = document.querySelector('#ag-install .tb.on');
+  var sucEl  = document.querySelector('#ag-suc .tb.on');
+  var perEl  = document.querySelector('#ag-per .tb.on');
+  var probEl = document.querySelector('#ag-prob .tb.on');
+  var el = document.getElementById('bid-preview');
+  if(!el) return;
+
+  var ret  = retEl  ? retEl.textContent  : '-';
+  var inst = instEl ? instEl.dataset.v   : 'none';
+  var suc  = sucEl  ? sucEl.textContent  : '없음';
+  var per  = perEl  ? perEl.textContent  : '-';
+  var prob = probEl ? probEl.dataset.v   : '-';
+  var instStr = inst==='none' ? '일시불' : inst+'개월 할부';
+
+  el.innerHTML = '📋 <b>제안 요약</b><br>'
+    +'착수금 <b style="color:var(--p)">'+ret+'</b> · '+instStr
+    +' · 성공보수 <b>'+suc+'</b><br>'
+    +'변제기간 <b>'+per+'</b> · 예상 승인율 <b style="color:var(--a)">'+prob+'% 이상</b>';
+}
+window.updateBidPreview = updateBidPreview;
 
 window.loadRevenue=loadRevenue; window.filterRevenue=filterRevenue;
 window.admApprovePayment=admApprovePayment; window.admRejectPayment=admRejectPayment;
@@ -2794,6 +2892,31 @@ function checkExpiredCases(cases) {
 }
 window._recoverBidToken = _recoverBidToken;
 window.checkExpiredCases = checkExpiredCases;
+
+
+// ── 제안 미리보기 실시간 업데이트 ──
+function updateBidPreview() {
+  var retEl  = document.querySelector('#ag-ret .tb.on');
+  var instEl = document.querySelector('#ag-install .tb.on');
+  var sucEl  = document.querySelector('#ag-suc .tb.on');
+  var perEl  = document.querySelector('#ag-per .tb.on');
+  var probEl = document.querySelector('#ag-prob .tb.on');
+  var el = document.getElementById('bid-preview');
+  if(!el) return;
+
+  var ret  = retEl  ? retEl.textContent  : '-';
+  var inst = instEl ? instEl.dataset.v   : 'none';
+  var suc  = sucEl  ? sucEl.textContent  : '없음';
+  var per  = perEl  ? perEl.textContent  : '-';
+  var prob = probEl ? probEl.dataset.v   : '-';
+  var instStr = inst==='none' ? '일시불' : inst+'개월 할부';
+
+  el.innerHTML = '📋 <b>제안 요약</b><br>'
+    +'착수금 <b style="color:var(--p)">'+ret+'</b> · '+instStr
+    +' · 성공보수 <b>'+suc+'</b><br>'
+    +'변제기간 <b>'+per+'</b> · 예상 승인율 <b style="color:var(--a)">'+prob+'% 이상</b>';
+}
+window.updateBidPreview = updateBidPreview;
 
 window.loadRevenue=loadRevenue; window.filterRevenue=filterRevenue;
 window.admApprovePayment=admApprovePayment; window.admRejectPayment=admRejectPayment;
