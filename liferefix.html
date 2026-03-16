@@ -1832,9 +1832,12 @@ function submitCase(){
     budget:budget?budget.textContent.trim():'',
     region:region?region.textContent.trim():'',
     memo:(document.getElementById('r-memo')||{}).value||'',
-    status:'new',bidCnt:0,
-    at:new Date().toLocaleString('ko-KR'),
-    diag:lastDiag
+    status:'new', bidCnt:0,
+    userId:    window.FB_USER ? window.FB_USER.uid   : 'anonymous',
+    userEmail: window.FB_USER ? window.FB_USER.email : '',
+    userName:  window.FB_USER ? (window.FB_USER.displayName||window.FB_USER.email.split('@')[0]) : '',
+    at: new Date().toLocaleString('ko-KR'),
+    diag: lastDiag
   };
   DB.addCase(c);
   if(window.submitCaseFirebase) window.submitCaseFirebase(c);
@@ -2085,7 +2088,8 @@ function renderAttCaseList(cases) {
       +'<span style="font-size:11px;font-weight:700;background:'+(isClosed?'#F0F0F0':'var(--pl)')+';color:'+(isClosed?'var(--ts)':s.c)+';padding:2px 8px;border-radius:20px">'+(isClosed?'마감':s.l)+'</span>'
       +(c.dtype?'<span style="font-size:11px;background:#FFF3E0;color:#7A3500;padding:2px 8px;border-radius:20px">'+c.dtype+'</span>':'')
       +'</div>'
-      +'<div style="font-size:15px;font-weight:700">'+(c.region||'')+' 사건</div>'
+      +'<div style="font-size:15px;font-weight:700">'+(c.dtype||'')+'</div>'
+      +'<div style="font-size:12px;color:var(--ts);margin-top:1px">'+(c.region||'')+' · '+(c.userName||c.userEmail||'채무자')+'</div>'
       +(c.memo?'<div style="font-size:12px;color:var(--ts);margin-top:3px">📝 '+c.memo+'</div>':'')
       +(timerStr?'<div style="font-size:11px;color:var(--o);margin-top:3px;font-weight:600">'+timerStr+'</div>':'')
       +'</div>'
@@ -2218,6 +2222,7 @@ function _doAttSubmitBid(){
   var bid = {
     id:       'BID-'+Date.now().toString(36).toUpperCase().slice(-5),
     caseId:   attBidId,
+    attId:    window.FB_USER ? window.FB_USER.uid   : '',
     attName:  attName,
     attEmail: window.FB_USER ? window.FB_USER.email : '',
     retainer: retainer,
@@ -2578,10 +2583,19 @@ document.addEventListener('click',function(e){
   if(e.target.classList.contains('att-progress-btn')){ openProgressModal(e.target.dataset.sid, e.target.dataset.cid); }
   if(e.target.classList.contains('att-done-btn')){ markCaseDone(e.target.dataset.sid); }
   if(e.target.classList.contains('my-select-bid-btn')){
-    var bName  = e.target.dataset.name  || '변호사';
-    var bEmail = e.target.dataset.email || '';
-    var bidId  = e.target.dataset.bid   || '';
-    openSelectAttModal(bName, bEmail, bidId);
+    var bidInfo = {
+      name:     e.target.dataset.name     || '변호사',
+      email:    e.target.dataset.email    || '',
+      bidId:    e.target.dataset.bid      || '',
+      caseId:   e.target.dataset.cid      || '',
+      attId:    e.target.dataset.attid    || '',
+      retainer: parseInt(e.target.dataset.retainer||'0'),
+      install:  e.target.dataset.install  || 'none',
+      success:  parseInt(e.target.dataset.success||'0'),
+      prob:     parseInt(e.target.dataset.prob||'0'),
+      strategy: e.target.dataset.strategy || ''
+    };
+    openSelectAttModal(bidInfo);
   }
   if(e.target.classList.contains('adm-blk-btn')){admBlockAtt(e.target.dataset.aid);}
   if(e.target.classList.contains('adm-rst-btn')){admRestoreAtt(e.target.dataset.aid);}
@@ -2860,12 +2874,30 @@ function switchMyTab(t) {
 function loadMyDiag() {
   function fw(v){ if(!v&&v!==0) return '-'; return v>=10000?(v/10000).toFixed(1)+'억':Math.round(v).toLocaleString()+'만'; }
 
-  // lastDiag 있으면 표시
+  // 1) 메모리의 lastDiag 우선
   if(lastDiag && lastDiag.ok) {
     showMyDiag(lastDiag);
     return;
   }
-  // Firestore에서 최근 진단 로드
+  // 2) Firestore users.lastDiag에서 로드
+  if(window.FB_USER && window.FB_DB && window.FB_FUNCS) {
+    window.FB_FUNCS.getDoc(
+      window.FB_FUNCS.doc(window.FB_DB,'users',window.FB_USER.uid)
+    ).then(function(snap){
+      if(snap.exists() && snap.data().lastDiag && snap.data().lastDiag.ok) {
+        lastDiag = snap.data().lastDiag;
+        showMyDiag(lastDiag);
+        return;
+      }
+      // 3) cases 컬렉션에서 최근 진단 로드
+      _loadDiagFromCases();
+    }).catch(function(){ _loadDiagFromCases(); });
+  } else {
+    _loadDiagFromCases();
+  }
+}
+
+function _loadDiagFromCases() {
   if(window.FB_USER && window.FB_DB && window.FB_FUNCS) {
     window.FB_FUNCS.getDocs(
       window.FB_FUNCS.query(
@@ -2875,9 +2907,7 @@ function loadMyDiag() {
     ).then(function(snap){
       var cases = snap.docs.map(function(d){return Object.assign({id:d.id},d.data());})
         .filter(function(c){ return c.userId===window.FB_USER.uid && c.diag && c.diag.ok; });
-      if(cases.length) {
-        showMyDiag(cases[0].diag);
-      }
+      if(cases.length) showMyDiag(cases[0].diag);
     }).catch(function(){});
   }
 }
@@ -3055,7 +3085,18 @@ function renderMyBidList(bids) {
       // 전략
       +(b.strategy?'<div style="font-size:13px;color:var(--ts);line-height:1.65;background:var(--bg);border-radius:8px;padding:10px;margin-bottom:12px">'+b.strategy+'</div>':'')
       // 선택 버튼
-      +'<button class="my-select-bid-btn" data-bid="'+b.id+'" data-email="'+(b.attEmail||'')+'" data-name="'+(b.attName||'')+'" style="width:100%;padding:12px;background:var(--p);color:#fff;border:none;border-radius:var(--rads);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">✅ 이 변호사 선택하기</button>'
+      +'<button class="my-select-bid-btn" '
+      +'data-bid="'+b.id+'" '
+      +'data-email="'+(b.attEmail||'')+'" '
+      +'data-name="'+(b.attName||'')+'" '
+      +'data-cid="'+(b.caseId||'')+'" '
+      +'data-attid="'+(b.attId||'')+'" '
+      +'data-retainer="'+(b.retainer||0)+'" '
+      +'data-install="'+(b.install||'none')+'" '
+      +'data-success="'+(b.success||0)+'" '
+      +'data-prob="'+(b.prob||0)+'" '
+      +'data-strategy="'+(b.strategy||'').replace(/"/g,'&quot;')+'" '
+      +' style="width:100%;padding:12px;background:var(--p);color:#fff;border:none;border-radius:var(--rads);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">✅ 이 변호사 선택하기</button>'
       +'</div>';
   }).join('');
 }
@@ -3071,10 +3112,10 @@ window.renderMyBidList = renderMyBidList;
 // ── 변호사 선택 ──────────────────────────────────────────
 var _selectedBid = null;
 
-function openSelectAttModal(name, email, bidId) {
-  _selectedBid = { name:name, email:email, bidId:bidId };
+function openSelectAttModal(info) {
+  _selectedBid = info;
   var titleEl = document.getElementById('sel-att-title');
-  if(titleEl) titleEl.textContent = name + ' 변호사 선택';
+  if(titleEl) titleEl.textContent = (info.name||'변호사') + ' 변호사 선택';
   // 기존 전화번호 자동 입력 (로그인 정보에서)
   var phoneEl = document.getElementById('sel-phone');
   if(phoneEl && window.FB_USER) {
@@ -3108,6 +3149,8 @@ function confirmSelectAtt() {
   // Firestore에 선택 정보 저장
   if(window.FB_DB && window.FB_FUNCS) {
     // 1. 연락처 정보 저장 (선택 기록)
+    // bid 상세 정보 가져오기
+    var bidData = _selectedBid.bidData || {};
     window.FB_FUNCS.addDoc(
       window.FB_FUNCS.collection(window.FB_DB,'selections'),
       {
@@ -3116,8 +3159,16 @@ function confirmSelectAtt() {
         phone:     phone,
         memo:      memo,
         bidId:     _selectedBid.bidId,
-        attName:   _selectedBid.name,
-        attEmail:  _selectedBid.email,
+        caseId:    _selectedBid.caseId   || bidData.caseId   || '',
+        attId:     _selectedBid.attId    || bidData.attId    || '',
+        attName:   _selectedBid.name     || bidData.attName  || '',
+        attEmail:  _selectedBid.email    || bidData.attEmail || '',
+        retainer:  _selectedBid.retainer || bidData.retainer || 0,
+        install:   _selectedBid.install  || bidData.install  || 'none',
+        success:   _selectedBid.success  || bidData.success  || 0,
+        strategy:  _selectedBid.strategy || bidData.strategy || '',
+        prob:      _selectedBid.prob     || bidData.prob     || 0,
+        caseStatus:'ongoing',
         status:    'selected',
         createdAt: window.FB_FUNCS.serverTimestamp()
       }
@@ -3133,6 +3184,13 @@ function confirmSelectAtt() {
         window.FB_FUNCS.updateDoc(
           window.FB_FUNCS.doc(window.FB_DB,'bids',_selectedBid.bidId),
           { status:'selected', selectedAt: window.FB_FUNCS.serverTimestamp() }
+        ).catch(function(){});
+      }
+      // 4. 사건 상태 → hired 업데이트
+      if(_selectedBid.caseId) {
+        window.FB_FUNCS.updateDoc(
+          window.FB_FUNCS.doc(window.FB_DB,'cases',_selectedBid.caseId),
+          { status:'hired', hiredAttEmail:_selectedBid.email, hiredAt:window.FB_FUNCS.serverTimestamp() }
         ).catch(function(){});
       }
 
@@ -3619,12 +3677,30 @@ function switchMyTab(t) {
 function loadMyDiag() {
   function fw(v){ if(!v&&v!==0) return '-'; return v>=10000?(v/10000).toFixed(1)+'억':Math.round(v).toLocaleString()+'만'; }
 
-  // lastDiag 있으면 표시
+  // 1) 메모리의 lastDiag 우선
   if(lastDiag && lastDiag.ok) {
     showMyDiag(lastDiag);
     return;
   }
-  // Firestore에서 최근 진단 로드
+  // 2) Firestore users.lastDiag에서 로드
+  if(window.FB_USER && window.FB_DB && window.FB_FUNCS) {
+    window.FB_FUNCS.getDoc(
+      window.FB_FUNCS.doc(window.FB_DB,'users',window.FB_USER.uid)
+    ).then(function(snap){
+      if(snap.exists() && snap.data().lastDiag && snap.data().lastDiag.ok) {
+        lastDiag = snap.data().lastDiag;
+        showMyDiag(lastDiag);
+        return;
+      }
+      // 3) cases 컬렉션에서 최근 진단 로드
+      _loadDiagFromCases();
+    }).catch(function(){ _loadDiagFromCases(); });
+  } else {
+    _loadDiagFromCases();
+  }
+}
+
+function _loadDiagFromCases() {
   if(window.FB_USER && window.FB_DB && window.FB_FUNCS) {
     window.FB_FUNCS.getDocs(
       window.FB_FUNCS.query(
@@ -3634,9 +3710,7 @@ function loadMyDiag() {
     ).then(function(snap){
       var cases = snap.docs.map(function(d){return Object.assign({id:d.id},d.data());})
         .filter(function(c){ return c.userId===window.FB_USER.uid && c.diag && c.diag.ok; });
-      if(cases.length) {
-        showMyDiag(cases[0].diag);
-      }
+      if(cases.length) showMyDiag(cases[0].diag);
     }).catch(function(){});
   }
 }
@@ -3814,7 +3888,18 @@ function renderMyBidList(bids) {
       // 전략
       +(b.strategy?'<div style="font-size:13px;color:var(--ts);line-height:1.65;background:var(--bg);border-radius:8px;padding:10px;margin-bottom:12px">'+b.strategy+'</div>':'')
       // 선택 버튼
-      +'<button class="my-select-bid-btn" data-bid="'+b.id+'" data-email="'+(b.attEmail||'')+'" data-name="'+(b.attName||'')+'" style="width:100%;padding:12px;background:var(--p);color:#fff;border:none;border-radius:var(--rads);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">✅ 이 변호사 선택하기</button>'
+      +'<button class="my-select-bid-btn" '
+      +'data-bid="'+b.id+'" '
+      +'data-email="'+(b.attEmail||'')+'" '
+      +'data-name="'+(b.attName||'')+'" '
+      +'data-cid="'+(b.caseId||'')+'" '
+      +'data-attid="'+(b.attId||'')+'" '
+      +'data-retainer="'+(b.retainer||0)+'" '
+      +'data-install="'+(b.install||'none')+'" '
+      +'data-success="'+(b.success||0)+'" '
+      +'data-prob="'+(b.prob||0)+'" '
+      +'data-strategy="'+(b.strategy||'').replace(/"/g,'&quot;')+'" '
+      +' style="width:100%;padding:12px;background:var(--p);color:#fff;border:none;border-radius:var(--rads);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">✅ 이 변호사 선택하기</button>'
       +'</div>';
   }).join('');
 }
@@ -3830,10 +3915,10 @@ window.renderMyBidList = renderMyBidList;
 // ── 변호사 선택 ──────────────────────────────────────────
 var _selectedBid = null;
 
-function openSelectAttModal(name, email, bidId) {
-  _selectedBid = { name:name, email:email, bidId:bidId };
+function openSelectAttModal(info) {
+  _selectedBid = info;
   var titleEl = document.getElementById('sel-att-title');
-  if(titleEl) titleEl.textContent = name + ' 변호사 선택';
+  if(titleEl) titleEl.textContent = (info.name||'변호사') + ' 변호사 선택';
   // 기존 전화번호 자동 입력 (로그인 정보에서)
   var phoneEl = document.getElementById('sel-phone');
   if(phoneEl && window.FB_USER) {
@@ -3867,6 +3952,8 @@ function confirmSelectAtt() {
   // Firestore에 선택 정보 저장
   if(window.FB_DB && window.FB_FUNCS) {
     // 1. 연락처 정보 저장 (선택 기록)
+    // bid 상세 정보 가져오기
+    var bidData = _selectedBid.bidData || {};
     window.FB_FUNCS.addDoc(
       window.FB_FUNCS.collection(window.FB_DB,'selections'),
       {
@@ -3875,8 +3962,16 @@ function confirmSelectAtt() {
         phone:     phone,
         memo:      memo,
         bidId:     _selectedBid.bidId,
-        attName:   _selectedBid.name,
-        attEmail:  _selectedBid.email,
+        caseId:    _selectedBid.caseId   || bidData.caseId   || '',
+        attId:     _selectedBid.attId    || bidData.attId    || '',
+        attName:   _selectedBid.name     || bidData.attName  || '',
+        attEmail:  _selectedBid.email    || bidData.attEmail || '',
+        retainer:  _selectedBid.retainer || bidData.retainer || 0,
+        install:   _selectedBid.install  || bidData.install  || 'none',
+        success:   _selectedBid.success  || bidData.success  || 0,
+        strategy:  _selectedBid.strategy || bidData.strategy || '',
+        prob:      _selectedBid.prob     || bidData.prob     || 0,
+        caseStatus:'ongoing',
         status:    'selected',
         createdAt: window.FB_FUNCS.serverTimestamp()
       }
@@ -3892,6 +3987,13 @@ function confirmSelectAtt() {
         window.FB_FUNCS.updateDoc(
           window.FB_FUNCS.doc(window.FB_DB,'bids',_selectedBid.bidId),
           { status:'selected', selectedAt: window.FB_FUNCS.serverTimestamp() }
+        ).catch(function(){});
+      }
+      // 4. 사건 상태 → hired 업데이트
+      if(_selectedBid.caseId) {
+        window.FB_FUNCS.updateDoc(
+          window.FB_FUNCS.doc(window.FB_DB,'cases',_selectedBid.caseId),
+          { status:'hired', hiredAttEmail:_selectedBid.email, hiredAt:window.FB_FUNCS.serverTimestamp() }
         ).catch(function(){});
       }
 
