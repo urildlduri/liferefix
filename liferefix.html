@@ -458,7 +458,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
     <div class="sec-t" style="margin-top:22px;margin-bottom:12px">서비스 안내</div>
     <div class="my-row" onclick="openM('m-about')"><span class="my-row-l">🏢 Liferefix 소개</span><span class="my-row-r">›</span></div>
     <div class="my-row"><span class="my-row-l">📞 고객센터</span><span class="my-row-r">›</span></div>
-    <div class="my-row" onclick="goAttApply()"><span class="my-row-l">⚖️ 변호사 입점 신청</span><span class="my-row-r">›</span></div>
+    <div class="my-row" onclick="openAttApply()"><span class="my-row-l">⚖️ 변호사 입점 신청</span><span class="my-row-r">›</span></div>
     <div class="sec-t" style="margin-top:22px;margin-bottom:4px">💬 나의 경험담</div>
     <div style="font-size:13px;color:var(--ts);margin-bottom:12px">한 줄 작성하면 홈 화면 후기에 표시됩니다</div>
     <div class="rv-input-wrap" style="margin-bottom:0">
@@ -621,7 +621,11 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
   </div>
   <!-- 회원 관리 패널 -->
 <div id="dtp-users" style="padding:14px;display:none">
-  <div style="font-size:14px;font-weight:800;margin-bottom:10px">회원 관리</div>
+  <div style="font-size:14px;font-weight:800;margin-bottom:4px">회원 관리</div>
+  <!-- 입점 신청 섹션 -->
+  <div style="font-size:13px;font-weight:700;color:var(--p);margin-bottom:8px;margin-top:10px">⚖️ 변호사 입점 신청</div>
+  <div id="adm-apply-list"><div style="font-size:13px;color:var(--ts);padding:8px 0">불러오는 중...</div></div>
+  <div style="font-size:13px;font-weight:700;color:var(--t);margin-top:16px;margin-bottom:8px">👥 전체 회원</div>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:14px">
     <div style="background:#fff;border-radius:var(--rad);padding:14px;border:1px solid var(--bd);box-shadow:var(--shs)"><div style="font-size:22px;font-weight:900;color:var(--p)" id="adm-user-total">-</div><div style="font-size:11px;color:var(--ts)">전체 가입자</div></div>
     <div style="background:#fff;border-radius:var(--rad);padding:14px;border:1px solid var(--bd);box-shadow:var(--shs)"><div style="font-size:22px;font-weight:900;color:var(--a)" id="adm-user-today">-</div><div style="font-size:11px;color:var(--ts)">오늘 가입</div></div>
@@ -723,7 +727,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
       <button class="btn p" onclick="submitAttApply()">🎯 파트너 신청하기</button>
       <div style="font-size:12px;color:var(--ts);text-align:center;margin-top:12px;line-height:1.7">
         신청 후 관리자 검토(1~2 영업일) 완료 시 승인 이메일이 발송됩니다.<br>
-        문의: partner@liferefix.com
+        문의: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="eb9b8a999f858e99ab87828d8e998e8d8293c5888486">[email&#160;protected]</a>
       </div>
     </div>
   </div>
@@ -788,6 +792,44 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
   </div>
 </div>
 <div class="ov" id="m-about" onclick="ovClose(event,'m-about')"><div class="modal" style="position:relative"><button class="mclose" onclick="closeM('m-about')">✕</button><div class="mhandle"></div><div class="mtitle">Liferefix 소개</div><div style="font-size:14px;line-height:1.8;color:var(--ts)"><b style="color:var(--t)">Liferefix</b>는 채무 해결을 위한 데이터 기반 원스톱 플랫폼입니다.<br><br>판결문 DB 기반 독자적 진단 알고리즘(가출원 특허 10-2026-0039619)으로 채무자에게 투명한 정보를 제공합니다.</div></div></div>
+
+<!-- 변호사 입점 신청 모달 -->
+<div class="ov" id="m-att-apply" onclick="ovClose(event,'m-att-apply')">
+  <div class="modal" style="position:relative">
+    <button class="mclose" onclick="closeM('m-att-apply')">✕</button>
+    <div class="mhandle"></div>
+    <div class="mtitle">⚖️ 변호사 입점 신청</div>
+    <div class="alert info">파트너 변호사로 등록하면 채무자 사건에 비딩 제안을 보낼 수 있습니다.</div>
+    <span class="flabel">이름 (실명)</span>
+    <input type="text" class="finput" id="apply-name" placeholder="홍길동">
+    <span class="flabel">소속 법무법인/사무소</span>
+    <input type="text" class="finput" id="apply-firm" placeholder="법무법인 OO">
+    <span class="flabel">경력 (년)</span>
+    <input type="number" class="finput" id="apply-career" placeholder="5" min="0" max="50">
+    <span class="flabel">전문 분야</span>
+    <div class="tg" id="g-apply-type">
+      <button class="tb on" onclick="sel(this,'g-apply-type')">신용대출</button>
+      <button class="tb" onclick="sel(this,'g-apply-type')">카드채무</button>
+      <button class="tb" onclick="sel(this,'g-apply-type')">담보대출</button>
+      <button class="tb" onclick="sel(this,'g-apply-type')">복합채무</button>
+    </div>
+    <span class="flabel">활동 지역</span>
+    <div class="tg" id="g-apply-region">
+      <button class="tb on" onclick="sel(this,'g-apply-region')">서울</button>
+      <button class="tb" onclick="sel(this,'g-apply-region')">경기·인천</button>
+      <button class="tb" onclick="sel(this,'g-apply-region')">부산·경남</button>
+      <button class="tb" onclick="sel(this,'g-apply-region')">대구·경북</button>
+      <button class="tb" onclick="sel(this,'g-apply-region')">광주·전라</button>
+      <button class="tb" onclick="sel(this,'g-apply-region')">대전·충청</button>
+    </div>
+    <span class="flabel">자기소개 (선택)</span>
+    <textarea class="finput" id="apply-bio" rows="3" placeholder="개인회생 전문 경력 및 강점을 입력해주세요" style="resize:none"></textarea>
+    <div id="apply-err" style="font-size:12px;color:var(--r);margin-bottom:10px;display:none"></div>
+    <button class="btn p" onclick="submitAttApply()">📨 입점 신청하기</button>
+    <div style="font-size:12px;color:var(--ts);margin-top:10px;line-height:1.6">※ 관리자 검토 후 1~2 영업일 내 승인 연락드립니다.</div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <!-- 로그인/회원가입 모달 -->
@@ -833,7 +875,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
 
 
 <!-- Firebase SDK (module) -->
-<script type="module">
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,
          signOut, onAuthStateChanged, GoogleAuthProvider, signInWithPopup }
@@ -1538,6 +1580,21 @@ function admRefresh(){
   var cases=DB.getCases();
   var total=cases.length,bidC=cases.filter(function(c){return c.status==='bid';}).length;
   var pend=getAdmAtts().filter(function(a){return a.status==='pending';}).length;
+  // Firestore 입점 신청 건수도 확인
+  if(window.FB_DB && window.FB_FUNCS) {
+    var q = window.FB_FUNCS.query(
+      window.FB_FUNCS.collection(window.FB_DB,'att_applications'),
+      window.FB_FUNCS.orderBy('createdAt','desc')
+    );
+    window.FB_FUNCS.getDocs(q).then(function(snap){
+      var apps = snap.docs.map(function(d){return Object.assign({id:d.id},d.data());});
+      var pendApps = apps.filter(function(a){return a.status==='pending';});
+      var noticeEl = document.getElementById('adm-notice');
+      if(noticeEl && pendApps.length > 0) {
+        noticeEl.innerHTML = '🔔 변호사 입점 신청 <b>'+pendApps.length+'건</b> 승인 대기 · 사건 <b>'+total+'건</b>';
+      }
+    }).catch(function(){});
+  }
   var el=document.getElementById('adm-total');if(el)el.textContent=total;
   el=document.getElementById('adm-bid-cnt');if(el)el.textContent=bidC;
   el=document.getElementById('adm-notice');
@@ -1560,6 +1617,41 @@ function admDeleteCase(id){var cases=DB.getCases().filter(function(x){return x.i
 function admRenderUsers(){
   var el = document.getElementById('adm-user-list'); if(!el) return;
   el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--ts)">🔄 불러오는 중...</div>';
+
+  // 입점 신청 목록 로드
+  var applyEl = document.getElementById('adm-apply-list');
+  if(applyEl && window.FB_DB && window.FB_FUNCS) {
+    window.FB_FUNCS.getDocs(
+      window.FB_FUNCS.query(window.FB_FUNCS.collection(window.FB_DB,'att_applications'),
+        window.FB_FUNCS.orderBy('createdAt','desc'))
+    ).then(function(snap){
+      var apps = snap.docs.map(function(d){return Object.assign({id:d.id},d.data());});
+      if(!apps.length) {
+        applyEl.innerHTML = '<div style="font-size:13px;color:var(--ts);padding:8px 0">신청 없음</div>';
+        return;
+      }
+      applyEl.innerHTML = apps.map(function(a){
+        var statusMap = {pending:{l:'승인대기',bg:'#FFF3E0',c:'#7A3500'},approved:{l:'승인완료',bg:'var(--al)',c:'#005945'},rejected:{l:'거절',bg:'#FFF0F0',c:'var(--r)'}};
+        var s = statusMap[a.status]||{l:a.status,bg:'#EEE',c:'#999'};
+        var btns = a.status==='pending'
+          ? '<div style="display:flex;gap:6px">'
+            +'<button onclick="admApproveAttApp(''+a.id+'')" style="font-size:11px;font-weight:700;background:var(--al);color:#005945;border:none;padding:5px 10px;border-radius:20px;cursor:pointer;font-family:inherit">✅ 승인</button>'
+            +'<button onclick="admRejectAttApp(''+a.id+'')" style="font-size:11px;font-weight:700;background:#FFF0F0;color:var(--r);border:none;padding:5px 10px;border-radius:20px;cursor:pointer;font-family:inherit">❌ 거절</button>'
+            +'</div>'
+          : '<span style="font-size:11px;font-weight:700;background:'+s.bg+';color:'+s.c+';padding:3px 9px;border-radius:20px">'+s.l+'</span>';
+        return '<div style="background:#fff;border-radius:var(--rad);padding:13px 15px;border:1px solid var(--bd);margin-bottom:9px;box-shadow:var(--shs)">'
+          +'<div style="display:flex;justify-content:space-between;align-items:flex-start">'
+          +'<div style="flex:1">'
+          +'<div style="font-size:14px;font-weight:700">'+a.name+' 변호사</div>'
+          +'<div style="font-size:12px;color:var(--ts);margin-top:2px">'+a.firm+' · 경력 '+a.career+'년 · '+a.region+'</div>'
+          +'<div style="font-size:12px;color:var(--ts);margin-top:1px">'+a.email+'</div>'
+          +(a.bio?'<div style="font-size:12px;color:var(--ts);margin-top:2px;line-height:1.4">'+a.bio+'</div>':'')
+          +'</div>'
+          +'<div style="margin-left:10px">'+btns+'</div>'
+          +'</div></div>';
+      }).join('');
+    }).catch(function(e){ applyEl.innerHTML='<div style="font-size:13px;color:var(--r)">오류: '+e.message+'</div>'; });
+  }
 
   if(window.FB_DB && window.FB_FUNCS) {
     var q = window.FB_FUNCS.query(
@@ -1585,6 +1677,7 @@ function admRenderUsers(){
         return;
       }
       el.innerHTML = users.map(function(u) {
+        var isPendingAtt = u.role === 'pending_attorney';
         var roleMap = {debtor:'채무자', attorney:'변호사', admin:'관리자'};
         var providerIcon = u.provider==='google' ? '🔵 구글' : '📧 이메일';
         var date = u.createdAt && u.createdAt.toDate ? u.createdAt.toDate().toLocaleDateString('ko-KR') : '-';
@@ -1808,13 +1901,4 @@ function submitAttApply() {
       setTimeout(function(){ go('s-my'); }, 2000);
     });
   } else {
-    DB.save('att_apply_'+Date.now(), applyData);
-    toast('✅ 신청이 접수되었습니다! 빠른 시일 내 연락드립니다.');
-    setTimeout(function(){ go('s-my'); }, 2000);
-  }
-}
-window.submitAttApply = submitAttApply;
-</script>
-
-</body>
-</html>
+    DB.save('att_apply_'+Da
