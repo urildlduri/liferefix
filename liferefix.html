@@ -4721,32 +4721,123 @@ function loadMyCaseInline() {
   if(!el) return;
   el.innerHTML = '<div style="text-align:center;padding:12px;color:var(--ts);font-size:12px">불러오는 중...</div>';
 
-  var uid   = window.FB_USER ? window.FB_USER.uid   : '';
-  var email = window.FB_USER ? window.FB_USER.email : '';
+  if(!window.FB_USER||!window.FB_DB||!window.FB_FUNCS) {
+    var lc=DB.getCases(); renderCase(lc[0]||null,null,'none'); return;
+  }
 
-  function renderCase(c, sel) {
+  var uid   = window.FB_USER.uid;
+  var email = window.FB_USER.email;
+
+  Promise.all([
+    window.FB_FUNCS.getDocs(window.FB_FUNCS.collection(window.FB_DB,'cases')),
+    window.FB_FUNCS.getDocs(window.FB_FUNCS.collection(window.FB_DB,'selections'))
+  ]).then(function(res){
+    // 내 사건 (최신 1개)
+    var myCases = res[0].docs
+      .map(function(d){ return Object.assign({id:d.id},d.data()); })
+      .filter(function(c){ return c.userId===uid||c.userEmail===email; })
+      .sort(function(a,b){
+        var ta=a.createdAt&&a.createdAt.toDate?a.createdAt.toDate().getTime():0;
+        var tb=b.createdAt&&b.createdAt.toDate?b.createdAt.toDate().getTime():0;
+        return tb-ta;
+      });
+    DB.getCases().forEach(function(c){
+      if(!myCases.find(function(x){return x.id===c.id;})) myCases.push(c);
+    });
+
+    // 내 selections
+    var sels = res[1].docs
+      .map(function(d){ return Object.assign({id:d.id},d.data()); })
+      .filter(function(s){ return s.userId===uid; });
+    window._mySelections = sels;
+
+    var latest = myCases[0]||null;
+    if(!latest){ renderCase(null,null,'none'); return; }
+
+    // 이 사건의 selection 찾기
+    var sel = sels.find(function(s){ return s.caseId===latest.id; });
+
+    // sel 상태에 따라 단계 결정
+    var selStatus = 'none';
+    if(sel) {
+      if(sel.status==='pending_confirm')  selStatus = 'pending';   // 변호사 확정 대기
+      else if(sel.status==='confirmed'||sel.confirmed) selStatus = 'confirmed'; // 확정됨
+      else if(sel.status==='rejected')    selStatus = 'rejected';  // 거절
+      else                                selStatus = 'pending';
+    }
+    renderCase(latest, sel, selStatus);
+
+  }).catch(function(){
+    var lc=DB.getCases(); renderCase(lc[0]||null,null,'none');
+  });
+
+  // ── renderCase ──────────────────────────────────────────
+  function renderCase(c, sel, selStatus) {
     if(!c) {
-      el.innerHTML = '<div style="text-align:center;padding:12px">'
+      el.innerHTML = '<div style="text-align:center;padding:16px">'
         +'<div style="font-size:13px;color:var(--ts);margin-bottom:12px">등록된 사건이 없습니다</div>'
         +'<button class="my-reg-case-btn" style="padding:10px 20px;background:var(--p);color:#fff;border:none;border-radius:var(--rads);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">사건 등록하기</button>'
         +'</div>';
       return;
     }
+
     var stC={'서류준비':'var(--o)','법원접수':'var(--p)','심사중':'#7B1FA2','변제계획인가':'var(--a)','변제중':'var(--a)','면책완료':'#005945'};
     var smC={new:{l:'비딩 대기',c:'var(--p)'},bid:{l:'제안 수신 ✨',c:'var(--a)'},hired:{l:'수임 완료',c:'#005945'},closed:{l:'마감',c:'var(--ts)'}};
     var st = smC[c.status]||{l:'대기',c:'#999'};
-    var borderC = c.status==='hired'?'#005945':c.status==='bid'?'var(--a)':'var(--bd)';
+    var borderC = selStatus==='confirmed'?'#005945':c.status==='bid'?'var(--a)':'var(--bd)';
 
-    var progHtml = '';
-    if(sel && sel.currentStage) {
-      var sc = stC[sel.currentStage]||'var(--p)';
-      var last = sel.progressLog&&sel.progressLog.length?sel.progressLog[sel.progressLog.length-1]:null;
-      progHtml = '<div style="margin-top:10px;border-left:3px solid '+sc+';padding:8px 12px;background:'+sc+'15;border-radius:0 8px 8px 0">'
-        +'<div style="font-size:11px;font-weight:700;color:'+sc+'">📋 진행상황: '+sel.currentStage+'</div>'
-        +(last?'<div style="font-size:12px;color:var(--ts);margin-top:4px;line-height:1.6">'+last.detail+(last.nextDate?'<br>다음 예정: <b>'+last.nextDate+'</b>':'')+'</div>':'')
+    // 진행상황 블록
+    var progressBlock = '';
+    if(selStatus==='none') {
+      // 사건 등록만 됨, 비딩 대기
+      progressBlock = '<div style="background:var(--pl);border-radius:8px;padding:10px;margin-top:10px;font-size:12px;color:var(--ts);text-align:center">'
+        +'변호사들이 제안을 검토하고 있습니다...'
         +'</div>';
-    } else if(c.status==='hired') {
-      progHtml = '<div style="margin-top:10px;padding:10px;background:var(--al);border-radius:8px;font-size:12px;color:#005945">✅ 수임 완료 — 변호사가 곧 진행상황을 업데이트합니다.</div>';
+    } else if(selStatus==='pending') {
+      // 변호사 확정 대기
+      progressBlock = '<div style="background:#FFF3E0;border-radius:8px;padding:12px;margin-top:10px">'
+        +'<div style="font-size:12px;font-weight:700;color:var(--o);margin-bottom:4px">⏳ 변호사 수임 확정 대기중</div>'
+        +'<div style="font-size:12px;color:var(--ts)">'+(sel&&sel.attName?sel.attName+' 변호사가':'담당 변호사가')+' 곧 확정 연락을 드릴 예정입니다.</div>'
+        +'</div>';
+    } else if(selStatus==='rejected') {
+      progressBlock = '<div style="background:#FFF0F0;border-radius:8px;padding:12px;margin-top:10px">'
+        +'<div style="font-size:12px;font-weight:700;color:var(--r);margin-bottom:4px">❌ 수임 거절됨</div>'
+        +'<div style="font-size:12px;color:var(--ts)">다른 변호사를 선택해주세요.</div>'
+        +'<button class="my-go-bids-btn" style="width:100%;margin-top:8px;padding:9px;background:var(--p);color:#fff;border:none;border-radius:var(--rads);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">📬 다른 제안 보기</button>'
+        +'</div>';
+    } else if(selStatus==='confirmed' && sel) {
+      // 수임 확정 - 진행상황 표시
+      var stage = sel.currentStage||'서류준비';
+      var sc = stC[stage]||'var(--p)';
+      var last = sel.progressLog&&sel.progressLog.length?sel.progressLog[sel.progressLog.length-1]:null;
+
+      // 진행 단계 스텝바
+      var steps = ['서류준비','법원접수','심사중','변제계획인가','변제중','면책완료'];
+      var stepIdx = steps.indexOf(stage);
+      var stepBar = '<div style="display:flex;align-items:center;margin:10px 0;overflow-x:auto">'
+        +steps.map(function(s,i){
+          var done = i<=stepIdx;
+          var cur  = i===stepIdx;
+          return '<div style="display:flex;flex-direction:column;align-items:center;flex:1;min-width:44px">'
+            +'<div style="width:24px;height:24px;border-radius:50%;background:'+(done?sc:'var(--bd)')+';color:'+(done?'#fff':'var(--ts)')+';font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;border:'+(cur?'3px solid '+sc:'none')+'">'+(i+1)+'</div>'
+            +'<div style="font-size:9px;color:'+(done?sc:'var(--ts)')+';margin-top:3px;text-align:center;font-weight:'+(cur?'700':'400')+'">'+s+'</div>'
+            +'</div>'
+            +(i<steps.length-1?'<div style="height:2px;background:'+(done&&i<stepIdx?sc:'var(--bd)')+';flex:0.5;margin-top:-12px"></div>':'');
+        }).join('')
+        +'</div>';
+
+      progressBlock = '<div style="border:2px solid '+sc+'30;border-radius:10px;padding:12px;margin-top:10px">'
+        +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">'
+        +'<div style="font-size:12px;font-weight:700;color:var(--ts)">담당: <b style="color:var(--t)">'+(sel.attName||'변호사')+'</b></div>'
+        +'<span style="font-size:11px;font-weight:700;background:'+sc+'20;color:'+sc+';padding:3px 9px;border-radius:20px">'+stage+'</span>'
+        +'</div>'
+        +stepBar
+        +(last?'<div style="background:var(--bg);border-radius:8px;padding:10px;font-size:12px;color:var(--ts);line-height:1.7;margin-top:4px">'
+          +'<b style="color:var(--t)">최근 업데이트:</b> '+last.detail
+          +(last.nextDate?'<br>다음 예정: <b>'+last.nextDate+'</b>':'')
+          +'</div>':'<div style="font-size:12px;color:var(--ts);text-align:center;padding:6px">곧 진행상황을 업데이트해드립니다.</div>')
+        +(sel.phone?'':'') // 변호사 연락처는 비공개
+        +'</div>';
     }
 
     el.innerHTML = '<div style="background:#fff;border-radius:var(--rad);padding:14px 16px;border:2px solid '+borderC+';box-shadow:var(--shs)">'
@@ -4756,41 +4847,12 @@ function loadMyCaseInline() {
       +'</div>'
       +'<div style="font-size:14px;font-weight:700">'+(c.dtype||'-')+' · '+(c.region||'-')+'</div>'
       +'<div style="font-size:12px;color:var(--ts);margin-top:2px">'+(c.drange||'')+' · 희망착수금 '+(c.budget||'-')+'</div>'
-      +progHtml
-      +(c.status==='bid'
+      +progressBlock
+      +(c.status==='bid'&&selStatus==='none'
         ?'<button class="my-go-bids-btn" style="width:100%;margin-top:10px;padding:10px;background:var(--a);color:#fff;border:none;border-radius:var(--rads);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">📬 받은 제안 확인하기 →</button>'
         :'')
       +'</div>';
   }
-
-  if(!window.FB_USER||!window.FB_DB||!window.FB_FUNCS) {
-    var lc = DB.getCases(); renderCase(lc[0]||null, null); return;
-  }
-
-  Promise.all([
-    window.FB_FUNCS.getDocs(window.FB_FUNCS.collection(window.FB_DB,'cases')),
-    window.FB_FUNCS.getDocs(window.FB_FUNCS.collection(window.FB_DB,'selections'))
-  ]).then(function(res){
-    var myCases = res[0].docs.map(function(d){return Object.assign({id:d.id},d.data());})
-      .filter(function(c){return c.userId===uid||c.userEmail===email;})
-      .sort(function(a,b){
-        return (b.createdAt&&b.createdAt.toDate?b.createdAt.toDate().getTime():0)
-              -(a.createdAt&&a.createdAt.toDate?a.createdAt.toDate().getTime():0);
-      });
-    // localStorage 병합
-    DB.getCases().forEach(function(c){if(!myCases.find(function(x){return x.id===c.id;}))myCases.unshift(c);});
-
-    var sels = res[1].docs.map(function(d){return Object.assign({id:d.id},d.data());})
-      .filter(function(s){return s.userId===uid;});
-    window._mySelections = sels;
-
-    // 최근 사건 1개만
-    var latest = myCases[0]||null;
-    var sel = latest ? sels.find(function(s){return s.caseId===latest.id;}) : null;
-    renderCase(latest, sel||null);
-  }).catch(function(){
-    var lc = DB.getCases(); renderCase(lc[0]||null, null);
-  });
 }
 window.loadMyCaseInline = loadMyCaseInline;
 
