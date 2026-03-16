@@ -491,7 +491,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
       <input type="password" class="finput" id="att-pw" placeholder="비밀번호" value="12345678">
       <button class="btn p" onclick="attDoLogin()">로그인</button>
       <button class="btn o" onclick="go('s-my')">← 돌아가기</button>
-      <div style="text-align:center;margin-top:14px;font-size:13px;color:var(--ts)">입점 문의: <span style="color:var(--p);font-weight:700">partner@liferefix.com</span></div>
+      <div style="text-align:center;margin-top:14px;font-size:13px;color:var(--ts)">입점 문의: <span style="color:var(--p);font-weight:700"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="90e0f1e2e4fef5e2d0fcf9f6f5e2f5f6f9e8bef3fffd">[email&#160;protected]</a></span></div>
     </div>
   </div>
 </div>
@@ -647,9 +647,150 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
 <div class="ov" id="m-i2" onclick="ovClose(event,'m-i2')"><div class="modal" style="position:relative"><button class="mclose" onclick="closeM('m-i2')">✕</button><div class="mhandle"></div><div class="mtitle">신청 절차</div><div style="font-size:14px;line-height:1.9;color:var(--ts)">1. <b style="color:var(--t)">자격 진단</b> — Liferefix AI 진단<br>2. <b style="color:var(--t)">변호사 선임</b> — 비딩으로 합리적 비용 선택<br>3. <b style="color:var(--t)">서류 준비</b> — 소득·채무·재산 서류<br>4. <b style="color:var(--t)">법원 신청</b><br>5. <b style="color:var(--t)">변제 계획 인가</b> — 법원 심사<br>6. <b style="color:var(--t)">변제 이행</b><br>7. <b style="color:var(--t)">면책 결정</b></div></div></div>
 <div class="ov" id="m-i3" onclick="ovClose(event,'m-i3')"><div class="modal" style="position:relative"><button class="mclose" onclick="closeM('m-i3')">✕</button><div class="mhandle"></div><div class="mtitle">변제 계획 산정 방식</div><div style="font-size:14px;line-height:1.8;color:var(--ts)"><b style="color:var(--t)">월 변제금 = 월 소득 — 최저생계비</b><br><br>2026년 기준 1인 가구 최저생계비: 약 133만 원<br><br>예시: 월 소득 250만 — 생계비 133만 = 가용소득 117만<br>117만 × 48개월 = 총 변제가능액 5,616만 원</div></div></div>
 <div class="ov" id="m-i4" onclick="ovClose(event,'m-i4')"><div class="modal" style="position:relative"><button class="mclose" onclick="closeM('m-i4')">✕</button><div class="mhandle"></div><div class="mtitle">주의사항</div><div style="font-size:14px;line-height:1.9;color:var(--ts)">• 신청 시 신용등급 하락 및 금융거래 제한<br>• 변제 기간 중 재산 취득 시 추가 변제 가능<br>• 허위 신청·재산 은닉 시 면책 불허가<br>• 본 서비스 결과는 참고 정보이며 법률 자문이 아닙니다</div></div></div>
-<div class="ov" id="m-login" onclick="ovClose(event,'m-login')"><div class="modal" style="position:relative"><button class="mclose" onclick="closeM('m-login')">✕</button><div class="mhandle"></div><div class="mtitle">로그인</div><input type="email" class="finput" placeholder="이메일 주소"><input type="password" class="finput" placeholder="비밀번호"><button class="btn p" onclick="closeM('m-login');toast('베타 서비스 준비 중입니다.')">로그인</button><button class="btn o">카카오로 시작하기</button></div></div>
+<div class="ov" id="m-login" onclick="ovClose(event,'m-login')">
+  <div class="modal" style="position:relative">
+    <button class="mclose" onclick="closeM('m-login')">✕</button>
+    <div class="mhandle"></div>
+    <!-- 탭 -->
+    <div style="display:flex;gap:0;margin-bottom:20px;border-bottom:2px solid var(--bd)">
+      <button id="tab-login" onclick="switchLoginTab('login')" style="flex:1;padding:10px 0;font-size:14px;font-weight:700;border:none;background:none;cursor:pointer;font-family:inherit;color:var(--p);border-bottom:3px solid var(--p);margin-bottom:-2px">로그인</button>
+      <button id="tab-signup" onclick="switchLoginTab('signup')" style="flex:1;padding:10px 0;font-size:14px;font-weight:700;border:none;background:none;cursor:pointer;font-family:inherit;color:var(--ts);border-bottom:3px solid transparent;margin-bottom:-2px">회원가입</button>
+    </div>
+    <!-- 로그인 폼 -->
+    <div id="form-login">
+      <input type="email" class="finput" id="login-email" placeholder="이메일 주소">
+      <input type="password" class="finput" id="login-pw" placeholder="비밀번호">
+      <div id="login-err" style="font-size:12px;color:var(--r);margin-bottom:10px;display:none"></div>
+      <button class="btn p" onclick="doLogin()">로그인</button>
+      <div style="text-align:center;margin-top:12px;font-size:13px;color:var(--ts)">계정이 없으신가요? <span style="color:var(--p);font-weight:700;cursor:pointer" onclick="switchLoginTab('signup')">회원가입</span></div>
+    </div>
+    <!-- 회원가입 폼 -->
+    <div id="form-signup" style="display:none">
+      <input type="email" class="finput" id="signup-email" placeholder="이메일 주소">
+      <input type="password" class="finput" id="signup-pw" placeholder="비밀번호 (6자 이상)">
+      <input type="password" class="finput" id="signup-pw2" placeholder="비밀번호 확인">
+      <div id="signup-err" style="font-size:12px;color:var(--r);margin-bottom:10px;display:none"></div>
+      <button class="btn p" onclick="doSignup()">회원가입</button>
+      <div style="text-align:center;margin-top:12px;font-size:13px;color:var(--ts)">이미 계정이 있으신가요? <span style="color:var(--p);font-weight:700;cursor:pointer" onclick="switchLoginTab('login')">로그인</span></div>
+    </div>
+  </div>
+</div>
 <div class="ov" id="m-about" onclick="ovClose(event,'m-about')"><div class="modal" style="position:relative"><button class="mclose" onclick="closeM('m-about')">✕</button><div class="mhandle"></div><div class="mtitle">Liferefix 소개</div><div style="font-size:14px;line-height:1.8;color:var(--ts)"><b style="color:var(--t)">Liferefix</b>는 채무 해결을 위한 데이터 기반 원스톱 플랫폼입니다.<br><br>판결문 DB 기반 독자적 진단 알고리즘(가출원 특허 10-2026-0039619)으로 채무자에게 투명한 정보를 제공합니다.</div></div></div>
 <div class="toast" id="toast"></div>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
+<!-- Firebase SDK -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,
+         signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, collection, addDoc, getDocs, doc, updateDoc,
+         deleteDoc, query, orderBy, onSnapshot, serverTimestamp }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCf_42fqDDl2CR6js4M8Y9_jpQdvVGgNmM",
+  authDomain: "liferefix-8f622.firebaseapp.com",
+  projectId: "liferefix-8f622",
+  storageBucket: "liferefix-8f622.firebasestorage.app",
+  messagingSenderId: "965333999360",
+  appId: "1:965333999360:web:f711c1590e218c40a4dde5",
+  measurementId: "G-TV0MWNT26C"
+};
+
+const app  = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db   = getFirestore(app);
+
+// ── 전역 노출 ──────────────────────────────────────────
+window.FB_AUTH = auth;
+window.FB_DB   = db;
+window.FB_FUNCS = {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged,
+  collection, addDoc, getDocs, doc, updateDoc,
+  deleteDoc, query, orderBy, onSnapshot, serverTimestamp
+};
+
+// ── 인증 상태 감지 ──────────────────────────────────────
+onAuthStateChanged(auth, (user) => {
+  window.FB_USER = user || null;
+  if (user) {
+    // 로그인 상태 → MY 페이지 UI 업데이트
+    const card = document.querySelector('#s-my .card');
+    if (card) {
+      card.querySelector('div > div').innerHTML =
+        '<div style="font-size:16px;font-weight:700">' + (user.email) + '</div>' +
+        '<div style="font-size:13px;color:var(--ts);margin-top:3px">로그인 완료 ✅</div>';
+    }
+    const loginBtn = document.querySelector('#s-my .btn.p');
+    if (loginBtn) {
+      loginBtn.textContent = '로그아웃';
+      loginBtn.onclick = function(){ doLogout(); };
+    }
+  } else {
+    // 로그아웃 상태
+    const loginBtn = document.querySelector('#s-my .btn.p');
+    if (loginBtn) {
+      loginBtn.textContent = '로그인 / 회원가입';
+      loginBtn.onclick = function(){ openM('m-login'); };
+    }
+    const card = document.querySelector('#s-my .card');
+    if (card) {
+      card.querySelector('div > div').innerHTML =
+        '<div style="font-size:16px;font-weight:700">로그인이 필요합니다</div>' +
+        '<div style="font-size:13px;color:var(--ts);margin-top:3px">사건 관리 및 진단 결과 저장</div>';
+    }
+  }
+});
+
+// ── Firestore: 사건 등록 ───────────────────────────────
+window.submitCaseFirebase = async function(caseData) {
+  try {
+    const ref = await addDoc(collection(db, 'cases'), {
+      ...caseData,
+      userId: window.FB_USER ? window.FB_USER.uid : 'anonymous',
+      createdAt: serverTimestamp()
+    });
+    console.log('사건 등록 완료:', ref.id);
+    return ref.id;
+  } catch(e) {
+    console.error('사건 등록 실패:', e);
+    return null;
+  }
+};
+
+// ── Firestore: 사건 목록 실시간 조회 ─────────────────────
+window.listenCases = function(callback) {
+  const q = query(collection(db, 'cases'), orderBy('createdAt', 'desc'));
+  return onSnapshot(q, (snap) => {
+    const cases = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    callback(cases);
+  });
+};
+
+// ── Firestore: 비딩 제안 저장 ─────────────────────────
+window.submitBidFirebase = async function(bidData) {
+  try {
+    const ref = await addDoc(collection(db, 'bids'), {
+      ...bidData,
+      attId: window.FB_USER ? window.FB_USER.uid : 'anonymous',
+      createdAt: serverTimestamp()
+    });
+    // 사건 bidCnt 업데이트
+    const caseRef = doc(db, 'cases', bidData.caseId);
+    await updateDoc(caseRef, { status: 'bid' });
+    return ref.id;
+  } catch(e) {
+    console.error('비딩 실패:', e);
+    return null;
+  }
+};
+
+console.log('✅ Firebase 초기화 완료 — liferefix-8f622');
+</script>
 
 <script type="text/javascript">
 // ═══════════════════════════════════════════════════
@@ -1196,15 +1337,4 @@ document.addEventListener('click',function(e){
 
 // go() 후킹 — 화면 전환 시 후기 갱신
 (function(){
-  var _go=go;
-  go=function(id){
-    _go(id);
-    if(id==='s-home')loadUserReviews();
-    if(id==='s-my'){loadMyList();bindStarGroup();bindReviewSubmit();}
-  };
-  // window에도 동기화
-  window.go=go;
-})();
-</script>
-</body>
-</html>
+  var
