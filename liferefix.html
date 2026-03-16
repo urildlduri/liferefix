@@ -1510,14 +1510,41 @@ window.listenCases = function(callback) {
 // ── Firestore 비딩 제출 ──────────────────────────────────
 window.submitBidFirebase = async function(bidData) {
   try {
+    // 1. bids 컬렉션에 저장
     var ref = await addDoc(collection(fbDb, 'bids'), Object.assign({}, bidData, {
-      attId: window.FB_USER ? window.FB_USER.uid : 'anonymous',
+      attId:    window.FB_USER ? window.FB_USER.uid   : 'anonymous',
       attEmail: window.FB_USER ? window.FB_USER.email : '',
       createdAt: serverTimestamp()
     }));
-    // 사건 상태 업데이트
+
+    // 2. cases 컬렉션 bidCnt 증가 + 상태 업데이트
     var caseRef = doc(fbDb, 'cases', bidData.caseId);
-    await updateDoc(caseRef, { status: 'bid' });
+    var caseSnap = await getDoc(caseRef);
+    if(caseSnap.exists()) {
+      var newCnt = (caseSnap.data().bidCnt || 0) + 1;
+      var newStatus = newCnt >= 10 ? 'closed' : 'bid';
+      await updateDoc(caseRef, { bidCnt: newCnt, status: newStatus });
+    }
+
+    // 3. 변호사 비딩권 차감
+    if(window.FB_USER) {
+      var userRef = doc(fbDb, 'users', window.FB_USER.uid);
+      var userSnap = await getDoc(userRef);
+      if(userSnap.exists()) {
+        var used = (userSnap.data().bidUsed || 0) + 1;
+        await updateDoc(userRef, { bidUsed: used });
+        // UI 즉시 업데이트
+        var quota = userSnap.data().plan==='premium' ? 20 : 10;
+        quota += (userSnap.data().extraBids || 0);
+        var remain = quota - used;
+        var sqEl = document.getElementById('att-stat-quota');
+        if(sqEl) sqEl.textContent = remain + '건';
+        if(remain <= 0) {
+          toast('⚠️ 비딩권이 소진됐습니다. 추가 구매가 필요합니다.');
+        }
+      }
+    }
+
     console.log('비딩 저장 완료:', ref.id);
     return ref.id;
   } catch(e) {
@@ -1999,6 +2026,22 @@ function updateAttStats(){
   el=document.getElementById('att-stat-bid');if(el)el.textContent=bd;
   el=document.getElementById('att-notice');
   if(el)el.innerHTML='📬 신규 사건 <b>'+nw+'건</b>이 등록되어 있습니다.';
+
+  // 비딩권 잔여 표시
+  if(window.FB_USER && window.FB_DB && window.FB_FUNCS) {
+    window.FB_FUNCS.getDoc(
+      window.FB_FUNCS.doc(window.FB_DB,'users',window.FB_USER.uid)
+    ).then(function(snap){
+      if(snap.exists()){
+        var ud = snap.data();
+        var quota = (ud.plan==='premium'?20:10) + (ud.extraBids||0);
+        var used  = ud.bidUsed || 0;
+        var remain = Math.max(0, quota - used);
+        var sqEl = document.getElementById('att-stat-quota');
+        if(sqEl) sqEl.textContent = remain+'건';
+      }
+    }).catch(function(){});
+  }
 }
 function renderAttCaseList(cases) {
   var el = document.getElementById('att-case-list'); if(!el) return;
@@ -2239,36 +2282,7 @@ function _doAttSubmitBid(){
   if(window.submitBidFirebase) {
     window.submitBidFirebase(bid).then(function(id){
       if(id) {
-        // Firestore 사건의 bidCnt 증가 + 10명 도달 시 마감 처리
-        window.FB_FUNCS.getDoc(
-          window.FB_FUNCS.doc(window.FB_DB,'cases',attBidId)
-        ).then(function(snap){
-          if(snap.exists()){
-            var newCnt = (snap.data().bidCnt||0) + 1;
-            var newStatus = newCnt >= 10 ? 'closed' : 'bid';
-            window.FB_FUNCS.updateDoc(
-              window.FB_FUNCS.doc(window.FB_DB,'cases',attBidId),
-              {bidCnt: newCnt, status: newStatus}
-            );
-            if(newCnt >= 10) toast('✅ 제안 제출 완료! 이 사건은 입찰 마감(10명)되었습니다.');
-            else toast('✅ 제안 제출 완료! ('+newCnt+'/10명)');
-          }
-        }).catch(function(){ toast('✅ 제안이 제출되었습니다!'); });
-
-        // 변호사 비딩권 차감
-        if(window.FB_USER) {
-          window.FB_FUNCS.getDoc(
-            window.FB_FUNCS.doc(window.FB_DB,'users',window.FB_USER.uid)
-          ).then(function(snap){
-            if(snap.exists()){
-              var used=(snap.data().bidUsed||0)+1;
-              window.FB_FUNCS.updateDoc(
-                window.FB_FUNCS.doc(window.FB_DB,'users',window.FB_USER.uid),
-                {bidUsed: used}
-              );
-            }
-          });
-        }
+        toast('✅ 제안이 제출되었습니다! 채무자에게 전달됩니다.');
       } else {
         toast('✅ 제안이 제출되었습니다!');
       }
@@ -2939,18 +2953,25 @@ function loadMyCases() {
 
   // Firestore에서도 로드
   if(window.FB_USER && window.FB_DB && window.FB_FUNCS) {
+    var uid2 = window.FB_USER.uid;
     window.FB_FUNCS.getDocs(
-      window.FB_FUNCS.query(
-        window.FB_FUNCS.collection(window.FB_DB,'cases'),
-        window.FB_FUNCS.orderBy('createdAt','desc')
-      )
+      window.FB_FUNCS.collection(window.FB_DB,'cases')
     ).then(function(snap){
-      var fbCases = snap.docs.map(function(d){return Object.assign({id:d.id},d.data());})
-        .filter(function(c){ return c.userId===window.FB_USER.uid; });
+      var fbCases = snap.docs
+        .map(function(d){return Object.assign({id:d.id},d.data());})
+        .filter(function(c){ return c.userId===uid2; })
+        .sort(function(a,b){
+          var ta=a.createdAt&&a.createdAt.toDate?a.createdAt.toDate().getTime():0;
+          var tb=b.createdAt&&b.createdAt.toDate?b.createdAt.toDate().getTime():0;
+          return tb-ta;
+        });
       var ids = fbCases.map(function(c){return c.id;});
       var local = allCases.filter(function(c){return ids.indexOf(c.id)<0;});
       renderMyCaseList(fbCases.concat(local));
-    }).catch(function(){ renderMyCaseList(allCases); });
+    }).catch(function(e){
+      console.error('cases 조회 실패:', e);
+      renderMyCaseList(allCases);
+    });
   } else {
     renderMyCaseList(allCases);
   }
@@ -3013,37 +3034,47 @@ function loadMyBids() {
   if(!listEl) return;
 
   if(!window.FB_USER || !window.FB_DB || !window.FB_FUNCS) {
-    var localBids = DB.getBids();
-    renderMyBidList(localBids);
+    renderMyBidList(DB.getBids());
     return;
   }
 
-  // 내 사건 ID 목록 먼저 가져오기
+  var uid = window.FB_USER.uid;
+
+  // Step1: 내 사건 ID 목록 조회
   window.FB_FUNCS.getDocs(
-    window.FB_FUNCS.query(
-      window.FB_FUNCS.collection(window.FB_DB,'cases'),
-      window.FB_FUNCS.orderBy('createdAt','desc')
-    )
-  ).then(function(snap){
-    var myCaseIds = snap.docs
+    window.FB_FUNCS.collection(window.FB_DB,'cases')
+  ).then(function(cSnap){
+    var myCaseIds = cSnap.docs
       .map(function(d){return Object.assign({id:d.id},d.data());})
-      .filter(function(c){return c.userId===window.FB_USER.uid;})
+      .filter(function(c){return c.userId===uid;})
       .map(function(c){return c.id;});
 
-    if(!myCaseIds.length){ renderMyBidList([]); return; }
+    if(!myCaseIds.length){
+      renderMyBidList([]);
+      return;
+    }
 
-    // 해당 사건들의 비딩 조회
+    // Step2: bids 전체 조회 후 내 사건 ID로 필터
     window.FB_FUNCS.getDocs(
-      window.FB_FUNCS.query(
-        window.FB_FUNCS.collection(window.FB_DB,'bids'),
-        window.FB_FUNCS.orderBy('createdAt','desc')
-      )
+      window.FB_FUNCS.collection(window.FB_DB,'bids')
     ).then(function(bSnap){
-      var bids = bSnap.docs.map(function(d){return Object.assign({id:d.id},d.data());})
-        .filter(function(b){return myCaseIds.indexOf(b.caseId)>-1;});
+      var bids = bSnap.docs
+        .map(function(d){return Object.assign({id:d.id},d.data());})
+        .filter(function(b){return myCaseIds.indexOf(b.caseId)>-1;})
+        .sort(function(a,b){
+          var ta = a.createdAt&&a.createdAt.toDate ? a.createdAt.toDate().getTime() : 0;
+          var tb = b.createdAt&&b.createdAt.toDate ? b.createdAt.toDate().getTime() : 0;
+          return tb - ta;
+        });
       renderMyBidList(bids);
-    }).catch(function(){ renderMyBidList(DB.getBids()); });
-  }).catch(function(){ renderMyBidList(DB.getBids()); });
+    }).catch(function(e){
+      console.error('bids 조회 실패:', e);
+      renderMyBidList([]);
+    });
+  }).catch(function(e){
+    console.error('cases 조회 실패:', e);
+    renderMyBidList([]);
+  });
 }
 
 function renderMyBidList(bids) {
@@ -3742,18 +3773,25 @@ function loadMyCases() {
 
   // Firestore에서도 로드
   if(window.FB_USER && window.FB_DB && window.FB_FUNCS) {
+    var uid2 = window.FB_USER.uid;
     window.FB_FUNCS.getDocs(
-      window.FB_FUNCS.query(
-        window.FB_FUNCS.collection(window.FB_DB,'cases'),
-        window.FB_FUNCS.orderBy('createdAt','desc')
-      )
+      window.FB_FUNCS.collection(window.FB_DB,'cases')
     ).then(function(snap){
-      var fbCases = snap.docs.map(function(d){return Object.assign({id:d.id},d.data());})
-        .filter(function(c){ return c.userId===window.FB_USER.uid; });
+      var fbCases = snap.docs
+        .map(function(d){return Object.assign({id:d.id},d.data());})
+        .filter(function(c){ return c.userId===uid2; })
+        .sort(function(a,b){
+          var ta=a.createdAt&&a.createdAt.toDate?a.createdAt.toDate().getTime():0;
+          var tb=b.createdAt&&b.createdAt.toDate?b.createdAt.toDate().getTime():0;
+          return tb-ta;
+        });
       var ids = fbCases.map(function(c){return c.id;});
       var local = allCases.filter(function(c){return ids.indexOf(c.id)<0;});
       renderMyCaseList(fbCases.concat(local));
-    }).catch(function(){ renderMyCaseList(allCases); });
+    }).catch(function(e){
+      console.error('cases 조회 실패:', e);
+      renderMyCaseList(allCases);
+    });
   } else {
     renderMyCaseList(allCases);
   }
@@ -3816,37 +3854,47 @@ function loadMyBids() {
   if(!listEl) return;
 
   if(!window.FB_USER || !window.FB_DB || !window.FB_FUNCS) {
-    var localBids = DB.getBids();
-    renderMyBidList(localBids);
+    renderMyBidList(DB.getBids());
     return;
   }
 
-  // 내 사건 ID 목록 먼저 가져오기
+  var uid = window.FB_USER.uid;
+
+  // Step1: 내 사건 ID 목록 조회
   window.FB_FUNCS.getDocs(
-    window.FB_FUNCS.query(
-      window.FB_FUNCS.collection(window.FB_DB,'cases'),
-      window.FB_FUNCS.orderBy('createdAt','desc')
-    )
-  ).then(function(snap){
-    var myCaseIds = snap.docs
+    window.FB_FUNCS.collection(window.FB_DB,'cases')
+  ).then(function(cSnap){
+    var myCaseIds = cSnap.docs
       .map(function(d){return Object.assign({id:d.id},d.data());})
-      .filter(function(c){return c.userId===window.FB_USER.uid;})
+      .filter(function(c){return c.userId===uid;})
       .map(function(c){return c.id;});
 
-    if(!myCaseIds.length){ renderMyBidList([]); return; }
+    if(!myCaseIds.length){
+      renderMyBidList([]);
+      return;
+    }
 
-    // 해당 사건들의 비딩 조회
+    // Step2: bids 전체 조회 후 내 사건 ID로 필터
     window.FB_FUNCS.getDocs(
-      window.FB_FUNCS.query(
-        window.FB_FUNCS.collection(window.FB_DB,'bids'),
-        window.FB_FUNCS.orderBy('createdAt','desc')
-      )
+      window.FB_FUNCS.collection(window.FB_DB,'bids')
     ).then(function(bSnap){
-      var bids = bSnap.docs.map(function(d){return Object.assign({id:d.id},d.data());})
-        .filter(function(b){return myCaseIds.indexOf(b.caseId)>-1;});
+      var bids = bSnap.docs
+        .map(function(d){return Object.assign({id:d.id},d.data());})
+        .filter(function(b){return myCaseIds.indexOf(b.caseId)>-1;})
+        .sort(function(a,b){
+          var ta = a.createdAt&&a.createdAt.toDate ? a.createdAt.toDate().getTime() : 0;
+          var tb = b.createdAt&&b.createdAt.toDate ? b.createdAt.toDate().getTime() : 0;
+          return tb - ta;
+        });
       renderMyBidList(bids);
-    }).catch(function(){ renderMyBidList(DB.getBids()); });
-  }).catch(function(){ renderMyBidList(DB.getBids()); });
+    }).catch(function(e){
+      console.error('bids 조회 실패:', e);
+      renderMyBidList([]);
+    });
+  }).catch(function(e){
+    console.error('cases 조회 실패:', e);
+    renderMyBidList([]);
+  });
 }
 
 function renderMyBidList(bids) {
