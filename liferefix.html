@@ -1051,7 +1051,27 @@ onAuthStateChanged(fbAuth, function(user) {
     if(hdrBtn) {
       hdrBtn.textContent = nickname + ' ›';
       hdrBtn.style.background = 'var(--ts)';
-      hdrBtn.onclick = function(){ window.go&&window.go('s-my'); };
+      hdrBtn.onclick = function(){
+        // Firestore에서 role 확인 후 이동
+        if(window.FB_DB && window.FB_FUNCS) {
+          window.FB_FUNCS.getDoc(
+            window.FB_FUNCS.doc(window.FB_DB, 'users', user.uid)
+          ).then(function(snap) {
+            var role = snap.exists() ? snap.data().role : 'debtor';
+            if(role === 'admin') {
+              window.go&&window.go('s-adm-login');
+            } else if(role === 'attorney') {
+              window.go&&window.go('s-att-login');
+            } else {
+              window.go&&window.go('s-my');
+            }
+          }).catch(function(){
+            window.go&&window.go('s-my');
+          });
+        } else {
+          window.go&&window.go('s-my');
+        }
+      };
     }
   } else {
     if(hdrBtn) {
@@ -1777,8 +1797,8 @@ function admRenderUsers(){
         var s = statusMap[a.status]||{l:a.status,bg:'#EEE',c:'#999'};
         var btns = a.status==='pending'
           ? '<div style="display:flex;gap:6px">'
-            +'<button onclick="admApproveAttApp(''+a.id+'')" style="font-size:11px;font-weight:700;background:var(--al);color:#005945;border:none;padding:5px 10px;border-radius:20px;cursor:pointer;font-family:inherit">✅ 승인</button>'
-            +'<button onclick="admRejectAttApp(''+a.id+'')" style="font-size:11px;font-weight:700;background:#FFF0F0;color:var(--r);border:none;padding:5px 10px;border-radius:20px;cursor:pointer;font-family:inherit">❌ 거절</button>'
+            +'<button class="adm-app-att-btn" data-aid="'+a.id+'" style="font-size:11px;font-weight:700;background:var(--al);color:#005945;border:none;padding:5px 10px;border-radius:20px;cursor:pointer;font-family:inherit">✅ 승인</button>'
+            +'<button class="adm-rej-att-btn" data-aid="'+a.id+'" style="font-size:11px;font-weight:700;background:#FFF0F0;color:var(--r);border:none;padding:5px 10px;border-radius:20px;cursor:pointer;font-family:inherit">❌ 거절</button>'
             +'</div>'
           : '<span style="font-size:11px;font-weight:700;background:'+s.bg+';color:'+s.c+';padding:3px 9px;border-radius:20px">'+s.l+'</span>';
         return '<div style="background:#fff;border-radius:var(--rad);padding:13px 15px;border:1px solid var(--bd);margin-bottom:9px;box-shadow:var(--shs)">'
@@ -1902,6 +1922,8 @@ document.addEventListener('click',function(e){
   if(e.target.classList.contains('att-bid-btn')){attOpenBidForm(e.target.dataset.cid);}
   if(e.target.classList.contains('adm-del-btn')){admDeleteCase(e.target.dataset.cid);}
   if(e.target.classList.contains('adm-app-btn')){admApproveAtt(e.target.dataset.aid);}
+  if(e.target.classList.contains('adm-app-att-btn')){admApproveAttApp(e.target.dataset.aid);}
+  if(e.target.classList.contains('adm-rej-att-btn')){admRejectAttApp(e.target.dataset.aid);}
   if(e.target.classList.contains('adm-blk-btn')){admBlockAtt(e.target.dataset.aid);}
   if(e.target.classList.contains('adm-rst-btn')){admRestoreAtt(e.target.dataset.aid);}
 });
@@ -1993,54 +2015,87 @@ function goAttApply() {
 window.goAttApply = goAttApply;
 
 function submitAttApply() {
-  var name   = (document.getElementById('att-apply-name')||{}).value||'';
-  var firm   = (document.getElementById('att-apply-firm')||{}).value||'';
-  var regnum = (document.getElementById('att-apply-regnum')||{}).value||'';
-  var email  = (document.getElementById('att-apply-email')||{}).value||'';
-  var errEl  = document.getElementById('att-apply-err');
+  var name   = (document.getElementById('apply-name')||{}).value||'';
+  var firm   = (document.getElementById('apply-firm')||{}).value||'';
+  var career = (document.getElementById('apply-career')||{}).value||'';
+  var type   = document.querySelector('#g-apply-type .tb.on');
+  var region = document.querySelector('#g-apply-region .tb.on');
+  var bio    = (document.getElementById('apply-bio')||{}).value||'';
+  var errEl  = document.getElementById('apply-err');
 
-  if(!name||!firm||!regnum||!email) {
-    if(errEl){ errEl.style.display='block'; errEl.textContent='* 표시된 항목을 모두 입력해주세요.'; }
+  if(!name || !firm || !career) {
+    if(errEl){ errEl.style.display='block'; errEl.textContent='이름, 소속, 경력은 필수입니다.'; }
     return;
   }
-
-  var careerEl = document.querySelector('#g-att-career .tb.on');
-  var typeEl   = document.querySelector('#g-att-type .tb.on');
-  var regionEl = document.querySelector('#g-att-region .tb.on');
-  var priceEl  = document.querySelector('#g-att-price .tb.on');
-  var intro    = (document.getElementById('att-apply-intro')||{}).value||'';
+  if(!window.FB_USER){ toast('로그인이 필요합니다.'); return; }
+  if(errEl) errEl.style.display='none';
 
   var applyData = {
-    uid:    window.FB_USER ? window.FB_USER.uid : '',
-    name:   name,
-    firm:   firm,
-    regnum: regnum,
-    email:  email,
-    career: careerEl ? careerEl.textContent.trim() : '',
-    type:   typeEl   ? typeEl.textContent.trim()   : '',
-    region: regionEl ? regionEl.textContent.trim() : '',
-    price:  priceEl  ? priceEl.textContent.trim()  : '',
-    intro:  intro,
-    status: 'pending',
+    uid:      window.FB_USER.uid,
+    email:    window.FB_USER.email,
+    name:     name,
+    firm:     firm,
+    career:   parseInt(career)||0,
+    type:     type ? type.textContent.trim() : '',
+    region:   region ? region.textContent.trim() : '',
+    bio:      bio,
+    status:   'pending',
     appliedAt: new Date().toLocaleString('ko-KR')
   };
 
-  // Firestore 저장
   if(window.FB_DB && window.FB_FUNCS) {
-    var addDoc    = window.FB_FUNCS.addDoc;
-    var collection= window.FB_FUNCS.collection;
-    var srvTs     = window.FB_FUNCS.serverTimestamp;
-    addDoc(collection(window.FB_DB, 'attorney_applications'),
-      Object.assign({}, applyData, { createdAt: srvTs() })
+    window.FB_FUNCS.setDoc(
+      window.FB_FUNCS.doc(window.FB_DB, 'att_applications', window.FB_USER.uid),
+      Object.assign({}, applyData, { createdAt: window.FB_FUNCS.serverTimestamp() })
     ).then(function() {
-      toast('✅ 신청 완료! 1~2 영업일 내 검토 후 이메일로 안내드립니다.');
-      setTimeout(function(){ go('s-my'); }, 2000);
+      window.FB_FUNCS.updateDoc(
+        window.FB_FUNCS.doc(window.FB_DB, 'users', window.FB_USER.uid),
+        { role: 'pending_attorney', attApplyData: applyData }
+      ).catch(function(){});
+      closeM('m-att-apply');
+      toast('✅ 입점 신청 완료! 1~2 영업일 내 검토 후 연락드립니다.');
     }).catch(function(e) {
-      console.error('신청 저장 실패:', e);
-      // Firestore 실패해도 localStorage에 저장
-      DB.save('att_apply_'+Date.now(), applyData);
-      toast('✅ 신청이 접수되었습니다!');
-      setTimeout(function(){ go('s-my'); }, 2000);
+      if(errEl){ errEl.style.display='block'; errEl.textContent='신청 실패: '+e.message; }
     });
   } else {
-    DB.save('att_apply_'+Da
+    DB.save('att_apply_'+Date.now(), applyData);
+    closeM('m-att-apply');
+    toast('✅ 신청이 접수되었습니다!');
+  }
+}
+
+// ── window 전역 노출 (전체) ──────────────────────────────
+window.go=go; window.sel=sel; window.slid=slid; window.gofs=gofs;
+window.runDiag=runDiag; window.resetDiag=resetDiag; window.renderAtts=renderAtts;
+window.sortAtt=sortAtt; window.openAtt=openAtt; window.toggleCmp=toggleCmp;
+window.openCompare=openCompare; window.switchTab=switchTab;
+window.submitCase=submitCase; window.simBid=simBid; window.renderMy=renderMy;
+window.faq=faq; window.openM=openM; window.closeM=closeM; window.ovClose=ovClose;
+window.toast=toast; window.enterAttorney=enterAttorney; window.enterAdmin=enterAdmin;
+window.attDoLogin=attDoLogin; window.switchAttTab=switchAttTab;
+window.attOpenBidForm=attOpenBidForm; window.attSubmitBid=attSubmitBid;
+window.admDoLogin=admDoLogin; window.switchAdmTab=switchAdmTab;
+window.admRefresh=admRefresh; window.admRenderCases=admRenderCases;
+window.admDeleteCase=admDeleteCase; window.admRenderAtts=admRenderAtts;
+window.admApproveAtt=admApproveAtt; window.admBlockAtt=admBlockAtt;
+window.admRestoreAtt=admRestoreAtt; window.admRenderUsers=admRenderUsers;
+window.openAttApply=openAttApply; window.submitAttApply=submitAttApply;
+window.admApproveAttApp=admApproveAttApp; window.admRejectAttApp=admRejectAttApp;
+window.renderPayPage=renderPayPage; window.changeBidQty=changeBidQty;
+window.attRequestPay=attRequestPay; window.attRequestBidPay=attRequestBidPay;
+window.loadAttProfile=loadAttProfile; window.saveAttProfile=saveAttProfile;
+window.loadUserReviews=loadUserReviews; window.loadMyList=loadMyList;
+window.doLogin=doLogin; window.doSignup=doSignup;
+window.doLogout=doLogout; window.doGoogleLogin=doGoogleLogin;
+window.switchLoginTab=switchLoginTab;
+
+// go() 후킹 — 화면 전환 시 후기 갱신
+var _go=go;
+window.go=function(id){
+  _go(id);
+  if(id==='s-home') loadUserReviews();
+  if(id==='s-my'){ loadMyList(); bindStarGroup(); bindReviewSubmit(); }
+};
+</script>
+</body>
+</html>
