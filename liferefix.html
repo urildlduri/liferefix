@@ -3342,13 +3342,19 @@ function loadHiredCases() {
     return;
   }
   window.FB_FUNCS.getDocs(
-    window.FB_FUNCS.query(
-      window.FB_FUNCS.collection(window.FB_DB,'selections'),
-      window.FB_FUNCS.orderBy('createdAt','desc')
-    )
+    window.FB_FUNCS.collection(window.FB_DB,'selections')
   ).then(function(snap){
-    var all = snap.docs.map(function(d){return Object.assign({id:d.id},d.data());})
-      .filter(function(s){ return s.attEmail===window.FB_USER.email || s.attId===window.FB_USER.uid; });
+    var all = snap.docs
+      .map(function(d){ return Object.assign({id:d.id}, d.data()); })
+      .filter(function(s){
+        return s.attEmail===window.FB_USER.email || s.attId===window.FB_USER.uid;
+      })
+      .sort(function(a,b){
+        var ta=a.createdAt&&a.createdAt.toDate?a.createdAt.toDate().getTime():0;
+        var tb=b.createdAt&&b.createdAt.toDate?b.createdAt.toDate().getTime():0;
+        return tb-ta;
+      });
+    console.log('[loadHiredCases] total selections:',snap.docs.length,'/ mine:',all.length);
 
     // 수임 대기 (pending_confirm) + 진행중 분리
     var pending = all.filter(function(s){ return s.status==='pending_confirm'||(!s.confirmed&&!s.currentStage&&s.status!=='rejected'); });
@@ -3494,13 +3500,11 @@ function markCaseDone(selId) {
 function loadMyProgressInfo(callback) {
   if(!window.FB_USER||!window.FB_DB||!window.FB_FUNCS){ callback([]); return; }
   window.FB_FUNCS.getDocs(
-    window.FB_FUNCS.query(
-      window.FB_FUNCS.collection(window.FB_DB,'selections'),
-      window.FB_FUNCS.orderBy('createdAt','desc')
-    )
+    window.FB_FUNCS.collection(window.FB_DB,'selections')
   ).then(function(snap){
-    var sels = snap.docs.map(function(d){return Object.assign({id:d.id},d.data());})
-      .filter(function(s){return s.userId===window.FB_USER.uid;});
+    var sels = snap.docs
+      .map(function(d){ return Object.assign({id:d.id}, d.data()); })
+      .filter(function(s){ return s.userId===window.FB_USER.uid; });
     window._mySelections = sels;
     callback(sels);
   }).catch(function(){ callback([]); });
@@ -4384,13 +4388,19 @@ function loadHiredCases() {
     return;
   }
   window.FB_FUNCS.getDocs(
-    window.FB_FUNCS.query(
-      window.FB_FUNCS.collection(window.FB_DB,'selections'),
-      window.FB_FUNCS.orderBy('createdAt','desc')
-    )
+    window.FB_FUNCS.collection(window.FB_DB,'selections')
   ).then(function(snap){
-    var all = snap.docs.map(function(d){return Object.assign({id:d.id},d.data());})
-      .filter(function(s){ return s.attEmail===window.FB_USER.email || s.attId===window.FB_USER.uid; });
+    var all = snap.docs
+      .map(function(d){ return Object.assign({id:d.id}, d.data()); })
+      .filter(function(s){
+        return s.attEmail===window.FB_USER.email || s.attId===window.FB_USER.uid;
+      })
+      .sort(function(a,b){
+        var ta=a.createdAt&&a.createdAt.toDate?a.createdAt.toDate().getTime():0;
+        var tb=b.createdAt&&b.createdAt.toDate?b.createdAt.toDate().getTime():0;
+        return tb-ta;
+      });
+    console.log('[loadHiredCases] total selections:',snap.docs.length,'/ mine:',all.length);
 
     // 수임 대기 (pending_confirm) + 진행중 분리
     var pending = all.filter(function(s){ return s.status==='pending_confirm'||(!s.confirmed&&!s.currentStage&&s.status!=='rejected'); });
@@ -4536,13 +4546,11 @@ function markCaseDone(selId) {
 function loadMyProgressInfo(callback) {
   if(!window.FB_USER||!window.FB_DB||!window.FB_FUNCS){ callback([]); return; }
   window.FB_FUNCS.getDocs(
-    window.FB_FUNCS.query(
-      window.FB_FUNCS.collection(window.FB_DB,'selections'),
-      window.FB_FUNCS.orderBy('createdAt','desc')
-    )
+    window.FB_FUNCS.collection(window.FB_DB,'selections')
   ).then(function(snap){
-    var sels = snap.docs.map(function(d){return Object.assign({id:d.id},d.data());})
-      .filter(function(s){return s.userId===window.FB_USER.uid;});
+    var sels = snap.docs
+      .map(function(d){ return Object.assign({id:d.id}, d.data()); })
+      .filter(function(s){ return s.userId===window.FB_USER.uid; });
     window._mySelections = sels;
     callback(sels);
   }).catch(function(){ callback([]); });
