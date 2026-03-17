@@ -3148,6 +3148,15 @@ function loadMyBids() {
     return;
   }
 
+  // selections 먼저 로드 (선택된 제안 필터링용)
+  var uid = window.FB_USER.uid;
+  window.FB_FUNCS.getDocs(window.FB_FUNCS.collection(window.FB_DB,'selections'))
+    .then(function(sSnap){
+      window._mySelections = sSnap.docs
+        .map(function(d){return Object.assign({id:d.id},d.data());})
+        .filter(function(s){return s.userId===uid;});
+    }).catch(function(){});
+
   var uid   = window.FB_USER.uid;
   var email = window.FB_USER.email;
   console.log('[loadMyBids] 시작 uid:', uid, 'email:', email);
@@ -3215,14 +3224,29 @@ function renderMyBidList(bids) {
   var emptyEl = document.getElementById('my-bids-empty');
   if(!listEl) return;
   console.log('[renderMyBidList] bids:', bids.length, bids);
-  if(!bids.length){
+
+  // 이미 선택한 bid 제외 (selections에서 확인)
+  var selectedBidIds = (window._mySelections||[]).map(function(s){ return s.bidId; });
+  var activeBids = bids.filter(function(b){ return selectedBidIds.indexOf(b.id) < 0; });
+
+  if(!activeBids.length){
     if(emptyEl) emptyEl.style.display='block';
-    listEl.innerHTML='<div style="text-align:center;padding:30px;color:var(--ts)">아직 받은 제안이 없습니다.<br><small style="color:var(--ts)">변호사가 제안을 보내면 여기에 표시됩니다.</small></div>';
+    if(selectedBidIds.length > 0){
+      // 선택 완료 상태 메시지
+      listEl.innerHTML = '<div style="text-align:center;padding:30px">'
+        +'<div style="font-size:36px;margin-bottom:10px">✅</div>'
+        +'<div style="font-size:14px;font-weight:700;margin-bottom:6px">변호사를 선택하셨습니다!</div>'
+        +'<div style="font-size:12px;color:var(--ts);margin-bottom:16px">내 진단 탭에서 진행상황을 확인하세요</div>'
+        +'<button class="my-go-diag-btn" style="padding:10px 20px;background:var(--p);color:#fff;border:none;border-radius:var(--rads);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">내 사건 진행상황 보기</button>'
+        +'</div>';
+    } else {
+      listEl.innerHTML='<div style="text-align:center;padding:30px;color:var(--ts)">아직 받은 제안이 없습니다.<br><small style="color:var(--ts)">변호사가 제안을 보내면 여기에 표시됩니다.</small></div>';
+    }
     return;
   }
   if(emptyEl) emptyEl.style.display='none';
 
-  listEl.innerHTML = bids.map(function(b){
+  listEl.innerHTML = activeBids.map(function(b){
     var installStr = !b.install||b.install==='none' ? '일시불' : b.install+'개월 할부';
     var probStr = b.prob ? b.prob+'% 이상' : '-';
     return '<div style="background:#fff;border-radius:var(--rad);padding:16px;border:1px solid var(--bd);margin-bottom:12px;box-shadow:var(--shs)">'
@@ -3365,8 +3389,16 @@ function confirmSelectAtt() {
       var attEmail2 = _selectedBid.email;
       var attId2    = _selectedBid.attId || '';
       var userName2 = window.FB_USER.displayName || window.FB_USER.email.split('@')[0];
-      toast('✅ ' + _selectedBid.name + ' 변호사에게 연락처가 전달되었습니다!');
+      var selAttName = _selectedBid.name;
       _selectedBid = null;
+      toast('✅ ' + selAttName + ' 변호사에게 연락처가 전달되었습니다! 내 사건 탭에서 진행상황을 확인하세요.');
+
+      // 받은제안 → 내진단 탭으로 이동 (사건 현황에서 확인)
+      closeM('m-select-att');
+      setTimeout(function(){
+        switchMyTab('diag');   // 내진단 탭으로
+        loadMyCaseInline();    // 사건 상태 즉시 갱신
+      }, 500);
       // 변호사에게 수임 요청 알림
       if(attId2 && window.sendPushNotification) {
         window.sendPushNotification(
@@ -3787,6 +3819,15 @@ function _doInlineBid() {
 }
 
 window.submitInlineBid = submitInlineBid;
+function openBidModal(c) {
+  // attOpenBidForm fallback (인라인 폼 실패 시)
+  attBidId = c ? c.id : attBidId;
+  var idEl = document.getElementById('att-bf-id');
+  var ttEl = document.getElementById('att-bf-title');
+  if(idEl) idEl.textContent = attBidId;
+  if(ttEl) ttEl.textContent = c ? ((c.dtype||'') + (c.region?' · '+c.region:'')) : '';
+  switchAttTab('form');
+}
 window.openBidModal = openBidModal;
 window.applyAttCaseFilter = applyAttCaseFilter;
 
@@ -4385,6 +4426,15 @@ function loadMyBids() {
     return;
   }
 
+  // selections 먼저 로드 (선택된 제안 필터링용)
+  var uid = window.FB_USER.uid;
+  window.FB_FUNCS.getDocs(window.FB_FUNCS.collection(window.FB_DB,'selections'))
+    .then(function(sSnap){
+      window._mySelections = sSnap.docs
+        .map(function(d){return Object.assign({id:d.id},d.data());})
+        .filter(function(s){return s.userId===uid;});
+    }).catch(function(){});
+
   var uid   = window.FB_USER.uid;
   var email = window.FB_USER.email;
   console.log('[loadMyBids] 시작 uid:', uid, 'email:', email);
@@ -4452,9 +4502,24 @@ function renderMyBidList(bids) {
   var emptyEl = document.getElementById('my-bids-empty');
   if(!listEl) return;
   console.log('[renderMyBidList] bids:', bids.length, bids);
-  if(!bids.length){
+
+  // 이미 선택한 bid 제외 (selections에서 확인)
+  var selectedBidIds = (window._mySelections||[]).map(function(s){ return s.bidId; });
+  var activeBids = bids.filter(function(b){ return selectedBidIds.indexOf(b.id) < 0; });
+
+  if(!activeBids.length){
     if(emptyEl) emptyEl.style.display='block';
-    listEl.innerHTML='<div style="text-align:center;padding:30px;color:var(--ts)">아직 받은 제안이 없습니다.<br><small style="color:var(--ts)">변호사가 제안을 보내면 여기에 표시됩니다.</small></div>';
+    if(selectedBidIds.length > 0){
+      // 선택 완료 상태 메시지
+      listEl.innerHTML = '<div style="text-align:center;padding:30px">'
+        +'<div style="font-size:36px;margin-bottom:10px">✅</div>'
+        +'<div style="font-size:14px;font-weight:700;margin-bottom:6px">변호사를 선택하셨습니다!</div>'
+        +'<div style="font-size:12px;color:var(--ts);margin-bottom:16px">내 진단 탭에서 진행상황을 확인하세요</div>'
+        +'<button class="my-go-diag-btn" style="padding:10px 20px;background:var(--p);color:#fff;border:none;border-radius:var(--rads);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">내 사건 진행상황 보기</button>'
+        +'</div>';
+    } else {
+      listEl.innerHTML='<div style="text-align:center;padding:30px;color:var(--ts)">아직 받은 제안이 없습니다.<br><small style="color:var(--ts)">변호사가 제안을 보내면 여기에 표시됩니다.</small></div>';
+    }
     return;
   }
   if(emptyEl) emptyEl.style.display='none';
@@ -4602,8 +4667,16 @@ function confirmSelectAtt() {
       var attEmail2 = _selectedBid.email;
       var attId2    = _selectedBid.attId || '';
       var userName2 = window.FB_USER.displayName || window.FB_USER.email.split('@')[0];
-      toast('✅ ' + _selectedBid.name + ' 변호사에게 연락처가 전달되었습니다!');
+      var selAttName = _selectedBid.name;
       _selectedBid = null;
+      toast('✅ ' + selAttName + ' 변호사에게 연락처가 전달되었습니다! 내 사건 탭에서 진행상황을 확인하세요.');
+
+      // 받은제안 → 내진단 탭으로 이동 (사건 현황에서 확인)
+      closeM('m-select-att');
+      setTimeout(function(){
+        switchMyTab('diag');   // 내진단 탭으로
+        loadMyCaseInline();    // 사건 상태 즉시 갱신
+      }, 500);
       // 변호사에게 수임 요청 알림
       if(attId2 && window.sendPushNotification) {
         window.sendPushNotification(
@@ -5024,6 +5097,15 @@ function _doInlineBid() {
 }
 
 window.submitInlineBid = submitInlineBid;
+function openBidModal(c) {
+  // attOpenBidForm fallback (인라인 폼 실패 시)
+  attBidId = c ? c.id : attBidId;
+  var idEl = document.getElementById('att-bf-id');
+  var ttEl = document.getElementById('att-bf-title');
+  if(idEl) idEl.textContent = attBidId;
+  if(ttEl) ttEl.textContent = c ? ((c.dtype||'') + (c.region?' · '+c.region:'')) : '';
+  switchAttTab('form');
+}
 window.openBidModal = openBidModal;
 window.applyAttCaseFilter = applyAttCaseFilter;
 
@@ -5132,6 +5214,314 @@ window.toast=toast; window.enterAttorney=enterAttorney; window.enterAdmin=enterA
 window.attDoLogin=attDoLogin; window.switchAttTab=switchAttTab;
 window.attOpenBidForm=attOpenBidForm; window.attSubmitBid=attSubmitBid;
 window.updateAttStats=updateAttStats; window.renderAttCases=renderAttCases;
+
+// ── 결제 페이지 ──────────────────────────────────────────
+var _bidQty = 1;
+
+function renderPayPage() {
+  if(window.FB_USER && window.FB_DB && window.FB_FUNCS) {
+    window.FB_FUNCS.getDoc(
+      window.FB_FUNCS.doc(window.FB_DB,'users',window.FB_USER.uid)
+    ).then(function(snap){
+      if(!snap.exists()) return;
+      var ud = snap.data();
+      var plan  = ud.plan==='premium' ? '프리미엄 플랜' : '기본 플랜';
+      var quota = ud.plan==='premium' ? 20 : 10;
+      var used  = ud.bidUsed || 0;
+      var pct   = Math.min(100, Math.round(used/quota*100));
+      var remain= Math.max(0, quota-used);
+      var planEl= document.getElementById('pay-plan-name'); if(planEl) planEl.textContent=plan;
+      var u1=document.getElementById('pay-bid-used');  if(u1) u1.textContent=used;
+      var u2=document.getElementById('pay-bid-total'); if(u2) u2.textContent=quota;
+      var u3=document.getElementById('pay-bid-pct');   if(u3) u3.textContent=pct+'%';
+      var u4=document.getElementById('pay-bid-bar');   if(u4) u4.style.width=pct+'%';
+      var u5=document.getElementById('pay-bid-warning');
+      if(u5){ u5.style.display=remain<=2?'block':'none'; if(remain<=2) u5.textContent='⚠️ 비딩 잔여 '+remain+'건 — 추가 구매를 고려해보세요'; }
+      var sqEl=document.getElementById('att-stat-quota'); if(sqEl) sqEl.textContent=remain+'건';
+    }).catch(function(){});
+  }
+}
+
+function changeBidQty(d) {
+  _bidQty = Math.max(1, Math.min(10, _bidQty + d));
+  var el = document.getElementById('bid-qty'); if(el) el.textContent=_bidQty;
+  var amt = _bidQty * 100000;
+  var bids= _bidQty * 5;
+  var totEl = document.getElementById('bid-qty-total');
+  if(totEl) totEl.textContent = bids+'건 / '+(amt/10000)+'만원';
+}
+
+function attRequestPay(planType, amount) {
+  var planName = planType==='premium' ? '프리미엄 플랜 (80만원/월)' : '기본 플랜 (50만원/월)';
+  if(confirm(planName+'\n결제를 진행하시겠습니까?\n(토스페이먼츠 연동 준비 중)')) {
+    if(window.FB_USER && window.FB_DB && window.FB_FUNCS) {
+      window.FB_FUNCS.addDoc(
+        window.FB_FUNCS.collection(window.FB_DB,'payments'),
+        { uid:window.FB_USER.uid, email:window.FB_USER.email,
+          type:'subscription', plan:planType, amount:parseInt(amount),
+          status:'pending', createdAt:window.FB_FUNCS.serverTimestamp() }
+      ).then(function(){ toast('✅ 결제 요청이 등록됐습니다. 관리자 확인 후 플랜이 활성화됩니다.'); })
+       .catch(function(e){ toast('오류: '+e.message); });
+    } else {
+      toast('✅ 결제 요청이 접수됐습니다.');
+    }
+  }
+}
+
+function attRequestBidPay() {
+  var bids = _bidQty * 5;
+  var amt  = _bidQty * 10;
+  if(confirm('추가 비딩 '+bids+'건 ('+amt+'만원)\n결제를 진행하시겠습니까?')) {
+    if(window.FB_USER && window.FB_DB && window.FB_FUNCS) {
+      window.FB_FUNCS.addDoc(
+        window.FB_FUNCS.collection(window.FB_DB,'payments'),
+        { uid:window.FB_USER.uid, email:window.FB_USER.email,
+          type:'bid_addon', bids:bids, amount:_bidQty*100000,
+          status:'pending', createdAt:window.FB_FUNCS.serverTimestamp() }
+      ).then(function(){ toast('✅ '+bids+'건 추가 비딩권 결제 요청됐습니다!'); })
+       .catch(function(e){ toast('오류: '+e.message); });
+    } else {
+      toast('✅ 결제 요청이 접수됐습니다.');
+    }
+  }
+}
+
+// ── 변호사 프로필 ──────────────────────────────────────────
+function loadAttProfile() {
+  if(!window.FB_USER) return;
+  if(window.FB_DB && window.FB_FUNCS) {
+    window.FB_FUNCS.getDoc(
+      window.FB_FUNCS.doc(window.FB_DB,'users',window.FB_USER.uid)
+    ).then(function(snap){
+      var data = snap.exists() ? snap.data() : {};
+      var att  = data.attApplyData || {};
+      var setVal = function(id,v){ var e=document.getElementById(id); if(e)e.value=v||''; };
+      setVal('prof-edit-name',    att.name||data.nickname||'');
+      setVal('prof-edit-firm',    att.firm||'');
+      setVal('prof-edit-career',  att.career||'');
+      setVal('prof-edit-retainer',att.retainer||'');
+      setVal('prof-edit-bio',     att.bio||'');
+      var pn=document.getElementById('prof-name');        if(pn) pn.textContent=(att.name||data.nickname||'')+ ' 변호사';
+      var pc=document.getElementById('prof-firm-career'); if(pc) pc.textContent=(att.firm||'')+' · 경력 '+(att.career||0)+'년';
+      var av=document.getElementById('prof-avatar');      if(av) av.textContent=(att.name||data.nickname||'변')[0];
+    }).catch(function(){});
+  }
+}
+
+function saveAttProfile() {
+  var name    = (document.getElementById('prof-edit-name')||{}).value||'';
+  var firm    = (document.getElementById('prof-edit-firm')||{}).value||'';
+  var career  = (document.getElementById('prof-edit-career')||{}).value||'';
+  var retainer= (document.getElementById('prof-edit-retainer')||{}).value||'';
+  var bio     = (document.getElementById('prof-edit-bio')||{}).value||'';
+  var type    = document.querySelector('#g-prof-type .tb.on');
+  var region  = document.querySelector('#g-prof-region .tb.on');
+  var errEl   = document.getElementById('prof-edit-err');
+  if(!name||!firm){ if(errEl){errEl.style.display='block';errEl.textContent='이름과 소속은 필수입니다.';} return; }
+  if(!window.FB_USER){ toast('로그인이 필요합니다.'); return; }
+  var profileData = {
+    name:name, firm:firm, career:parseInt(career)||0,
+    retainer:parseInt(retainer)||0,
+    type:type?type.textContent.trim():'',
+    region:region?region.textContent.trim():'',
+    bio:bio
+  };
+  if(window.FB_DB && window.FB_FUNCS) {
+    window.FB_FUNCS.updateDoc(
+      window.FB_FUNCS.doc(window.FB_DB,'users',window.FB_USER.uid),
+      { attApplyData:profileData, nickname:name }
+    ).then(function(){
+      window.FB_FUNCS.updateDoc(
+        window.FB_FUNCS.doc(window.FB_DB,'att_applications',window.FB_USER.uid),
+        profileData
+      ).catch(function(){});
+      if(errEl) errEl.style.display='none';
+      toast('✅ 프로필이 저장됐습니다!');
+      var hdrBtn=document.getElementById('hdr-login-btn'); if(hdrBtn) hdrBtn.textContent=name+' ›';
+      var pn=document.getElementById('prof-name'); if(pn) pn.textContent=name+' 변호사';
+      var av=document.getElementById('prof-avatar'); if(av) av.textContent=name[0];
+    }).catch(function(e){ if(errEl){errEl.style.display='block';errEl.textContent='저장 실패: '+e.message;} });
+  } else {
+    DB.save('att_profile', profileData);
+    toast('✅ 프로필이 저장됐습니다!');
+  }
+}
+
+
+// ── 결제 페이지 ──────────────────────────────────────────
+var _bidQty = 1;
+
+function renderPayPage() {
+  var barEl  = document.getElementById('pay-bid-bar');
+  var pctEl  = document.getElementById('pay-bid-pct');
+  var usedEl = document.getElementById('pay-bid-used');
+  var totEl  = document.getElementById('pay-bid-total');
+  var warnEl = document.getElementById('pay-bid-warning');
+  var planEl = document.getElementById('pay-plan-name');
+
+  if(!window.FB_USER || !window.FB_DB || !window.FB_FUNCS) return;
+
+  window.FB_FUNCS.getDoc(
+    window.FB_FUNCS.doc(window.FB_DB,'users',window.FB_USER.uid)
+  ).then(function(snap){
+    if(!snap.exists()) return;
+    var ud     = snap.data();
+    var quota  = (ud.plan==='premium'?20:10) + (ud.extraBids||0);
+    var used   = ud.bidUsed || 0;
+    var pct    = Math.min(100, Math.round(used/quota*100));
+    var remain = quota - used;
+
+    if(planEl) planEl.textContent = ud.plan==='premium' ? '프리미엄 플랜' : '기본 플랜';
+    if(usedEl) usedEl.textContent = used;
+    if(totEl)  totEl.textContent  = quota;
+    if(pctEl)  pctEl.textContent  = pct + '%';
+    if(barEl)  barEl.style.width  = pct + '%';
+    if(warnEl) {
+      warnEl.style.display = remain <= 2 ? 'block' : 'none';
+      warnEl.textContent = '⚠️ 비딩 잔여 ' + remain + '건 — 추가 구매를 고려해보세요';
+    }
+
+    // 잔여 비딩권 대시보드 업데이트
+    var sqEl = document.getElementById('att-stat-quota');
+    if(sqEl) sqEl.textContent = remain + '건';
+  }).catch(function(){});
+}
+
+function changeBidQty(d) {
+  _bidQty = Math.max(1, Math.min(10, _bidQty + d));
+  var el   = document.getElementById('bid-qty');
+  var totEl= document.getElementById('bid-qty-total');
+  if(el)    el.textContent = _bidQty;
+  if(totEl) totEl.textContent = (_bidQty*5) + '건 / ' + (_bidQty*10) + '만원';
+}
+
+function attRequestPay(planType, amount) {
+  var planName = planType==='premium' ? '프리미엄 플랜 (80만원/월)' : '기본 플랜 (50만원/월)';
+  if(!confirm(planName + '\n결제를 진행하시겠습니까?\n(관리자 확인 후 활성화)')) return;
+
+  if(window.FB_USER && window.FB_DB && window.FB_FUNCS) {
+    window.FB_FUNCS.addDoc(
+      window.FB_FUNCS.collection(window.FB_DB,'payments'),
+      {
+        uid:    window.FB_USER.uid,
+        email:  window.FB_USER.email,
+        type:   'subscription',
+        plan:   planType,
+        amount: parseInt(amount),
+        status: 'pending',
+        createdAt: window.FB_FUNCS.serverTimestamp()
+      }
+    ).then(function(){
+      toast('✅ 결제 요청 등록! 관리자 확인 후 플랜이 활성화됩니다.');
+    }).catch(function(e){ toast('오류: '+e.message); });
+  } else {
+    toast('✅ 결제 요청이 접수됐습니다.');
+  }
+}
+
+function attRequestBidPay() {
+  var bids = _bidQty * 5;
+  var amt  = _bidQty * 10;
+  if(!confirm('추가 비딩 ' + bids + '건 (' + amt + '만원)\n결제를 진행하시겠습니까?')) return;
+
+  if(window.FB_USER && window.FB_DB && window.FB_FUNCS) {
+    window.FB_FUNCS.addDoc(
+      window.FB_FUNCS.collection(window.FB_DB,'payments'),
+      {
+        uid:    window.FB_USER.uid,
+        email:  window.FB_USER.email,
+        type:   'bid_addon',
+        bids:   bids,
+        amount: _bidQty * 100000,
+        status: 'pending',
+        createdAt: window.FB_FUNCS.serverTimestamp()
+      }
+    ).then(function(){
+      toast('✅ ' + bids + '건 추가 비딩권 결제 요청 완료!');
+    }).catch(function(e){ toast('오류: '+e.message); });
+  } else {
+    toast('✅ 결제 요청이 접수됐습니다.');
+  }
+}
+
+// ── 프로필 저장/로드 ──────────────────────────────────────
+function loadAttProfile() {
+  if(!window.FB_USER || !window.FB_DB || !window.FB_FUNCS) return;
+  window.FB_FUNCS.getDoc(
+    window.FB_FUNCS.doc(window.FB_DB,'users',window.FB_USER.uid)
+  ).then(function(snap){
+    if(!snap.exists()) return;
+    var data = snap.data();
+    var att  = data.attApplyData || {};
+    var fields = {
+      'prof-edit-name':     att.name     || data.nickname || '',
+      'prof-edit-firm':     att.firm     || '',
+      'prof-edit-career':   att.career   || '',
+      'prof-edit-retainer': att.retainer || '',
+      'prof-edit-bio':      att.bio      || '',
+    };
+    Object.keys(fields).forEach(function(id){
+      var el = document.getElementById(id);
+      if(el) el.value = fields[id];
+    });
+    // 헤더 업데이트
+    var pn = document.getElementById('prof-name');
+    if(pn) pn.textContent = (att.name||data.nickname||'') + ' 변호사';
+    var pc = document.getElementById('prof-firm-career');
+    if(pc) pc.textContent = (att.firm||'') + ' · 경력 ' + (att.career||0) + '년';
+    var av = document.getElementById('prof-avatar');
+    if(av) av.textContent = (att.name||data.nickname||'김')[0];
+  }).catch(function(){});
+}
+
+function saveAttProfile() {
+  var name     = (document.getElementById('prof-edit-name')||{}).value||'';
+  var firm     = (document.getElementById('prof-edit-firm')||{}).value||'';
+  var career   = (document.getElementById('prof-edit-career')||{}).value||'';
+  var retainer = (document.getElementById('prof-edit-retainer')||{}).value||'';
+  var bio      = (document.getElementById('prof-edit-bio')||{}).value||'';
+  var type     = document.querySelector('#g-prof-type .tb.on');
+  var region   = document.querySelector('#g-prof-region .tb.on');
+  var errEl    = document.getElementById('prof-edit-err');
+
+  if(!name || !firm) {
+    if(errEl){ errEl.style.display='block'; errEl.textContent='이름과 소속은 필수입니다.'; }
+    return;
+  }
+  if(!window.FB_USER){ toast('로그인이 필요합니다.'); return; }
+
+  var profileData = {
+    name:     name, firm: firm,
+    career:   parseInt(career)||0,
+    retainer: parseInt(retainer)||0,
+    type:     type   ? type.textContent.trim()   : '',
+    region:   region ? region.textContent.trim() : '',
+    bio:      bio,
+  };
+
+  if(window.FB_DB && window.FB_FUNCS) {
+    window.FB_FUNCS.updateDoc(
+      window.FB_FUNCS.doc(window.FB_DB,'users',window.FB_USER.uid),
+      { attApplyData: profileData, nickname: name }
+    ).then(function(){
+      if(errEl) errEl.style.display='none';
+      toast('✅ 프로필이 저장됐습니다!');
+      var hdrBtn = document.getElementById('hdr-login-btn');
+      if(hdrBtn) hdrBtn.textContent = name + ' ›';
+      var pn = document.getElementById('prof-name');
+      if(pn) pn.textContent = name + ' 변호사';
+      var pc = document.getElementById('prof-firm-career');
+      if(pc) pc.textContent = firm + ' · 경력 ' + career + '년';
+      var av = document.getElementById('prof-avatar');
+      if(av) av.textContent = name[0];
+    }).catch(function(e){
+      if(errEl){ errEl.style.display='block'; errEl.textContent='저장 실패: '+e.message; }
+    });
+  } else {
+    toast('✅ 프로필이 저장됐습니다!');
+  }
+}
+
 window.renderPayPage=renderPayPage; window.changeBidQty=changeBidQty;
 window.attRequestPay=attRequestPay; window.attRequestBidPay=attRequestBidPay;
 window.saveAttProfile=saveAttProfile; window.loadAttProfile=loadAttProfile;
@@ -5427,6 +5817,15 @@ function _doInlineBid() {
 }
 
 window.submitInlineBid = submitInlineBid;
+function openBidModal(c) {
+  // attOpenBidForm fallback (인라인 폼 실패 시)
+  attBidId = c ? c.id : attBidId;
+  var idEl = document.getElementById('att-bf-id');
+  var ttEl = document.getElementById('att-bf-title');
+  if(idEl) idEl.textContent = attBidId;
+  if(ttEl) ttEl.textContent = c ? ((c.dtype||'') + (c.region?' · '+c.region:'')) : '';
+  switchAttTab('form');
+}
 window.openBidModal = openBidModal;
 window.applyAttCaseFilter = applyAttCaseFilter;
 
@@ -5625,6 +6024,314 @@ function submitAttApply() {
 }
 window.openAttApply=openAttApply; window.submitAttApply=submitAttApply;
 window.admApproveAttApp=admApproveAttApp; window.admRejectAttApp=admRejectAttApp;
+
+// ── 결제 페이지 ──────────────────────────────────────────
+var _bidQty = 1;
+
+function renderPayPage() {
+  if(window.FB_USER && window.FB_DB && window.FB_FUNCS) {
+    window.FB_FUNCS.getDoc(
+      window.FB_FUNCS.doc(window.FB_DB,'users',window.FB_USER.uid)
+    ).then(function(snap){
+      if(!snap.exists()) return;
+      var ud = snap.data();
+      var plan  = ud.plan==='premium' ? '프리미엄 플랜' : '기본 플랜';
+      var quota = ud.plan==='premium' ? 20 : 10;
+      var used  = ud.bidUsed || 0;
+      var pct   = Math.min(100, Math.round(used/quota*100));
+      var remain= Math.max(0, quota-used);
+      var planEl= document.getElementById('pay-plan-name'); if(planEl) planEl.textContent=plan;
+      var u1=document.getElementById('pay-bid-used');  if(u1) u1.textContent=used;
+      var u2=document.getElementById('pay-bid-total'); if(u2) u2.textContent=quota;
+      var u3=document.getElementById('pay-bid-pct');   if(u3) u3.textContent=pct+'%';
+      var u4=document.getElementById('pay-bid-bar');   if(u4) u4.style.width=pct+'%';
+      var u5=document.getElementById('pay-bid-warning');
+      if(u5){ u5.style.display=remain<=2?'block':'none'; if(remain<=2) u5.textContent='⚠️ 비딩 잔여 '+remain+'건 — 추가 구매를 고려해보세요'; }
+      var sqEl=document.getElementById('att-stat-quota'); if(sqEl) sqEl.textContent=remain+'건';
+    }).catch(function(){});
+  }
+}
+
+function changeBidQty(d) {
+  _bidQty = Math.max(1, Math.min(10, _bidQty + d));
+  var el = document.getElementById('bid-qty'); if(el) el.textContent=_bidQty;
+  var amt = _bidQty * 100000;
+  var bids= _bidQty * 5;
+  var totEl = document.getElementById('bid-qty-total');
+  if(totEl) totEl.textContent = bids+'건 / '+(amt/10000)+'만원';
+}
+
+function attRequestPay(planType, amount) {
+  var planName = planType==='premium' ? '프리미엄 플랜 (80만원/월)' : '기본 플랜 (50만원/월)';
+  if(confirm(planName+'\n결제를 진행하시겠습니까?\n(토스페이먼츠 연동 준비 중)')) {
+    if(window.FB_USER && window.FB_DB && window.FB_FUNCS) {
+      window.FB_FUNCS.addDoc(
+        window.FB_FUNCS.collection(window.FB_DB,'payments'),
+        { uid:window.FB_USER.uid, email:window.FB_USER.email,
+          type:'subscription', plan:planType, amount:parseInt(amount),
+          status:'pending', createdAt:window.FB_FUNCS.serverTimestamp() }
+      ).then(function(){ toast('✅ 결제 요청이 등록됐습니다. 관리자 확인 후 플랜이 활성화됩니다.'); })
+       .catch(function(e){ toast('오류: '+e.message); });
+    } else {
+      toast('✅ 결제 요청이 접수됐습니다.');
+    }
+  }
+}
+
+function attRequestBidPay() {
+  var bids = _bidQty * 5;
+  var amt  = _bidQty * 10;
+  if(confirm('추가 비딩 '+bids+'건 ('+amt+'만원)\n결제를 진행하시겠습니까?')) {
+    if(window.FB_USER && window.FB_DB && window.FB_FUNCS) {
+      window.FB_FUNCS.addDoc(
+        window.FB_FUNCS.collection(window.FB_DB,'payments'),
+        { uid:window.FB_USER.uid, email:window.FB_USER.email,
+          type:'bid_addon', bids:bids, amount:_bidQty*100000,
+          status:'pending', createdAt:window.FB_FUNCS.serverTimestamp() }
+      ).then(function(){ toast('✅ '+bids+'건 추가 비딩권 결제 요청됐습니다!'); })
+       .catch(function(e){ toast('오류: '+e.message); });
+    } else {
+      toast('✅ 결제 요청이 접수됐습니다.');
+    }
+  }
+}
+
+// ── 변호사 프로필 ──────────────────────────────────────────
+function loadAttProfile() {
+  if(!window.FB_USER) return;
+  if(window.FB_DB && window.FB_FUNCS) {
+    window.FB_FUNCS.getDoc(
+      window.FB_FUNCS.doc(window.FB_DB,'users',window.FB_USER.uid)
+    ).then(function(snap){
+      var data = snap.exists() ? snap.data() : {};
+      var att  = data.attApplyData || {};
+      var setVal = function(id,v){ var e=document.getElementById(id); if(e)e.value=v||''; };
+      setVal('prof-edit-name',    att.name||data.nickname||'');
+      setVal('prof-edit-firm',    att.firm||'');
+      setVal('prof-edit-career',  att.career||'');
+      setVal('prof-edit-retainer',att.retainer||'');
+      setVal('prof-edit-bio',     att.bio||'');
+      var pn=document.getElementById('prof-name');        if(pn) pn.textContent=(att.name||data.nickname||'')+ ' 변호사';
+      var pc=document.getElementById('prof-firm-career'); if(pc) pc.textContent=(att.firm||'')+' · 경력 '+(att.career||0)+'년';
+      var av=document.getElementById('prof-avatar');      if(av) av.textContent=(att.name||data.nickname||'변')[0];
+    }).catch(function(){});
+  }
+}
+
+function saveAttProfile() {
+  var name    = (document.getElementById('prof-edit-name')||{}).value||'';
+  var firm    = (document.getElementById('prof-edit-firm')||{}).value||'';
+  var career  = (document.getElementById('prof-edit-career')||{}).value||'';
+  var retainer= (document.getElementById('prof-edit-retainer')||{}).value||'';
+  var bio     = (document.getElementById('prof-edit-bio')||{}).value||'';
+  var type    = document.querySelector('#g-prof-type .tb.on');
+  var region  = document.querySelector('#g-prof-region .tb.on');
+  var errEl   = document.getElementById('prof-edit-err');
+  if(!name||!firm){ if(errEl){errEl.style.display='block';errEl.textContent='이름과 소속은 필수입니다.';} return; }
+  if(!window.FB_USER){ toast('로그인이 필요합니다.'); return; }
+  var profileData = {
+    name:name, firm:firm, career:parseInt(career)||0,
+    retainer:parseInt(retainer)||0,
+    type:type?type.textContent.trim():'',
+    region:region?region.textContent.trim():'',
+    bio:bio
+  };
+  if(window.FB_DB && window.FB_FUNCS) {
+    window.FB_FUNCS.updateDoc(
+      window.FB_FUNCS.doc(window.FB_DB,'users',window.FB_USER.uid),
+      { attApplyData:profileData, nickname:name }
+    ).then(function(){
+      window.FB_FUNCS.updateDoc(
+        window.FB_FUNCS.doc(window.FB_DB,'att_applications',window.FB_USER.uid),
+        profileData
+      ).catch(function(){});
+      if(errEl) errEl.style.display='none';
+      toast('✅ 프로필이 저장됐습니다!');
+      var hdrBtn=document.getElementById('hdr-login-btn'); if(hdrBtn) hdrBtn.textContent=name+' ›';
+      var pn=document.getElementById('prof-name'); if(pn) pn.textContent=name+' 변호사';
+      var av=document.getElementById('prof-avatar'); if(av) av.textContent=name[0];
+    }).catch(function(e){ if(errEl){errEl.style.display='block';errEl.textContent='저장 실패: '+e.message;} });
+  } else {
+    DB.save('att_profile', profileData);
+    toast('✅ 프로필이 저장됐습니다!');
+  }
+}
+
+
+// ── 결제 페이지 ──────────────────────────────────────────
+var _bidQty = 1;
+
+function renderPayPage() {
+  var barEl  = document.getElementById('pay-bid-bar');
+  var pctEl  = document.getElementById('pay-bid-pct');
+  var usedEl = document.getElementById('pay-bid-used');
+  var totEl  = document.getElementById('pay-bid-total');
+  var warnEl = document.getElementById('pay-bid-warning');
+  var planEl = document.getElementById('pay-plan-name');
+
+  if(!window.FB_USER || !window.FB_DB || !window.FB_FUNCS) return;
+
+  window.FB_FUNCS.getDoc(
+    window.FB_FUNCS.doc(window.FB_DB,'users',window.FB_USER.uid)
+  ).then(function(snap){
+    if(!snap.exists()) return;
+    var ud     = snap.data();
+    var quota  = (ud.plan==='premium'?20:10) + (ud.extraBids||0);
+    var used   = ud.bidUsed || 0;
+    var pct    = Math.min(100, Math.round(used/quota*100));
+    var remain = quota - used;
+
+    if(planEl) planEl.textContent = ud.plan==='premium' ? '프리미엄 플랜' : '기본 플랜';
+    if(usedEl) usedEl.textContent = used;
+    if(totEl)  totEl.textContent  = quota;
+    if(pctEl)  pctEl.textContent  = pct + '%';
+    if(barEl)  barEl.style.width  = pct + '%';
+    if(warnEl) {
+      warnEl.style.display = remain <= 2 ? 'block' : 'none';
+      warnEl.textContent = '⚠️ 비딩 잔여 ' + remain + '건 — 추가 구매를 고려해보세요';
+    }
+
+    // 잔여 비딩권 대시보드 업데이트
+    var sqEl = document.getElementById('att-stat-quota');
+    if(sqEl) sqEl.textContent = remain + '건';
+  }).catch(function(){});
+}
+
+function changeBidQty(d) {
+  _bidQty = Math.max(1, Math.min(10, _bidQty + d));
+  var el   = document.getElementById('bid-qty');
+  var totEl= document.getElementById('bid-qty-total');
+  if(el)    el.textContent = _bidQty;
+  if(totEl) totEl.textContent = (_bidQty*5) + '건 / ' + (_bidQty*10) + '만원';
+}
+
+function attRequestPay(planType, amount) {
+  var planName = planType==='premium' ? '프리미엄 플랜 (80만원/월)' : '기본 플랜 (50만원/월)';
+  if(!confirm(planName + '\n결제를 진행하시겠습니까?\n(관리자 확인 후 활성화)')) return;
+
+  if(window.FB_USER && window.FB_DB && window.FB_FUNCS) {
+    window.FB_FUNCS.addDoc(
+      window.FB_FUNCS.collection(window.FB_DB,'payments'),
+      {
+        uid:    window.FB_USER.uid,
+        email:  window.FB_USER.email,
+        type:   'subscription',
+        plan:   planType,
+        amount: parseInt(amount),
+        status: 'pending',
+        createdAt: window.FB_FUNCS.serverTimestamp()
+      }
+    ).then(function(){
+      toast('✅ 결제 요청 등록! 관리자 확인 후 플랜이 활성화됩니다.');
+    }).catch(function(e){ toast('오류: '+e.message); });
+  } else {
+    toast('✅ 결제 요청이 접수됐습니다.');
+  }
+}
+
+function attRequestBidPay() {
+  var bids = _bidQty * 5;
+  var amt  = _bidQty * 10;
+  if(!confirm('추가 비딩 ' + bids + '건 (' + amt + '만원)\n결제를 진행하시겠습니까?')) return;
+
+  if(window.FB_USER && window.FB_DB && window.FB_FUNCS) {
+    window.FB_FUNCS.addDoc(
+      window.FB_FUNCS.collection(window.FB_DB,'payments'),
+      {
+        uid:    window.FB_USER.uid,
+        email:  window.FB_USER.email,
+        type:   'bid_addon',
+        bids:   bids,
+        amount: _bidQty * 100000,
+        status: 'pending',
+        createdAt: window.FB_FUNCS.serverTimestamp()
+      }
+    ).then(function(){
+      toast('✅ ' + bids + '건 추가 비딩권 결제 요청 완료!');
+    }).catch(function(e){ toast('오류: '+e.message); });
+  } else {
+    toast('✅ 결제 요청이 접수됐습니다.');
+  }
+}
+
+// ── 프로필 저장/로드 ──────────────────────────────────────
+function loadAttProfile() {
+  if(!window.FB_USER || !window.FB_DB || !window.FB_FUNCS) return;
+  window.FB_FUNCS.getDoc(
+    window.FB_FUNCS.doc(window.FB_DB,'users',window.FB_USER.uid)
+  ).then(function(snap){
+    if(!snap.exists()) return;
+    var data = snap.data();
+    var att  = data.attApplyData || {};
+    var fields = {
+      'prof-edit-name':     att.name     || data.nickname || '',
+      'prof-edit-firm':     att.firm     || '',
+      'prof-edit-career':   att.career   || '',
+      'prof-edit-retainer': att.retainer || '',
+      'prof-edit-bio':      att.bio      || '',
+    };
+    Object.keys(fields).forEach(function(id){
+      var el = document.getElementById(id);
+      if(el) el.value = fields[id];
+    });
+    // 헤더 업데이트
+    var pn = document.getElementById('prof-name');
+    if(pn) pn.textContent = (att.name||data.nickname||'') + ' 변호사';
+    var pc = document.getElementById('prof-firm-career');
+    if(pc) pc.textContent = (att.firm||'') + ' · 경력 ' + (att.career||0) + '년';
+    var av = document.getElementById('prof-avatar');
+    if(av) av.textContent = (att.name||data.nickname||'김')[0];
+  }).catch(function(){});
+}
+
+function saveAttProfile() {
+  var name     = (document.getElementById('prof-edit-name')||{}).value||'';
+  var firm     = (document.getElementById('prof-edit-firm')||{}).value||'';
+  var career   = (document.getElementById('prof-edit-career')||{}).value||'';
+  var retainer = (document.getElementById('prof-edit-retainer')||{}).value||'';
+  var bio      = (document.getElementById('prof-edit-bio')||{}).value||'';
+  var type     = document.querySelector('#g-prof-type .tb.on');
+  var region   = document.querySelector('#g-prof-region .tb.on');
+  var errEl    = document.getElementById('prof-edit-err');
+
+  if(!name || !firm) {
+    if(errEl){ errEl.style.display='block'; errEl.textContent='이름과 소속은 필수입니다.'; }
+    return;
+  }
+  if(!window.FB_USER){ toast('로그인이 필요합니다.'); return; }
+
+  var profileData = {
+    name:     name, firm: firm,
+    career:   parseInt(career)||0,
+    retainer: parseInt(retainer)||0,
+    type:     type   ? type.textContent.trim()   : '',
+    region:   region ? region.textContent.trim() : '',
+    bio:      bio,
+  };
+
+  if(window.FB_DB && window.FB_FUNCS) {
+    window.FB_FUNCS.updateDoc(
+      window.FB_FUNCS.doc(window.FB_DB,'users',window.FB_USER.uid),
+      { attApplyData: profileData, nickname: name }
+    ).then(function(){
+      if(errEl) errEl.style.display='none';
+      toast('✅ 프로필이 저장됐습니다!');
+      var hdrBtn = document.getElementById('hdr-login-btn');
+      if(hdrBtn) hdrBtn.textContent = name + ' ›';
+      var pn = document.getElementById('prof-name');
+      if(pn) pn.textContent = name + ' 변호사';
+      var pc = document.getElementById('prof-firm-career');
+      if(pc) pc.textContent = firm + ' · 경력 ' + career + '년';
+      var av = document.getElementById('prof-avatar');
+      if(av) av.textContent = name[0];
+    }).catch(function(e){
+      if(errEl){ errEl.style.display='block'; errEl.textContent='저장 실패: '+e.message; }
+    });
+  } else {
+    toast('✅ 프로필이 저장됐습니다!');
+  }
+}
+
 window.renderPayPage=renderPayPage; window.changeBidQty=changeBidQty;
 window.attRequestPay=attRequestPay; window.attRequestBidPay=attRequestBidPay;
 window.loadAttProfile=loadAttProfile; window.saveAttProfile=saveAttProfile;
