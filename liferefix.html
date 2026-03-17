@@ -346,7 +346,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
 <!-- BIDDING -->
 <div class="scr" id="s-bid">
   <div class="bid-tabs">
-    <button class="btab on" id="bt-mine" onclick="switchTab('mine')">내 사건</button>
+    <button class="btab on" id="bt-mine" onclick="switchTab('mine')">진행중 사건</button>
     <button class="btab" id="bt-list" onclick="switchTab('list')">받은 제안</button>
     <button class="btab" id="bt-reg" onclick="switchTab('reg')">사건 등록</button>
   </div>
@@ -409,10 +409,18 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
   </div>
   <div id="tp-mine" class="bid-content">
     <div style="padding:0">
-      <div style="font-size:15px;font-weight:800;margin-bottom:10px">📂 내 사건</div>
-      <div id="tp-mine-case">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div style="font-size:15px;font-weight:800">⚖️ 진행중인 사건</div>
+        <div class="tg" id="g-all-cases-filter" style="margin-bottom:0">
+          <button class="tb on" data-f="all" onclick="filterAllCases(this)">전체</button>
+          <button class="tb" data-f="new" onclick="filterAllCases(this)">신규</button>
+          <button class="tb" data-f="bid" onclick="filterAllCases(this)">비딩중</button>
+          <button class="tb" data-f="hired" onclick="filterAllCases(this)">수임</button>
+        </div>
       </div>
-
+      <div id="tp-mine-case">
+        <div style="text-align:center;padding:20px;color:var(--ts);font-size:13px">불러오는 중...</div>
+      </div>
     </div>
   </div>
   
@@ -1223,6 +1231,14 @@ onAuthStateChanged(fbAuth, function(user) {
   if(window.initMyDash) {
     setTimeout(function(){ window.initMyDash(); }, 100);
   }
+  // 로그인 후 사건등록 이동 처리
+  if(user && window._afterLoginGoReg) {
+    window._afterLoginGoReg = false;
+    setTimeout(function(){
+      window.go&&window.go('s-my');
+      if(window.initMyDash) window.initMyDash();
+    }, 300);
+  }
   // 로그인 시 FCM 알림 권한 요청
   if(user) {
     if(window.requestPushPermission) {
@@ -1732,7 +1748,7 @@ function switchTab(t){
     if(btn)   btn.classList.toggle('on', x===t);
     if(panel) panel.style.display = x===t ? 'block' : 'none';
   });
-  if(t==='mine')  loadMyBidCases();
+  if(t==='mine')  loadAllActiveCases();
   if(t==='list')  loadBidPanel();
   if(t==='reg')   { if(window.loadRegPrev) loadRegPrev(); }
   window.scrollTo(0,0);
@@ -2975,11 +2991,21 @@ document.addEventListener('click',function(e){
       strategy: e.target.dataset.strategy || ''
     });
   }
-  if(e.target.classList.contains('my-go-bids-btn'))   { switchMyTab('bids'); }
+  if(e.target.classList.contains('my-go-bids-btn')){
+    var cur=document.querySelector('.scr.on');
+    if(cur&&cur.id==='s-bid'){ switchTab('list'); } else { switchMyTab('bids'); }
+  }
   if(e.target.classList.contains('my-reg-case-btn'))  { go('s-bid'); switchTab('reg'); }
   if(e.target.classList.contains('go-bid-btn')){
-    if(!window.FB_USER){ openM('m-login'); toast('로그인이 필요합니다.'); return; }
-    go('s-bid'); switchTab('reg');
+    if(!window.FB_USER){
+      window._afterLoginGoReg = true;
+      openM('m-login');
+      toast('사건 등록을 위해 로그인이 필요합니다.');
+      return;
+    }
+    // MY 대시보드로 이동 (채무자 대시보드)
+    go('s-my');
+    if(window.initMyDash) setTimeout(function(){ initMyDash(); }, 150);
   }
   if(e.target.classList.contains('pay-btn'))          { attRequestPay(e.target.dataset.plan, e.target.dataset.amount); }
   // 알림
@@ -4276,7 +4302,121 @@ function renderBidPanel(bids) {
   }).join('');
 }
 
-// ── 비딩탭 내 사건 (내가 제안한 사건) ───────────────────
+// ── 비딩탭 진행중인 모든 사건 ──────────────────────────
+var _allActiveCases = [];
+
+function loadAllActiveCases() {
+  var el = document.getElementById('tp-mine-case');
+  if(!el) return;
+  el.innerHTML = '<div style="text-align:center;padding:16px;color:var(--ts);font-size:13px">불러오는 중...</div>';
+
+  if(!window.FB_DB || !window.FB_FUNCS) {
+    // localStorage fallback
+    renderAllActiveCases(DB.getCases());
+    return;
+  }
+
+  window.FB_FUNCS.getDocs(
+    window.FB_FUNCS.collection(window.FB_DB, 'cases')
+  ).then(function(snap){
+    var cases = snap.docs
+      .map(function(d){ return Object.assign({id:d.id}, d.data()); })
+      .filter(function(c){ return c.status !== 'closed'; })
+      .sort(function(a,b){
+        var ta=a.createdAt&&a.createdAt.toDate?a.createdAt.toDate().getTime():0;
+        var tb=b.createdAt&&b.createdAt.toDate?b.createdAt.toDate().getTime():0;
+        return tb-ta;
+      });
+    // localStorage 사건도 병합
+    DB.getCases().forEach(function(c){
+      if(!cases.find(function(x){return x.id===c.id;})) cases.push(c);
+    });
+    _allActiveCases = cases;
+    renderAllActiveCases(cases);
+  }).catch(function(){
+    _allActiveCases = DB.getCases();
+    renderAllActiveCases(_allActiveCases);
+  });
+}
+
+function filterAllCases(el) {
+  var g = document.getElementById('g-all-cases-filter');
+  if(g) g.querySelectorAll('.tb').forEach(function(b){b.classList.remove('on');});
+  if(el) el.classList.add('on');
+  var f = el ? el.dataset.f : 'all';
+  var filtered = f==='all' ? _allActiveCases
+    : _allActiveCases.filter(function(c){ return c.status===f; });
+  renderAllActiveCases(filtered);
+}
+
+function renderAllActiveCases(cases) {
+  var el = document.getElementById('tp-mine-case');
+  if(!el) return;
+
+  if(!cases.length){
+    el.innerHTML = '<div style="text-align:center;padding:30px;color:var(--ts)">'
+      +'<div style="font-size:36px;margin-bottom:10px">📂</div>'
+      +'<div style="font-size:14px;font-weight:700;margin-bottom:6px">진행중인 사건이 없습니다</div>'
+      +'<div style="font-size:12px;color:var(--ts)">사건을 등록하면 여기에 표시됩니다</div>'
+      +'</div>';
+    return;
+  }
+
+  var smC = {
+    new:    {l:'신규',    c:'var(--p)',  bg:'var(--pl)'},
+    bid:    {l:'비딩중',  c:'var(--a)',  bg:'var(--al)'},
+    hired:  {l:'수임완료',c:'#005945',  bg:'#E0FAF5'},
+    closed: {l:'마감',    c:'var(--ts)', bg:'#F0F0F0'}
+  };
+
+  el.innerHTML = cases.map(function(c){
+    var s = smC[c.status] || {l:'진행중', c:'var(--a)', bg:'var(--al)'};
+    var now = Date.now();
+    var createdMs = c.createdAt&&c.createdAt.toDate?c.createdAt.toDate().getTime():0;
+    var remaining = createdMs ? (48*60*60*1000)-(now-createdMs) : 0;
+    var timerStr = '';
+    if(c.status==='new' && remaining > 0) {
+      var rh=Math.floor(remaining/3600000), rm=Math.floor((remaining%3600000)/60000);
+      timerStr = '<div style="font-size:11px;color:var(--o);margin-top:3px;font-weight:600">⏱ '+rh+'시간 '+rm+'분 남음</div>';
+    }
+    var bidBar = (c.status==='new'||c.status==='bid') ?
+      '<div style="margin-top:8px">'
+      +'<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--ts);margin-bottom:3px">'
+      +'<span>입찰 현황</span><span style="font-weight:700;color:var(--p)">'+(c.bidCnt||0)+'/10명</span></div>'
+      +'<div style="height:5px;border-radius:3px;background:var(--bd);overflow:hidden">'
+      +'<div style="width:'+Math.min(100,((c.bidCnt||0)/10*100))+'%;height:100%;background:var(--p);border-radius:3px"></div>'
+      +'</div></div>' : '';
+
+    // 진단 정보
+    var diag = c.diag;
+    var diagStr = diag&&diag.ok
+      ? '<div style="font-size:11px;color:var(--ts);margin-top:4px">탕감률 <b style="color:var(--p)">'+Math.round(diag.final*100)+'%</b> · 채무 <b>'+fw2(diag.debt)+'</b></div>'
+      : '';
+
+    return '<div style="background:#fff;border-radius:var(--rad);padding:14px 16px;border:1px solid var(--bd);margin-bottom:10px;box-shadow:var(--shs);border-left:4px solid '+s.c+'">'
+      +'<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">'
+      +'<div style="flex:1">'
+      +'<div style="font-size:11px;font-weight:800;color:var(--p)">'+c.id+'</div>'
+      +'<div style="font-size:14px;font-weight:700;margin-top:2px">'+(c.dtype||'-')+' · '+(c.region||'-')+'</div>'
+      +'<div style="font-size:12px;color:var(--ts);margin-top:1px">'+(c.drange||'')+' · '+(c.budget||'')+'</div>'
+      +diagStr
+      +timerStr
+      +'</div>'
+      +'<span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;background:'+s.bg+';color:'+s.c+';flex-shrink:0;margin-left:8px">'+s.l+'</span>'
+      +'</div>'
+      +bidBar
+      +(c.status==='bid'
+        ? '<button class="my-go-bids-btn" style="width:100%;margin-top:10px;padding:9px;background:var(--a);color:#fff;border:none;border-radius:var(--rads);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">📬 받은 제안 보기</button>'
+        : '')
+      +'</div>';
+  }).join('');
+}
+
+window.loadAllActiveCases  = loadAllActiveCases;
+window.filterAllCases      = filterAllCases;
+window.renderAllActiveCases = renderAllActiveCases;
+
+// ── 비딩탭 내 사건 (내가 제안한 사건) - 구버전 호환 ─────
 function loadMyBidCases() {
   var el = document.getElementById('tp-mine-case');
   if(!el) return;
@@ -5740,7 +5880,121 @@ function renderBidPanel(bids) {
   }).join('');
 }
 
-// ── 비딩탭 내 사건 (내가 제안한 사건) ───────────────────
+// ── 비딩탭 진행중인 모든 사건 ──────────────────────────
+var _allActiveCases = [];
+
+function loadAllActiveCases() {
+  var el = document.getElementById('tp-mine-case');
+  if(!el) return;
+  el.innerHTML = '<div style="text-align:center;padding:16px;color:var(--ts);font-size:13px">불러오는 중...</div>';
+
+  if(!window.FB_DB || !window.FB_FUNCS) {
+    // localStorage fallback
+    renderAllActiveCases(DB.getCases());
+    return;
+  }
+
+  window.FB_FUNCS.getDocs(
+    window.FB_FUNCS.collection(window.FB_DB, 'cases')
+  ).then(function(snap){
+    var cases = snap.docs
+      .map(function(d){ return Object.assign({id:d.id}, d.data()); })
+      .filter(function(c){ return c.status !== 'closed'; })
+      .sort(function(a,b){
+        var ta=a.createdAt&&a.createdAt.toDate?a.createdAt.toDate().getTime():0;
+        var tb=b.createdAt&&b.createdAt.toDate?b.createdAt.toDate().getTime():0;
+        return tb-ta;
+      });
+    // localStorage 사건도 병합
+    DB.getCases().forEach(function(c){
+      if(!cases.find(function(x){return x.id===c.id;})) cases.push(c);
+    });
+    _allActiveCases = cases;
+    renderAllActiveCases(cases);
+  }).catch(function(){
+    _allActiveCases = DB.getCases();
+    renderAllActiveCases(_allActiveCases);
+  });
+}
+
+function filterAllCases(el) {
+  var g = document.getElementById('g-all-cases-filter');
+  if(g) g.querySelectorAll('.tb').forEach(function(b){b.classList.remove('on');});
+  if(el) el.classList.add('on');
+  var f = el ? el.dataset.f : 'all';
+  var filtered = f==='all' ? _allActiveCases
+    : _allActiveCases.filter(function(c){ return c.status===f; });
+  renderAllActiveCases(filtered);
+}
+
+function renderAllActiveCases(cases) {
+  var el = document.getElementById('tp-mine-case');
+  if(!el) return;
+
+  if(!cases.length){
+    el.innerHTML = '<div style="text-align:center;padding:30px;color:var(--ts)">'
+      +'<div style="font-size:36px;margin-bottom:10px">📂</div>'
+      +'<div style="font-size:14px;font-weight:700;margin-bottom:6px">진행중인 사건이 없습니다</div>'
+      +'<div style="font-size:12px;color:var(--ts)">사건을 등록하면 여기에 표시됩니다</div>'
+      +'</div>';
+    return;
+  }
+
+  var smC = {
+    new:    {l:'신규',    c:'var(--p)',  bg:'var(--pl)'},
+    bid:    {l:'비딩중',  c:'var(--a)',  bg:'var(--al)'},
+    hired:  {l:'수임완료',c:'#005945',  bg:'#E0FAF5'},
+    closed: {l:'마감',    c:'var(--ts)', bg:'#F0F0F0'}
+  };
+
+  el.innerHTML = cases.map(function(c){
+    var s = smC[c.status] || {l:'진행중', c:'var(--a)', bg:'var(--al)'};
+    var now = Date.now();
+    var createdMs = c.createdAt&&c.createdAt.toDate?c.createdAt.toDate().getTime():0;
+    var remaining = createdMs ? (48*60*60*1000)-(now-createdMs) : 0;
+    var timerStr = '';
+    if(c.status==='new' && remaining > 0) {
+      var rh=Math.floor(remaining/3600000), rm=Math.floor((remaining%3600000)/60000);
+      timerStr = '<div style="font-size:11px;color:var(--o);margin-top:3px;font-weight:600">⏱ '+rh+'시간 '+rm+'분 남음</div>';
+    }
+    var bidBar = (c.status==='new'||c.status==='bid') ?
+      '<div style="margin-top:8px">'
+      +'<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--ts);margin-bottom:3px">'
+      +'<span>입찰 현황</span><span style="font-weight:700;color:var(--p)">'+(c.bidCnt||0)+'/10명</span></div>'
+      +'<div style="height:5px;border-radius:3px;background:var(--bd);overflow:hidden">'
+      +'<div style="width:'+Math.min(100,((c.bidCnt||0)/10*100))+'%;height:100%;background:var(--p);border-radius:3px"></div>'
+      +'</div></div>' : '';
+
+    // 진단 정보
+    var diag = c.diag;
+    var diagStr = diag&&diag.ok
+      ? '<div style="font-size:11px;color:var(--ts);margin-top:4px">탕감률 <b style="color:var(--p)">'+Math.round(diag.final*100)+'%</b> · 채무 <b>'+fw2(diag.debt)+'</b></div>'
+      : '';
+
+    return '<div style="background:#fff;border-radius:var(--rad);padding:14px 16px;border:1px solid var(--bd);margin-bottom:10px;box-shadow:var(--shs);border-left:4px solid '+s.c+'">'
+      +'<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">'
+      +'<div style="flex:1">'
+      +'<div style="font-size:11px;font-weight:800;color:var(--p)">'+c.id+'</div>'
+      +'<div style="font-size:14px;font-weight:700;margin-top:2px">'+(c.dtype||'-')+' · '+(c.region||'-')+'</div>'
+      +'<div style="font-size:12px;color:var(--ts);margin-top:1px">'+(c.drange||'')+' · '+(c.budget||'')+'</div>'
+      +diagStr
+      +timerStr
+      +'</div>'
+      +'<span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;background:'+s.bg+';color:'+s.c+';flex-shrink:0;margin-left:8px">'+s.l+'</span>'
+      +'</div>'
+      +bidBar
+      +(c.status==='bid'
+        ? '<button class="my-go-bids-btn" style="width:100%;margin-top:10px;padding:9px;background:var(--a);color:#fff;border:none;border-radius:var(--rads);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">📬 받은 제안 보기</button>'
+        : '')
+      +'</div>';
+  }).join('');
+}
+
+window.loadAllActiveCases  = loadAllActiveCases;
+window.filterAllCases      = filterAllCases;
+window.renderAllActiveCases = renderAllActiveCases;
+
+// ── 비딩탭 내 사건 (내가 제안한 사건) - 구버전 호환 ─────
 function loadMyBidCases() {
   var el = document.getElementById('tp-mine-case');
   if(!el) return;
@@ -6645,7 +6899,121 @@ function renderBidPanel(bids) {
   }).join('');
 }
 
-// ── 비딩탭 내 사건 (내가 제안한 사건) ───────────────────
+// ── 비딩탭 진행중인 모든 사건 ──────────────────────────
+var _allActiveCases = [];
+
+function loadAllActiveCases() {
+  var el = document.getElementById('tp-mine-case');
+  if(!el) return;
+  el.innerHTML = '<div style="text-align:center;padding:16px;color:var(--ts);font-size:13px">불러오는 중...</div>';
+
+  if(!window.FB_DB || !window.FB_FUNCS) {
+    // localStorage fallback
+    renderAllActiveCases(DB.getCases());
+    return;
+  }
+
+  window.FB_FUNCS.getDocs(
+    window.FB_FUNCS.collection(window.FB_DB, 'cases')
+  ).then(function(snap){
+    var cases = snap.docs
+      .map(function(d){ return Object.assign({id:d.id}, d.data()); })
+      .filter(function(c){ return c.status !== 'closed'; })
+      .sort(function(a,b){
+        var ta=a.createdAt&&a.createdAt.toDate?a.createdAt.toDate().getTime():0;
+        var tb=b.createdAt&&b.createdAt.toDate?b.createdAt.toDate().getTime():0;
+        return tb-ta;
+      });
+    // localStorage 사건도 병합
+    DB.getCases().forEach(function(c){
+      if(!cases.find(function(x){return x.id===c.id;})) cases.push(c);
+    });
+    _allActiveCases = cases;
+    renderAllActiveCases(cases);
+  }).catch(function(){
+    _allActiveCases = DB.getCases();
+    renderAllActiveCases(_allActiveCases);
+  });
+}
+
+function filterAllCases(el) {
+  var g = document.getElementById('g-all-cases-filter');
+  if(g) g.querySelectorAll('.tb').forEach(function(b){b.classList.remove('on');});
+  if(el) el.classList.add('on');
+  var f = el ? el.dataset.f : 'all';
+  var filtered = f==='all' ? _allActiveCases
+    : _allActiveCases.filter(function(c){ return c.status===f; });
+  renderAllActiveCases(filtered);
+}
+
+function renderAllActiveCases(cases) {
+  var el = document.getElementById('tp-mine-case');
+  if(!el) return;
+
+  if(!cases.length){
+    el.innerHTML = '<div style="text-align:center;padding:30px;color:var(--ts)">'
+      +'<div style="font-size:36px;margin-bottom:10px">📂</div>'
+      +'<div style="font-size:14px;font-weight:700;margin-bottom:6px">진행중인 사건이 없습니다</div>'
+      +'<div style="font-size:12px;color:var(--ts)">사건을 등록하면 여기에 표시됩니다</div>'
+      +'</div>';
+    return;
+  }
+
+  var smC = {
+    new:    {l:'신규',    c:'var(--p)',  bg:'var(--pl)'},
+    bid:    {l:'비딩중',  c:'var(--a)',  bg:'var(--al)'},
+    hired:  {l:'수임완료',c:'#005945',  bg:'#E0FAF5'},
+    closed: {l:'마감',    c:'var(--ts)', bg:'#F0F0F0'}
+  };
+
+  el.innerHTML = cases.map(function(c){
+    var s = smC[c.status] || {l:'진행중', c:'var(--a)', bg:'var(--al)'};
+    var now = Date.now();
+    var createdMs = c.createdAt&&c.createdAt.toDate?c.createdAt.toDate().getTime():0;
+    var remaining = createdMs ? (48*60*60*1000)-(now-createdMs) : 0;
+    var timerStr = '';
+    if(c.status==='new' && remaining > 0) {
+      var rh=Math.floor(remaining/3600000), rm=Math.floor((remaining%3600000)/60000);
+      timerStr = '<div style="font-size:11px;color:var(--o);margin-top:3px;font-weight:600">⏱ '+rh+'시간 '+rm+'분 남음</div>';
+    }
+    var bidBar = (c.status==='new'||c.status==='bid') ?
+      '<div style="margin-top:8px">'
+      +'<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--ts);margin-bottom:3px">'
+      +'<span>입찰 현황</span><span style="font-weight:700;color:var(--p)">'+(c.bidCnt||0)+'/10명</span></div>'
+      +'<div style="height:5px;border-radius:3px;background:var(--bd);overflow:hidden">'
+      +'<div style="width:'+Math.min(100,((c.bidCnt||0)/10*100))+'%;height:100%;background:var(--p);border-radius:3px"></div>'
+      +'</div></div>' : '';
+
+    // 진단 정보
+    var diag = c.diag;
+    var diagStr = diag&&diag.ok
+      ? '<div style="font-size:11px;color:var(--ts);margin-top:4px">탕감률 <b style="color:var(--p)">'+Math.round(diag.final*100)+'%</b> · 채무 <b>'+fw2(diag.debt)+'</b></div>'
+      : '';
+
+    return '<div style="background:#fff;border-radius:var(--rad);padding:14px 16px;border:1px solid var(--bd);margin-bottom:10px;box-shadow:var(--shs);border-left:4px solid '+s.c+'">'
+      +'<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">'
+      +'<div style="flex:1">'
+      +'<div style="font-size:11px;font-weight:800;color:var(--p)">'+c.id+'</div>'
+      +'<div style="font-size:14px;font-weight:700;margin-top:2px">'+(c.dtype||'-')+' · '+(c.region||'-')+'</div>'
+      +'<div style="font-size:12px;color:var(--ts);margin-top:1px">'+(c.drange||'')+' · '+(c.budget||'')+'</div>'
+      +diagStr
+      +timerStr
+      +'</div>'
+      +'<span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;background:'+s.bg+';color:'+s.c+';flex-shrink:0;margin-left:8px">'+s.l+'</span>'
+      +'</div>'
+      +bidBar
+      +(c.status==='bid'
+        ? '<button class="my-go-bids-btn" style="width:100%;margin-top:10px;padding:9px;background:var(--a);color:#fff;border:none;border-radius:var(--rads);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">📬 받은 제안 보기</button>'
+        : '')
+      +'</div>';
+  }).join('');
+}
+
+window.loadAllActiveCases  = loadAllActiveCases;
+window.filterAllCases      = filterAllCases;
+window.renderAllActiveCases = renderAllActiveCases;
+
+// ── 비딩탭 내 사건 (내가 제안한 사건) - 구버전 호환 ─────
 function loadMyBidCases() {
   var el = document.getElementById('tp-mine-case');
   if(!el) return;
@@ -7167,7 +7535,6 @@ window.go=function(id){
   if(id==='s-home') loadUserReviews();
   if(id==='s-my'){ loadMyList(); bindStarGroup(); bindReviewSubmit(); }
   if(id==='s-bid'){
-    // 비딩 탭 진입 시 내 사건 탭 기본 활성화
     switchTab('mine');
   }
 };
