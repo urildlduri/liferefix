@@ -345,11 +345,6 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
 
 <!-- BIDDING -->
 <div class="scr" id="s-bid">
-  <div class="bid-tabs">
-    <button class="btab on" id="bt-mine" onclick="switchTab('mine')">진행중 사건</button>
-    <button class="btab" id="bt-list" onclick="switchTab('list')">받은 제안</button>
-    <button class="btab" id="bt-reg" onclick="switchTab('reg')">사건 등록</button>
-  </div>
   <div id="tp-list" class="bid-content" style="display:none">
     <div style="padding:0">
       <div style="font-size:15px;font-weight:800;margin-bottom:10px">📬 받은 제안</div>
@@ -1770,15 +1765,17 @@ function renderDiag(r){
 // BID TABS
 // ═══════════════════════════════
 function switchTab(t){
-  ['list','reg','mine'].forEach(function(x){
-    var btn   = document.getElementById('bt-'+x);
-    var panel = document.getElementById('tp-'+x);
-    if(btn)   btn.classList.toggle('on', x===t);
-    if(panel) panel.style.display = x===t ? 'block' : 'none';
-  });
-  if(t==='mine')  loadAllActiveCases();
-  if(t==='list')  loadBidPanel();
-  if(t==='reg')   { if(window.loadRegPrev) loadRegPrev(); }
+  // mine 패널만 표시 (list/reg 탭 제거됨)
+  var minePanel = document.getElementById('tp-mine');
+  if(minePanel) minePanel.style.display = 'block';
+  var listPanel = document.getElementById('tp-list');
+  if(listPanel) listPanel.style.display = 'none';
+  var regPanel  = document.getElementById('tp-reg');
+  if(regPanel)  regPanel.style.display  = 'none';
+  // 데이터 로드
+  if(t==='mine') loadAllActiveCases();
+  if(t==='list') loadBidPanel();
+  if(t==='reg')  { if(window.loadRegPrev) loadRegPrev(); }
   window.scrollTo(0,0);
 }
 
