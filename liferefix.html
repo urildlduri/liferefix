@@ -1211,6 +1211,7 @@ setTimeout(function(){
 // 인증 상태 감지
 onAuthStateChanged(fbAuth, function(user) {
   window.FB_USER = user || null;
+  window._userRole = null; // 로그인/로그아웃 시 초기화
 
   // 헤더 버튼 업데이트
   var hdrBtn = document.getElementById('hdr-login-btn');
@@ -1226,6 +1227,7 @@ onAuthStateChanged(fbAuth, function(user) {
             window.FB_FUNCS.doc(window.FB_DB, 'users', user.uid)
           ).then(function(snap) {
             var role = snap.exists() ? snap.data().role : 'debtor';
+            window._userRole = role; // 캐싱
             if(role === 'admin') {
               window.go&&window.go('s-adm-login');
             } else if(role === 'attorney') {
@@ -4929,7 +4931,23 @@ window.admRejectAttApp  = admRejectAttApp;
     loadUserReviews();
     updateStatAtt(); // 파트너 변호사 수 업데이트
     renderAtts();    // 변호사 목록 렌더링 (att-list 있을 때만)
-  }if(id==='s-my'){loadMyList();bindStarGroup();bindReviewSubmit();}};
+  }if(id==='s-my'){
+    // 변호사는 변호사 포털로 즉시 리다이렉트
+    if(window._userRole === 'attorney') {
+      go('s-att-dash'); return;
+    }
+    // role 미캐싱 시 Firestore 확인
+    if(window.FB_USER && window.FB_DB && window.FB_FUNCS && !window._userRole) {
+      window.FB_FUNCS.getDoc(window.FB_FUNCS.doc(window.FB_DB,'users',window.FB_USER.uid))
+        .then(function(snap){
+          if(snap.exists()) {
+            window._userRole = snap.data().role;
+            if(window._userRole === 'attorney') go('s-att-dash');
+          }
+        }).catch(function(){});
+    }
+    loadMyList();bindStarGroup();bindReviewSubmit();
+  }};
 })();
 
 // ── 변호사 입점 신청 ──────────────────────────────────────
