@@ -213,9 +213,9 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
     <button class="hero-btn" onclick="go('s-diag')">⚡ 무료 채무 진단 시작하기</button>
   </div>
   <div class="stats">
-    <div class="stat"><span class="stat-n">33+</span><span class="stat-l">판결문 DB</span></div>
+    <div class="stat"><span class="stat-n" id="stat-db">33+</span><span class="stat-l">판결문 DB</span></div>
     <div class="stat"><span class="stat-n">92%</span><span class="stat-l">진단 정확도</span></div>
-    <div class="stat"><span class="stat-n">30명+</span><span class="stat-l">파트너 변호사</span></div>
+    <div class="stat"><span class="stat-n" id="stat-att">-</span><span class="stat-l">파트너 변호사</span></div>
   </div>
   <div class="notice">⚠️ 진단 결과는 참고용이며 실제 법원 판결을 보장하지 않습니다.</div>
   <div class="sec" style="margin-top:18px">
@@ -595,7 +595,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
   <div style="position:sticky;top:0;z-index:200;height:52px;background:#fff;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;padding:0 18px">
     <div style="font-size:15px;font-weight:900;background:linear-gradient(135deg,var(--p),var(--a));-webkit-background-clip:text;-webkit-text-fill-color:transparent">⚖️ 변호사 포털</div>
     <div style="display:flex;gap:8px;align-items:center">
-      <span style="font-size:12px;color:var(--ts);font-weight:600">김○○ 변호사</span>
+      <span id="att-header-name" style="font-size:12px;color:var(--ts);font-weight:600">변호사</span>
       <button onclick="go('s-my')" style="font-size:11px;font-weight:700;background:var(--bg);border:1px solid var(--bd);border-radius:20px;padding:5px 12px;cursor:pointer;font-family:inherit;color:var(--ts)">나가기</button>
     </div>
   </div>
@@ -608,7 +608,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
   </div>
   <div id="atp-dash" style="padding:16px">
     <div style="font-size:15px;font-weight:800;margin-bottom:2px">대시보드</div>
-    <div style="font-size:13px;color:var(--ts);margin-bottom:14px">김○○ 변호사님 👋</div>
+    <div id="att-dash-name" style="font-size:13px;color:var(--ts);margin-bottom:14px">변호사님 👋</div>
     <div class="alert info" id="att-notice">📬 신규 사건을 확인해보세요.</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
       <div style="background:#fff;border-radius:var(--rad);padding:14px;border:1px solid var(--bd);box-shadow:var(--shs);cursor:pointer" onclick="switchAttTab('cases')"><div style="font-size:22px;font-weight:900;color:var(--p)" id="att-stat-new">0</div><div style="font-size:11px;color:var(--ts)">신규 사건</div></div>
@@ -622,7 +622,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
         <span style="font-size:11px;font-weight:700;background:var(--al);color:#005945;padding:4px 10px;border-radius:20px">활성</span>
       </div>
       <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px"><span style="color:var(--ts)">이번 달 비딩</span><b>9건 / 10건</b></div>
-      <div style="height:7px;border-radius:4px;background:var(--bd);overflow:hidden"><div style="width:90%;height:100%;border-radius:4px;background:linear-gradient(90deg,var(--p),#4D8EFF)"></div></div>
+      <div style="height:7px;border-radius:4px;background:var(--bd);overflow:hidden"><div style="width:0%;height:100%;border-radius:4px;background:linear-gradient(90deg,var(--p),#4D8EFF)"></div></div>
     </div>
   </div>
   <div id="atp-cases" style="padding:16px;display:none">
@@ -812,10 +812,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
     <!-- 결제 내역 -->
     <div style="font-size:15px;font-weight:800;margin-bottom:10px;margin-top:8px">📄 결제 내역</div>
     <div id="pay-history">
-      <div style="background:#fff;border-radius:var(--rads);padding:13px 15px;border:1px solid var(--bd);margin-bottom:8px;display:flex;justify-content:space-between">
-        <div><div style="font-size:13px;font-weight:700">기본 플랜</div><div style="font-size:12px;color:var(--ts)">2026.03.01</div></div>
-        <div style="text-align:right"><div style="font-size:13px;font-weight:700;color:var(--p)">500,000원</div><div style="font-size:11px;color:var(--a)">결제완료</div></div>
-      </div>
+
     </div>
 
     <div style="background:var(--bg);border-radius:var(--rads);padding:13px;font-size:12px;color:var(--ts);line-height:1.7;margin-top:8px">
@@ -1611,13 +1608,7 @@ var CASE_DB=[
 // ═══════════════════════════════
 // ATTORNEYS
 // ═══════════════════════════════
-var ATTS=[
-  {id:1,name:'김○○',firm:'법무법인 리커버',career:12,region:'서울',rating:4.9,reviews:127,retainer:120,success_fee:50,rate:94,types:['신용대출','카드채무'],tags:['개인회생전문','무료상담','빠른처리'],install:false,free:true,badge:'best',score:98,strategy:'채무자 소득 대비 변제금을 최소화하여 3년 변제 인가를 목표로 합니다.'},
-  {id:2,name:'이○○',firm:'법률사무소 새출발',career:8,region:'서울',rating:4.7,reviews:89,retainer:150,success_fee:60,rate:91,types:['신용대출','복합채무'],tags:['빠른처리','분할납부'],install:true,free:false,badge:'new',score:87,strategy:'신속한 서류 준비와 법원 제출로 빠른 인가를 목표로 합니다.'},
-  {id:3,name:'박○○',firm:'법무법인 희망',career:15,region:'서울',rating:4.8,reviews:203,retainer:180,success_fee:0,rate:96,types:['담보대출','복합채무'],tags:['15년경력','성공보수제'],install:false,free:true,badge:'',score:92,strategy:'성공보수제로 의뢰인 부담을 최소화합니다.'},
-  {id:4,name:'최○○',firm:'법률사무소 재기',career:6,region:'경기',rating:4.6,reviews:54,retainer:100,success_fee:80,rate:88,types:['신용대출','카드채무'],tags:['최저착수금','친절상담'],install:true,free:true,badge:'',score:83,strategy:'착수금 부담을 최소화하고 성공보수 방식으로 진행합니다.'},
-  {id:5,name:'정○○',firm:'법무법인 새빛',career:10,region:'서울',rating:4.8,reviews:142,retainer:160,success_fee:40,rate:93,types:['신용대출','카드채무','복합채무'],tags:['전국대응','온라인처리'],install:false,free:true,badge:'',score:90,strategy:'온라인 서류 처리로 전국 어디서든 편리하게 진행 가능합니다.'},
-];
+var ATTS=[];
 
 // ═══════════════════════════════
 // STATE
@@ -2184,11 +2175,7 @@ function enterAdmin(){ go('s-adm-login'); }
 // ═══════════════════════════════
 // 변호사 포털
 // ═══════════════════════════════
-var ATT_SAMPLES=[
-  {id:'SMPL-001',status:'new',dtype:'신용대출',region:'서울',drange:'5천만~1억',budget:'100~150만',at:'30분 전'},
-  {id:'SMPL-002',status:'new',dtype:'카드채무',region:'서울',drange:'1천~3천만',budget:'100만 미만',at:'1시간 전'},
-  {id:'SMPL-003',status:'new',dtype:'복합채무',region:'경기',drange:'3천~5천만',budget:'100~150만',at:'3시간 전'},
-];
+var ATT_SAMPLES=[];
 var attBidId=null;
 function attDoLogin(){
   // Firebase 로그인 상태 확인
@@ -2637,14 +2624,7 @@ function _doAttSubmitBid(){
 // ═══════════════════════════════
 // 관리자 포털
 // ═══════════════════════════════
-var DEF_ATTS=[
-  {id:'A001',name:'김○○',firm:'법무법인 리커버',career:12,rating:4.9,status:'active'},
-  {id:'A002',name:'이○○',firm:'법률사무소 새출발',career:8,rating:4.7,status:'active'},
-  {id:'A003',name:'박○○',firm:'법무법인 희망',career:15,rating:4.8,status:'active'},
-  {id:'A004',name:'최○○',firm:'법률사무소 재기',career:6,rating:4.6,status:'active'},
-  {id:'A005',name:'정○○',firm:'법무법인 새빛',career:10,rating:4.8,status:'active'},
-  {id:'A006',name:'강○○',firm:'법률사무소 재도약',career:5,rating:0,status:'pending'},
-];
+var DEF_ATTS=[];
 function getAdmAtts(){return DB.load('attorneys',DEF_ATTS);}
 function saveAdmAtts(a){DB.save('attorneys',a);}
 function admDoLogin(){
@@ -7546,7 +7526,18 @@ window.switchLoginTab=switchLoginTab;
 var _go=go;
 window.go=function(id){
   _go(id);
-  if(id==='s-home') loadUserReviews();
+  if(id==='s-home') {
+    loadUserReviews();
+    // 파트너 변호사 수 실시간 로드
+    if(window.FB_DB && window.FB_FUNCS) {
+      window.FB_FUNCS.getDocs(window.FB_FUNCS.collection(window.FB_DB,'users'))
+        .then(function(snap){
+          var attCnt = snap.docs.filter(function(d){ return d.data().role==='attorney'; }).length;
+          var el = document.getElementById('stat-att');
+          if(el) el.textContent = attCnt > 0 ? attCnt+'명+' : '모집중';
+        }).catch(function(){});
+    }
+  }
   if(id==='s-my'){ loadMyList(); bindStarGroup(); bindReviewSubmit(); }
   if(id==='s-bid'){
     switchTab('mine');
