@@ -1827,7 +1827,15 @@ function renderTpMineCase(c, sel, selStatus) {
   } else if(selStatus==='pending'){
     progressBlock = '<div style="background:#FFF3E0;border-radius:8px;padding:12px;margin-top:10px">'
       +'<div style="font-size:12px;font-weight:700;color:var(--o)">⏳ 변호사 수임 확정 대기중</div>'
-      +'<div style="font-size:12px;color:var(--ts);margin-top:4px">'+(sel&&sel.attName?sel.attName+' 변호사가 곧 확정 연락드립니다.':'담당 변호사가 곧 연락드립니다.')+'</div>'
+      +'<div style="font-size:13px;font-weight:800;margin-top:4px">'+(sel&&sel.attName?sel.attName+' 변호사':'담당 변호사')+'</div>'
+      +(sel&&sel.attFirm?'<div style="font-size:11px;color:var(--ts)">'+sel.attFirm+'</div>':'')
+      +(sel&&sel.attPhone
+        ?'<a href="tel:'+sel.attPhone+'" style="display:flex;align-items:center;gap:6px;margin-top:8px;padding:9px 12px;background:#fff;border-radius:var(--rads);text-decoration:none;border:1px solid var(--o)">'
+          +'<span style="font-size:16px">📞</span>'
+          +'<span style="font-size:14px;font-weight:800;color:var(--p)">'+sel.attPhone+'</span>'
+          +'<span style="font-size:11px;color:var(--o);margin-left:auto">바로 전화</span>'
+          +'</a>'
+        :'<div style="font-size:12px;color:var(--ts);margin-top:4px">곧 확정 연락드립니다.</div>')
       +'</div>';
   } else if(selStatus==='rejected'){
     progressBlock = '<div style="background:#FFF0F0;border-radius:8px;padding:12px;margin-top:10px">'
@@ -1854,6 +1862,13 @@ function renderTpMineCase(c, sel, selStatus) {
       +'<div style="font-size:12px;font-weight:700;color:var(--ts)">담당: <b>'+(sel.attName||'변호사')+'</b></div>'
       +'<span style="font-size:11px;font-weight:700;background:'+sc+'20;color:'+sc+';padding:3px 9px;border-radius:20px">'+stage+'</span>'
       +'</div>'+stepBar
+      +(sel.attPhone
+        ?'<a href="tel:'+sel.attPhone+'" style="display:flex;align-items:center;gap:6px;padding:9px 12px;background:var(--al);border-radius:var(--rads);text-decoration:none;margin-bottom:8px">'
+          +'<span style="font-size:16px">📞</span>'
+          +'<div><div style="font-size:11px;color:#005945;font-weight:700">담당 변호사 직통</div>'
+          +'<div style="font-size:14px;font-weight:800;color:var(--p)">'+sel.attPhone+'</div></div>'
+          +'</a>'
+        :'')
       +(last?'<div style="background:var(--bg);border-radius:8px;padding:10px;font-size:12px;color:var(--ts);line-height:1.7">'
         +'<b>최근:</b> '+last.detail+(last.nextDate?'<br>다음 예정: <b>'+last.nextDate+'</b>':'')+'</div>'
         :'<div style="font-size:12px;color:var(--ts);text-align:center;padding:6px">곧 업데이트됩니다.</div>')
@@ -2024,29 +2039,46 @@ function renderAtts(){
 
   attListEl.innerHTML='<div style="text-align:center;padding:20px;color:var(--ts);font-size:13px">🔄 불러오는 중...</div>';
 
-  window.FB_FUNCS.getDocs(window.FB_FUNCS.collection(window.FB_DB,'users'))
-    .then(function(snap){
-      var list = snap.docs
+  Promise.all([
+    window.FB_FUNCS.getDocs(window.FB_FUNCS.collection(window.FB_DB,'users')),
+    window.FB_FUNCS.getDocs(window.FB_FUNCS.collection(window.FB_DB,'att_applications'))
+  ]).then(function(results){
+      var userDocs = results[0].docs;
+      var appDocs  = results[1].docs;
+
+      // users에서 attorney 추출
+      var fromUsers = userDocs
         .map(function(d){ return Object.assign({id:d.id}, d.data()); })
-        .filter(function(u){ return u.role==='attorney' && u.status==='active'; })
-        .map(function(u){
+        .filter(function(u){ return u.role==='attorney' && (u.status==='active'||u.status==='approved'); });
+
+      // att_applications에서 active/approved 추출 (users에 없는 것만)
+      var userIds = fromUsers.map(function(u){ return u.id||u.uid; });
+      var fromApps = appDocs
+        .map(function(d){ return Object.assign({id:d.id}, d.data()); })
+        .filter(function(a){
+          return (a.status==='active'||a.status==='approved')
+            && userIds.indexOf(a.uid||a.id) < 0;
+        })
+        .map(function(a){
           return {
-            id:          u.id,
-            name:        u.displayName || u.nickname || u.name || '변호사',
-            firm:        u.firm || u.lawfirm || '',
-            career:      u.career || 0,
-            region:      u.region || '서울',
-            rating:      u.rating || 5.0,
-            reviews:     u.reviews || 0,
-            retainer:    u.retainer || 0,
-            success_fee: u.success_fee || 0,
-            rate:        u.rate || 0,
-            types:       u.types || [],
-            tags:        u.tags || [],
-            score:       u.score || 0,
-            bio:         u.bio || '',
+            id:          a.uid||a.id,
+            name:        a.name||'',
+            firm:        a.firm||'',
+            career:      a.career||0,
+            region:      a.region||'서울',
+            rating:      5.0,
+            reviews:     0,
+            retainer:    0,
+            success_fee: 0,
+            rate:        0,
+            types:       a.type?[a.type]:[],
+            tags:        [],
+            phone:       a.phone||'',
+            bio:         a.intro||a.bio||'',
           };
         });
+
+      var list = fromUsers.concat(fromApps);
 
       if(list.length === 0){
         attListEl.innerHTML='<div style="text-align:center;padding:30px;color:var(--ts)">'
@@ -2102,7 +2134,9 @@ function attCard(a,isTop){
 function openAtt(id){
   var a=ATTS.find(function(x){return x.id===id;});if(!a)return;
   var total=a.retainer+a.success_fee;
-  document.getElementById('m-att-body').innerHTML='<div style="display:flex;align-items:center;gap:13px;margin-bottom:15px"><div class="av" style="width:52px;height:52px;font-size:20px">'+a.name[0]+'</div><div><div style="font-size:17px;font-weight:800">'+a.name+' 변호사</div><div style="font-size:13px;color:var(--ts)">'+a.firm+' · '+a.region+' · 경력 '+a.career+'년</div></div></div><div class="alert ok" style="margin-bottom:13px">✅ 개인회생 승인율 <b>'+a.rate+'%</b></div><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:15px"><div style="background:var(--pl);border-radius:10px;padding:12px;text-align:center"><div style="font-size:11px;color:var(--ts);margin-bottom:3px">착수금</div><div style="font-size:18px;font-weight:800;color:var(--p)">'+a.retainer+'만</div></div><div style="background:var(--al);border-radius:10px;padding:12px;text-align:center"><div style="font-size:11px;color:var(--ts);margin-bottom:3px">성공보수</div><div style="font-size:18px;font-weight:800;color:var(--a)">'+(a.success_fee>0?a.success_fee+'만':'없음')+'</div></div><div style="background:#FFF3E0;border-radius:10px;padding:12px;text-align:center"><div style="font-size:11px;color:var(--ts);margin-bottom:3px">총 비용</div><div style="font-size:18px;font-weight:800;color:#E65100">'+total+'만</div></div></div><div style="font-size:14px;font-weight:700;margin-bottom:7px">💬 제안 전략</div><div style="font-size:13.5px;color:var(--ts);line-height:1.75;background:var(--bg);border-radius:10px;padding:13px;margin-bottom:13px">'+a.strategy+'</div><button class="btn p" onclick="closeM(\'m-att\');toast(\'📞 '+a.name+' 변호사에게 상담 신청했습니다!\')">📞 '+(a.free?'무료 ':'')+'상담 신청하기</button>';
+  document.getElementById('m-att-body').innerHTML='<div style="display:flex;align-items:center;gap:13px;margin-bottom:15px"><div class="av" style="width:52px;height:52px;font-size:20px">'+a.name[0]+'</div><div><div style="font-size:17px;font-weight:800">'+a.name+' 변호사</div><div style="font-size:13px;color:var(--ts)">'+a.firm+' · '+a.region+' · 경력 '+a.career+'년</div></div></div><div class="alert ok" style="margin-bottom:13px">✅ 개인회생 승인율 <b>'+a.rate+'%</b></div><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:15px"><div style="background:var(--pl);border-radius:10px;padding:12px;text-align:center"><div style="font-size:11px;color:var(--ts);margin-bottom:3px">착수금</div><div style="font-size:18px;font-weight:800;color:var(--p)">'+a.retainer+'만</div></div><div style="background:var(--al);border-radius:10px;padding:12px;text-align:center"><div style="font-size:11px;color:var(--ts);margin-bottom:3px">성공보수</div><div style="font-size:18px;font-weight:800;color:var(--a)">'+(a.success_fee>0?a.success_fee+'만':'없음')+'</div></div><div style="background:#FFF3E0;border-radius:10px;padding:12px;text-align:center"><div style="font-size:11px;color:var(--ts);margin-bottom:3px">총 비용</div><div style="font-size:18px;font-weight:800;color:#E65100">'+total+'만</div></div></div><div style="font-size:14px;font-weight:700;margin-bottom:7px">💬 제안 전략</div><div style="font-size:13.5px;color:var(--ts);line-height:1.75;background:var(--bg);border-radius:10px;padding:13px;margin-bottom:13px">'+a.strategy+'</div><button class="btn p" onclick="closeM(\'m-att\');toast(\'📞 '+a.name+' 변호사에게 상담 신청했습니다!\')">📞 '+(a.free?'무료 ':'')+'상담 신청하기</button>'
+  +(a.phone?'<a href="tel:'+a.phone+'" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;margin-top:8px;background:#F0FAF7;border:1px solid #B2DFDB;border-radius:var(--rads);text-decoration:none;cursor:pointer"><span style="font-size:18px">📞</span><span style="font-size:15px;font-weight:800;color:var(--p)">'+a.phone+'</span><span style="font-size:12px;color:#005945;margin-left:2px">바로 전화하기</span></a>':'')
+  +'';
   openM('m-att');
 }
 function toggleCmp(id){
@@ -3155,7 +3189,11 @@ function bindReviewSubmit(){
     var stored=[];try{stored=JSON.parse(localStorage.getItem('lrx_reviews')||'[]');}catch(e){}
     stored.unshift({text:text,star:selectedStar,at:new Date().toLocaleString('ko-KR')});
     localStorage.setItem('lrx_reviews',JSON.stringify(stored.slice(0,20)));
-    inp.value='';loadMyList();loadUserReviews();toast('경험담이 홈 화면에 등록되었습니다! 🙏');
+    inp.value='';loadMyList();loadUserReviews();
+  // 첫 로드 시 파트너 변호사 수 즉시 표시
+  setTimeout(function(){
+    if(document.getElementById('stat-att')) renderAtts();
+  }, 1000);toast('경험담이 홈 화면에 등록되었습니다! 🙏');
   };
 }
 function bindStarGroup(){
@@ -4814,7 +4852,10 @@ window.admRejectAttApp  = admRejectAttApp;
   window.admBlockAtt=admBlockAtt; window.admRestoreAtt=admRestoreAtt;
   // go() 후킹 — 화면 전환 시 후기 갱신
   var _go=go;
-  window.go=function(id){_go(id);if(id==='s-home')loadUserReviews();if(id==='s-my'){loadMyList();bindStarGroup();bindReviewSubmit();}};
+  window.go=function(id){_go(id);if(id==='s-home'){
+    loadUserReviews();
+    renderAtts(); // 파트너 변호사 수 + 목록 로드
+  }if(id==='s-my'){loadMyList();bindStarGroup();bindReviewSubmit();}};
 })();
 
 // ── 변호사 입점 신청 ──────────────────────────────────────
@@ -4834,7 +4875,9 @@ function submitAttApply() {
   var career = (document.getElementById('apply-career')||{}).value||'';
   var type   = document.querySelector('#g-apply-type .tb.on');
   var region = document.querySelector('#g-apply-region .tb.on');
-  var bio    = (document.getElementById('apply-bio')||{}).value||'';
+  var phone  = (document.getElementById('att-apply-phone')||{}).value||'';
+  var bio    = (document.getElementById('att-apply-intro')||{}).value||
+               (document.getElementById('apply-bio')||{}).value||'';
   var errEl  = document.getElementById('apply-err');
 
   if(!name || !firm || !career) {
@@ -4852,7 +4895,9 @@ function submitAttApply() {
     career:   parseInt(career)||0,
     type:     type ? type.textContent.trim() : '',
     region:   region ? region.textContent.trim() : '',
+    phone:    phone,
     bio:      bio,
+    intro:    bio,
     status:   'pending',
     appliedAt: new Date().toLocaleString('ko-KR')
   };
@@ -7435,7 +7480,9 @@ function submitAttApply() {
   var career = (document.getElementById('apply-career')||{}).value||'';
   var type   = document.querySelector('#g-apply-type .tb.on');
   var region = document.querySelector('#g-apply-region .tb.on');
-  var bio    = (document.getElementById('apply-bio')||{}).value||'';
+  var phone  = (document.getElementById('att-apply-phone')||{}).value||'';
+  var bio    = (document.getElementById('att-apply-intro')||{}).value||
+               (document.getElementById('apply-bio')||{}).value||'';
   var errEl  = document.getElementById('apply-err');
 
   if(!name || !firm || !career) {
@@ -7453,7 +7500,9 @@ function submitAttApply() {
     career:   parseInt(career)||0,
     type:     type ? type.textContent.trim() : '',
     region:   region ? region.textContent.trim() : '',
+    phone:    phone,
     bio:      bio,
+    intro:    bio,
     status:   'pending',
     appliedAt: new Date().toLocaleString('ko-KR')
   };
@@ -7813,8 +7862,8 @@ window.go=function(id){
 };
 </script>
 <!-- 관리자 상세 정보 모달 -->
-<div class="overlay" id="m-adm-detail" onclick="ovClose(event,'m-adm-detail')">
-  <div class="modal">
+<div class="ov" id="m-adm-detail" onclick="ovClose(event,'m-adm-detail')">
+  <div class="modal" style="position:relative">
     <button class="mclose" onclick="closeM('m-adm-detail')">✕</button>
     <div class="mhandle"></div>
     <div class="mtitle">상세 정보</div>
