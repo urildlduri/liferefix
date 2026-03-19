@@ -1479,7 +1479,8 @@ window.listenCases = function(callback) {
     });
     callback(cases);
   }, function(err) {
-    console.error('Firestore 사건 조회 오류:', err);
+    console.error('Firestore 사건 조회 오류:', err.code, err.message);
+    // 권한 오류 시 빈 배열
     callback([]);
   });
 };
@@ -2006,13 +2007,85 @@ function sortAtt(s,el){
   renderAtts();
 }
 function renderAtts(){
-  var list=ATTS.slice();
-  if(curSort==='price')list.sort(function(a,b){return a.retainer-b.retainer;});
-  else if(curSort==='career')list.sort(function(a,b){return b.career-a.career;});
-  else if(curSort==='rating')list.sort(function(a,b){return b.rating-a.rating;});
-  else if(curSort==='rate')list.sort(function(a,b){return b.rate-a.rate;});
-  else list.sort(function(a,b){return b.score-a.score;});
-  var attListEl=document.getElementById('att-list'); if(attListEl) attListEl.innerHTML=list.map(function(a,i){return attCard(a,i===0&&curSort==='rec');}).join('');
+  var attListEl=document.getElementById('att-list');
+  if(!attListEl) return;
+
+  // 로컬 ATTS 있으면 먼저 표시
+  if(ATTS.length > 0){
+    _renderAttList(ATTS);
+    return;
+  }
+
+  // Firestore에서 attorney 로드
+  if(!window.FB_DB || !window.FB_FUNCS){
+    attListEl.innerHTML='<div style="text-align:center;padding:20px;color:var(--ts);font-size:13px">파트너 변호사를 불러오는 중...</div>';
+    return;
+  }
+
+  attListEl.innerHTML='<div style="text-align:center;padding:20px;color:var(--ts);font-size:13px">🔄 불러오는 중...</div>';
+
+  window.FB_FUNCS.getDocs(window.FB_FUNCS.collection(window.FB_DB,'users'))
+    .then(function(snap){
+      var list = snap.docs
+        .map(function(d){ return Object.assign({id:d.id}, d.data()); })
+        .filter(function(u){ return u.role==='attorney' && u.status==='active'; })
+        .map(function(u){
+          return {
+            id:          u.id,
+            name:        u.displayName || u.nickname || u.name || '변호사',
+            firm:        u.firm || u.lawfirm || '',
+            career:      u.career || 0,
+            region:      u.region || '서울',
+            rating:      u.rating || 5.0,
+            reviews:     u.reviews || 0,
+            retainer:    u.retainer || 0,
+            success_fee: u.success_fee || 0,
+            rate:        u.rate || 0,
+            types:       u.types || [],
+            tags:        u.tags || [],
+            score:       u.score || 0,
+            bio:         u.bio || '',
+          };
+        });
+
+      if(list.length === 0){
+        attListEl.innerHTML='<div style="text-align:center;padding:30px;color:var(--ts)">'
+          +'<div style="font-size:36px;margin-bottom:10px">⚖️</div>'
+          +'<div style="font-size:14px;font-weight:700;margin-bottom:6px">파트너 변호사 모집 중</div>'
+          +'<div style="font-size:12px">곧 전문 변호사들이 합류합니다</div>'
+          +'</div>';
+        return;
+      }
+
+      // 정렬
+      if(curSort==='price')  list.sort(function(a,b){return a.retainer-b.retainer;});
+      else if(curSort==='career') list.sort(function(a,b){return b.career-a.career;});
+      else if(curSort==='rating') list.sort(function(a,b){return b.rating-a.rating;});
+      else if(curSort==='rate')   list.sort(function(a,b){return b.rate-a.rate;});
+
+      _renderAttList(list);
+
+      // stat-att 업데이트
+      var statEl = document.getElementById('stat-att');
+      if(statEl) statEl.textContent = list.length+'명+';
+    })
+    .catch(function(err){
+      console.error('변호사 로드 오류:', err);
+      attListEl.innerHTML='<div style="text-align:center;padding:20px;color:var(--ts);font-size:13px">변호사 목록을 불러올 수 없습니다</div>';
+    });
+}
+
+function _renderAttList(list){
+  var attListEl=document.getElementById('att-list');
+  if(!attListEl) return;
+  if(!list.length){
+    attListEl.innerHTML='<div style="text-align:center;padding:30px;color:var(--ts)">'
+      +'<div style="font-size:36px;margin-bottom:10px">⚖️</div>'
+      +'<div style="font-size:14px;font-weight:700">파트너 변호사 모집 중</div>'
+      +'</div>';
+    return;
+  }
+  attListEl.innerHTML=list.map(function(a,i){return attCard(a,i===0&&curSort==='rec');}).join('');
 }
 function attCard(a,isTop){
   var inC=cmpList.indexOf(a.id)>-1;
@@ -2417,6 +2490,20 @@ function renderAttCases(){
   // 기존 리스너 해제
   if(_attCasesUnsubscribe) { _attCasesUnsubscribe(); _attCasesUnsubscribe=null; }
 
+  // Firestore bids에서 내가 제안한 사건 ID 캐시
+  if(window.FB_USER && window.FB_DB && window.FB_FUNCS) {
+    var uid_ = window.FB_USER.uid;
+    var email_ = window.FB_USER.email;
+    window.FB_FUNCS.getDocs(window.FB_FUNCS.collection(window.FB_DB,'bids'))
+      .then(function(bSnap){
+        window._cachedMyBidCaseIds = bSnap.docs
+          .map(function(d){ return d.data(); })
+          .filter(function(b){ return b.attId===uid_ || b.attEmail===email_; })
+          .map(function(b){ return b.caseId; });
+        console.log('[renderAttCases] 내 제안 사건 캐시:', window._cachedMyBidCaseIds.length, '건');
+      }).catch(function(){});
+  }
+
   if(window.listenCases) {
     // Firestore 실시간 연결
     _attCasesUnsubscribe = window.listenCases(function(firestoreCases) {
@@ -2588,6 +2675,13 @@ function _doAttSubmitBid(){
   if(window.submitBidFirebase) {
     window.submitBidFirebase(bid).then(function(id){
       if(id) {
+        // 내 제안 캐시 업데이트
+        if(window._cachedMyBidCaseIds) {
+          if(window._cachedMyBidCaseIds.indexOf(attBidId) < 0)
+            window._cachedMyBidCaseIds.push(attBidId);
+        } else {
+          window._cachedMyBidCaseIds = [attBidId];
+        }
         toast('✅ 제안이 제출되었습니다! 채무자에게 전달됩니다.');
           // 사건 등록자(채무자)에게 알림
           if(window.FB_DB && window.FB_FUNCS && window.sendPushNotification) {
@@ -2878,7 +2972,67 @@ function admRenderAtts(){
     if(applyEl) applyEl.innerHTML='<div style="font-size:13px;color:var(--r)">오류: '+e.message+'</div>';
   });
 }
-function admApproveAtt(id){var a=getAdmAtts();var x=a.find(function(x){return x.id===id;});if(x){x.status='active';saveAdmAtts(a);admRenderAtts();toast(x.name+' 변호사 입점 승인');}}
+function admApproveAtt(id){
+  // 1. localStorage 업데이트
+  var a=getAdmAtts();
+  var x=a.find(function(x){return x.id===id;});
+  if(x){ x.status='active'; saveAdmAtts(a); admRenderAtts(); }
+
+  // 2. Firestore att_applications 상태 업데이트
+  if(!window.FB_DB || !window.FB_FUNCS){ toast('승인 처리됐습니다 (로컬)'); return; }
+
+  // att_applications에서 해당 문서 찾아서 status 변경
+  window.FB_FUNCS.getDocs(window.FB_FUNCS.collection(window.FB_DB,'att_applications'))
+    .then(function(snap){
+      var doc = snap.docs.find(function(d){
+        var data = d.data();
+        return d.id===id || data.uid===id || data.id===id;
+      });
+      if(!doc){ toast('❌ 신청서를 찾을 수 없습니다.'); return; }
+
+      var data = doc.data();
+      var appRef = window.FB_FUNCS.doc(window.FB_DB,'att_applications',doc.id);
+
+      // att_applications status → active
+      window.FB_FUNCS.updateDoc(appRef, { status:'active' })
+        .then(function(){
+          // 3. users 컬렉션에 attorney 유저 생성/업데이트
+          var uid = data.uid || doc.id;
+          var userRef = window.FB_FUNCS.doc(window.FB_DB,'users',uid);
+          return window.FB_FUNCS.setDoc(userRef, {
+            uid:         uid,
+            email:       data.email || '',
+            name:        data.name  || '',
+            displayName: data.name  || '',
+            firm:        data.firm  || '',
+            region:      data.region|| '서울',
+            career:      data.career|| '',
+            intro:       data.intro || '',
+            price:       data.price || '',
+            types:       data.type  ? [data.type] : [],
+            role:        'attorney',
+            status:      'active',
+            rating:      5.0,
+            reviews:     0,
+            retainer:    0,
+            createdAt:   data.createdAt || new Date(),
+          }, { merge: true });
+        })
+        .then(function(){
+          toast('✅ ' + (data.name||'변호사') + ' 님 입점 승인 완료! 메인 화면에 표시됩니다.');
+          // 관리자 목록 새로고침
+          if(window.admRefresh) admRefresh();
+        })
+        .catch(function(err){
+          console.error('승인 오류:', err);
+          toast('❌ 승인 중 오류: ' + err.message);
+        });
+    })
+    .catch(function(err){
+      console.error('att_applications 조회 오류:', err);
+      toast('❌ 오류: ' + err.message);
+    });
+}
 function admBlockAtt(id){var a=getAdmAtts();var x=a.find(function(x){return x.id===id;});if(x){x.status='blocked';saveAdmAtts(a);admRenderAtts();toast(x.name+' 계정 정지');}}
 function admRestoreAtt(id){var a=getAdmAtts();var x=a.find(function(x){return x.id===id;});if(x){x.status='active';saveAdmAtts(a);admRenderAtts();toast(x.name+' 계정 복구');}}
 
@@ -3981,10 +4135,14 @@ function applyAttCaseFilter() {
   var uid   = window.FB_USER ? window.FB_USER.uid   : '';
   var email = window.FB_USER ? window.FB_USER.email : '';
 
-  // 내가 제안한 사건 ID 목록 (localStorage + Firestore 캐시)
-  var myBidCaseIds = DB.getBids()
+  // 내가 제안한 사건 ID 목록 (localStorage + Firestore 캐시 _myBidCaseIds)
+  var localBidIds = DB.getBids()
     .filter(function(b){ return b.attId===uid || b.attEmail===email; })
     .map(function(b){ return b.caseId; });
+  // Firestore bids 캐시 (loadMyBidCaseIds에서 저장)
+  var myBidCaseIds = window._cachedMyBidCaseIds
+    ? localBidIds.concat(window._cachedMyBidCaseIds.filter(function(id){ return localBidIds.indexOf(id)<0; }))
+    : localBidIds;
 
   var filtered = _attAllCases.filter(function(c){
     var iMine = myBidCaseIds.indexOf(c.id) > -1;
@@ -4081,6 +4239,10 @@ function _doInlineBid() {
   } else {
     toast('✅ 제안이 제출됐습니다!');
   }
+  // 내 제안 캐시 업데이트
+  if(!window._cachedMyBidCaseIds) window._cachedMyBidCaseIds = [];
+  if(window._cachedMyBidCaseIds.indexOf(attBidId) < 0)
+    window._cachedMyBidCaseIds.push(attBidId);
 
   // 인라인 폼 제거
   var form = document.getElementById('inline-bid-form');
@@ -5560,10 +5722,14 @@ function applyAttCaseFilter() {
   var uid   = window.FB_USER ? window.FB_USER.uid   : '';
   var email = window.FB_USER ? window.FB_USER.email : '';
 
-  // 내가 제안한 사건 ID 목록 (localStorage + Firestore 캐시)
-  var myBidCaseIds = DB.getBids()
+  // 내가 제안한 사건 ID 목록 (localStorage + Firestore 캐시 _myBidCaseIds)
+  var localBidIds = DB.getBids()
     .filter(function(b){ return b.attId===uid || b.attEmail===email; })
     .map(function(b){ return b.caseId; });
+  // Firestore bids 캐시 (loadMyBidCaseIds에서 저장)
+  var myBidCaseIds = window._cachedMyBidCaseIds
+    ? localBidIds.concat(window._cachedMyBidCaseIds.filter(function(id){ return localBidIds.indexOf(id)<0; }))
+    : localBidIds;
 
   var filtered = _attAllCases.filter(function(c){
     var iMine = myBidCaseIds.indexOf(c.id) > -1;
@@ -5660,6 +5826,10 @@ function _doInlineBid() {
   } else {
     toast('✅ 제안이 제출됐습니다!');
   }
+  // 내 제안 캐시 업데이트
+  if(!window._cachedMyBidCaseIds) window._cachedMyBidCaseIds = [];
+  if(window._cachedMyBidCaseIds.indexOf(attBidId) < 0)
+    window._cachedMyBidCaseIds.push(attBidId);
 
   // 인라인 폼 제거
   var form = document.getElementById('inline-bid-form');
@@ -6579,10 +6749,14 @@ function applyAttCaseFilter() {
   var uid   = window.FB_USER ? window.FB_USER.uid   : '';
   var email = window.FB_USER ? window.FB_USER.email : '';
 
-  // 내가 제안한 사건 ID 목록 (localStorage + Firestore 캐시)
-  var myBidCaseIds = DB.getBids()
+  // 내가 제안한 사건 ID 목록 (localStorage + Firestore 캐시 _myBidCaseIds)
+  var localBidIds = DB.getBids()
     .filter(function(b){ return b.attId===uid || b.attEmail===email; })
     .map(function(b){ return b.caseId; });
+  // Firestore bids 캐시 (loadMyBidCaseIds에서 저장)
+  var myBidCaseIds = window._cachedMyBidCaseIds
+    ? localBidIds.concat(window._cachedMyBidCaseIds.filter(function(id){ return localBidIds.indexOf(id)<0; }))
+    : localBidIds;
 
   var filtered = _attAllCases.filter(function(c){
     var iMine = myBidCaseIds.indexOf(c.id) > -1;
@@ -6679,6 +6853,10 @@ function _doInlineBid() {
   } else {
     toast('✅ 제안이 제출됐습니다!');
   }
+  // 내 제안 캐시 업데이트
+  if(!window._cachedMyBidCaseIds) window._cachedMyBidCaseIds = [];
+  if(window._cachedMyBidCaseIds.indexOf(attBidId) < 0)
+    window._cachedMyBidCaseIds.push(attBidId);
 
   // 인라인 폼 제거
   var form = document.getElementById('inline-bid-form');
@@ -7528,15 +7706,7 @@ window.go=function(id){
   _go(id);
   if(id==='s-home') {
     loadUserReviews();
-    // 파트너 변호사 수 실시간 로드
-    if(window.FB_DB && window.FB_FUNCS) {
-      window.FB_FUNCS.getDocs(window.FB_FUNCS.collection(window.FB_DB,'users'))
-        .then(function(snap){
-          var attCnt = snap.docs.filter(function(d){ return d.data().role==='attorney'; }).length;
-          var el = document.getElementById('stat-att');
-          if(el) el.textContent = attCnt > 0 ? attCnt+'명+' : '모집중';
-        }).catch(function(){});
-    }
+    renderAtts(); // Firestore에서 변호사 목록 로드
   }
   if(id==='s-my'){ loadMyList(); bindStarGroup(); bindReviewSubmit(); }
   if(id==='s-bid'){
