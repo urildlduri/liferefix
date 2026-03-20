@@ -2541,6 +2541,7 @@ function updateAttStats(){
   }
 }
 function renderAttCaseList(cases) {
+  console.log('[att] renderAttCaseList - 표시할 사건:', cases.length);
   var el = document.getElementById('att-case-list'); if(!el) return;
   if(!cases.length){
     el.innerHTML='<div style="text-align:center;padding:30px;color:var(--ts)">등록된 사건이 없습니다</div>';
@@ -2670,7 +2671,8 @@ function renderAttCaseList(cases) {
 
 var _attCasesUnsubscribe = null;
 function renderAttCases(){
-  var el = document.getElementById('att-case-list'); if(!el) return;
+  var el = document.getElementById('att-case-list'); if(!el) { console.log('[att] att-case-list 없음'); return; }
+  console.log('[att] renderAttCases 시작');
   el.innerHTML = '<div style="text-align:center;padding:30px;color:var(--ts)">🔄 사건 불러오는 중...</div>';
 
   // 기존 리스너 해제
@@ -2681,7 +2683,7 @@ function renderAttCases(){
       _attCasesUnsubscribe = window.listenCases(function(cases) {
         console.log('[renderAttCases] 수신된 사건:', cases.length, '건');
         if(window.checkExpiredCases) checkExpiredCases(cases);
-        _attAllCases = cases;
+        _attAllCases = cases; window._attAllCases = cases;
         applyAttCaseFilter();
         // 신규 카운트 업데이트
         var uid   = window.FB_USER ? window.FB_USER.uid   : '';
@@ -2709,7 +2711,7 @@ function renderAttCases(){
           .then(function(snap){
             var cases = snap.docs.map(function(d){ return Object.assign({id:d.id},d.data()); });
             console.log('[renderAttCases] getDocs:', cases.length, '건');
-            _attAllCases = cases;
+            _attAllCases = cases; window._attAllCases = cases;
             applyAttCaseFilter();
           }).catch(function(e){
             console.error('[renderAttCases] getDocs 오류:', e);
@@ -2728,10 +2730,17 @@ function renderAttCases(){
     var email_ = window.FB_USER.email;
     window.FB_FUNCS.getDocs(window.FB_FUNCS.collection(window.FB_DB,'bids'))
       .then(function(bSnap){
-        window._cachedMyBidCaseIds = bSnap.docs
+        var myBids = bSnap.docs
           .map(function(d){ return d.data(); })
-          .filter(function(b){ return b.attId===uid_ || b.attEmail===email_; })
+          .filter(function(b){
+            // 정확히 현재 로그인 변호사가 제안한 것만 + 실제 사건 ID만 (SMPL 제외)
+            var isMyBid = b.attId===uid_ || b.attEmail===email_;
+            var isRealCase = b.caseId && b.caseId.indexOf('SMPL') < 0;
+            return isMyBid && isRealCase;
+          })
           .map(function(b){ return b.caseId; });
+        // 중복 제거
+        window._cachedMyBidCaseIds = myBids.filter(function(id, idx){ return myBids.indexOf(id)===idx; });
         console.log('[renderAttCases] 내 제안 캐시:', window._cachedMyBidCaseIds.length, '건');
         startListen();
       }).catch(function(){
@@ -4524,6 +4533,7 @@ window.loadMyProgressInfo = loadMyProgressInfo;
 
 // ── 변호사 사건 필터 ──────────────────────────────────────
 var _attAllCases = [];
+window._attAllCases = _attAllCases;
 var _attCaseFilter = 'new';
 
 function filterAttCases(el) {
@@ -4534,6 +4544,7 @@ function filterAttCases(el) {
 }
 
 function applyAttCaseFilter() {
+  console.log('[att] applyAttCaseFilter - filter:', _attCaseFilter, 'cases:', _attAllCases.length, 'myBids:', (window._cachedMyBidCaseIds||[]).length);
   var f     = _attCaseFilter;
   var uid   = window.FB_USER ? window.FB_USER.uid   : '';
   var email = window.FB_USER ? window.FB_USER.email : '';
@@ -4549,14 +4560,14 @@ function applyAttCaseFilter() {
 
   var filtered = _attAllCases.filter(function(c){
     var iMine = myBidCaseIds.indexOf(c.id) > -1;
-    if(f === 'new')  return c.status==='new' && !iMine;   // 신규 + 내가 제안 안 한 것만
+    if(f === 'new')  return c.status==='new' && !iMine && c.id.indexOf('SMPL-')<0; // 신규 + 내가 제안 안 한 것만 + 샘플 제외
     if(f === 'bid')  return c.status==='bid' || iMine;    // 비딩중 or 내가 제안한 것
     if(f === 'mine') return iMine;
     return true; // all
   });
 
   // 탭 카운트 업데이트
-  var newCnt  = _attAllCases.filter(function(c){ return c.status==='new'  && myBidCaseIds.indexOf(c.id)<0; }).length;
+  var newCnt  = _attAllCases.filter(function(c){ return c.status==='new' && myBidCaseIds.indexOf(c.id)<0 && c.id.indexOf('SMPL-')<0; }).length;
   var bidCnt  = _attAllCases.filter(function(c){ return c.status==='bid'  || myBidCaseIds.indexOf(c.id)>-1; }).length;
   var mineCnt = myBidCaseIds.length;
 
@@ -4879,7 +4890,7 @@ function loadAllActiveCases() {
   ).then(function(snap){
     var cases = snap.docs
       .map(function(d){ return Object.assign({id:d.id}, d.data()); })
-      .filter(function(c){ return c.status !== 'closed'; })
+      .filter(function(c){ return c.status !== 'closed' && c.id.indexOf('SMPL-')<0; })
       .sort(function(a,b){
         var ta=a.createdAt&&a.createdAt.toDate?a.createdAt.toDate().getTime():0;
         var tb=b.createdAt&&b.createdAt.toDate?b.createdAt.toDate().getTime():0;
@@ -6135,6 +6146,7 @@ window.loadMyProgressInfo = loadMyProgressInfo;
 
 // ── 변호사 사건 필터 ──────────────────────────────────────
 var _attAllCases = [];
+window._attAllCases = _attAllCases;
 var _attCaseFilter = 'new';
 
 function filterAttCases(el) {
@@ -6145,6 +6157,7 @@ function filterAttCases(el) {
 }
 
 function applyAttCaseFilter() {
+  console.log('[att] applyAttCaseFilter - filter:', _attCaseFilter, 'cases:', _attAllCases.length, 'myBids:', (window._cachedMyBidCaseIds||[]).length);
   var f     = _attCaseFilter;
   var uid   = window.FB_USER ? window.FB_USER.uid   : '';
   var email = window.FB_USER ? window.FB_USER.email : '';
@@ -6160,14 +6173,14 @@ function applyAttCaseFilter() {
 
   var filtered = _attAllCases.filter(function(c){
     var iMine = myBidCaseIds.indexOf(c.id) > -1;
-    if(f === 'new')  return c.status==='new' && !iMine;   // 신규 + 내가 제안 안 한 것만
+    if(f === 'new')  return c.status==='new' && !iMine && c.id.indexOf('SMPL-')<0; // 신규 + 내가 제안 안 한 것만 + 샘플 제외
     if(f === 'bid')  return c.status==='bid' || iMine;    // 비딩중 or 내가 제안한 것
     if(f === 'mine') return iMine;
     return true; // all
   });
 
   // 탭 카운트 업데이트
-  var newCnt  = _attAllCases.filter(function(c){ return c.status==='new'  && myBidCaseIds.indexOf(c.id)<0; }).length;
+  var newCnt  = _attAllCases.filter(function(c){ return c.status==='new' && myBidCaseIds.indexOf(c.id)<0 && c.id.indexOf('SMPL-')<0; }).length;
   var bidCnt  = _attAllCases.filter(function(c){ return c.status==='bid'  || myBidCaseIds.indexOf(c.id)>-1; }).length;
   var mineCnt = myBidCaseIds.length;
 
@@ -6490,7 +6503,7 @@ function loadAllActiveCases() {
   ).then(function(snap){
     var cases = snap.docs
       .map(function(d){ return Object.assign({id:d.id}, d.data()); })
-      .filter(function(c){ return c.status !== 'closed'; })
+      .filter(function(c){ return c.status !== 'closed' && c.id.indexOf('SMPL-')<0; })
       .sort(function(a,b){
         var ta=a.createdAt&&a.createdAt.toDate?a.createdAt.toDate().getTime():0;
         var tb=b.createdAt&&b.createdAt.toDate?b.createdAt.toDate().getTime():0;
@@ -7162,6 +7175,7 @@ window.openSelectAttModal=openSelectAttModal; window.confirmSelectAtt=confirmSel
 
 // ── 변호사 사건 필터 ──────────────────────────────────────
 var _attAllCases = [];
+window._attAllCases = _attAllCases;
 var _attCaseFilter = 'new';
 
 function filterAttCases(el) {
@@ -7172,6 +7186,7 @@ function filterAttCases(el) {
 }
 
 function applyAttCaseFilter() {
+  console.log('[att] applyAttCaseFilter - filter:', _attCaseFilter, 'cases:', _attAllCases.length, 'myBids:', (window._cachedMyBidCaseIds||[]).length);
   var f     = _attCaseFilter;
   var uid   = window.FB_USER ? window.FB_USER.uid   : '';
   var email = window.FB_USER ? window.FB_USER.email : '';
@@ -7187,14 +7202,14 @@ function applyAttCaseFilter() {
 
   var filtered = _attAllCases.filter(function(c){
     var iMine = myBidCaseIds.indexOf(c.id) > -1;
-    if(f === 'new')  return c.status==='new' && !iMine;   // 신규 + 내가 제안 안 한 것만
+    if(f === 'new')  return c.status==='new' && !iMine && c.id.indexOf('SMPL-')<0; // 신규 + 내가 제안 안 한 것만 + 샘플 제외
     if(f === 'bid')  return c.status==='bid' || iMine;    // 비딩중 or 내가 제안한 것
     if(f === 'mine') return iMine;
     return true; // all
   });
 
   // 탭 카운트 업데이트
-  var newCnt  = _attAllCases.filter(function(c){ return c.status==='new'  && myBidCaseIds.indexOf(c.id)<0; }).length;
+  var newCnt  = _attAllCases.filter(function(c){ return c.status==='new' && myBidCaseIds.indexOf(c.id)<0 && c.id.indexOf('SMPL-')<0; }).length;
   var bidCnt  = _attAllCases.filter(function(c){ return c.status==='bid'  || myBidCaseIds.indexOf(c.id)>-1; }).length;
   var mineCnt = myBidCaseIds.length;
 
@@ -7517,7 +7532,7 @@ function loadAllActiveCases() {
   ).then(function(snap){
     var cases = snap.docs
       .map(function(d){ return Object.assign({id:d.id}, d.data()); })
-      .filter(function(c){ return c.status !== 'closed'; })
+      .filter(function(c){ return c.status !== 'closed' && c.id.indexOf('SMPL-')<0; })
       .sort(function(a,b){
         var ta=a.createdAt&&a.createdAt.toDate?a.createdAt.toDate().getTime():0;
         var tb=b.createdAt&&b.createdAt.toDate?b.createdAt.toDate().getTime():0;
