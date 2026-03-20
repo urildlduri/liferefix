@@ -264,6 +264,11 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
     <div class="fhdr"><h2>📊 AI 채무 진단</h2><p>재무 정보를 입력하면 판결문 DB 기반으로 개인회생 가능성을 계산합니다.</p></div>
     <div class="steps"><div class="sdot on" id="sd1"></div><div class="sdot" id="sd2"></div><div class="sdot" id="sd3"></div></div>
     <div class="fstep on" id="fs1">
+      <span class="flabel">신청 유형</span>
+      <div class="tg" id="g-proc">
+        <button class="tb on" onclick="sel(this,'g-proc')">개인회생</button>
+        <button class="tb" onclick="sel(this,'g-proc')">개인파산</button>
+      </div>
       <span class="flabel">채무 유형</span>
       <div class="tg" id="g-dtype">
         <button class="tb on" onclick="sel(this,'g-dtype')">신용대출</button>
@@ -283,6 +288,32 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
       <button class="btn p" onclick="gofs(2)">다음 단계 →</button>
     </div>
     <div class="fstep" id="fs2">
+      <span class="flabel">나이대</span>
+      <div class="tg" id="g-age">
+        <button class="tb" onclick="sel(this,'g-age')">20대</button>
+        <button class="tb on" onclick="sel(this,'g-age')">30대</button>
+        <button class="tb" onclick="sel(this,'g-age')">40~50대</button>
+        <button class="tb" onclick="sel(this,'g-age')">60대 이상</button>
+      </div>
+      <span class="flabel">만 19세 미만 미성년 자녀가 있나요?</span>
+      <div class="tg" id="g-minor">
+        <button class="tb on" onclick="sel(this,'g-minor')">없음</button>
+        <button class="tb" onclick="sel(this,'g-minor')">1명</button>
+        <button class="tb" onclick="sel(this,'g-minor')">2명</button>
+        <button class="tb" onclick="sel(this,'g-minor')">3명 이상</button>
+      </div>
+      <span class="flabel" style="line-height:1.5">최근 5년 이내 개인회생 또는 7년 이내 개인파산으로 면책을 받은 적이 있나요?</span>
+      <div class="tg" id="g-prev">
+        <button class="tb on" onclick="sel(this,'g-prev')">아니요</button>
+        <button class="tb" onclick="sel(this,'g-prev')">네</button>
+      </div>
+      <span class="flabel">직업 유형</span>
+      <div class="tg" id="g-job">
+        <button class="tb on" onclick="sel(this,'g-job')">직장인</button>
+        <button class="tb" onclick="sel(this,'g-job')">자영업</button>
+        <button class="tb" onclick="sel(this,'g-job')">프리랜서</button>
+        <button class="tb" onclick="sel(this,'g-job')">무직</button>
+      </div>
       <span class="flabel">부양가족 수 (본인 제외)</span>
       <div class="tg" id="g-dep">
         <button class="tb on" data-v="0" onclick="sel(this,'g-dep')">없음</button>
@@ -301,6 +332,11 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
         <button class="tb on" onclick="sel(this,'g-crd')">1~2개</button>
         <button class="tb" onclick="sel(this,'g-crd')">3~5개</button>
         <button class="tb" onclick="sel(this,'g-crd')">6개 이상</button>
+      </div>
+      <span class="flabel">보증채무 포함 여부</span>
+      <div class="tg" id="g-guar">
+        <button class="tb on" onclick="sel(this,'g-guar')">없음</button>
+        <button class="tb" onclick="sel(this,'g-guar')">있음</button>
       </div>
       <button class="btn p" onclick="runDiag()">📊 진단 시작하기</button>
       <button class="btn o" onclick="gofs(1)">← 이전으로</button>
@@ -1706,6 +1742,22 @@ function runDiag(){
   var dtype=dtypeEl?dtypeEl.textContent.trim():'신용대출';
   var depEl=document.querySelector('#g-dep .tb.on');
   var dep=depEl?parseInt(depEl.dataset.v||'0'):0;
+  var procEl=document.querySelector('#g-proc .tb.on');
+  var proc=procEl?procEl.textContent.trim():'개인회생';
+  var ageEl=document.querySelector('#g-age .tb.on');
+  var age=ageEl?ageEl.textContent.trim():'30대';
+  var minorEl=document.querySelector('#g-minor .tb.on');
+  var minor=minorEl?minorEl.textContent.trim():'없음';
+  var prevEl=document.querySelector('#g-prev .tb.on');
+  var prev=prevEl?prevEl.textContent.trim():'아니요';
+  var jobEl=document.querySelector('#g-job .tb.on');
+  var job=jobEl?jobEl.textContent.trim():'직장인';
+  var ovdEl=document.querySelector('#g-ovd .tb.on');
+  var ovd=ovdEl?ovdEl.textContent.trim():'3개월 미만';
+  var crdEl=document.querySelector('#g-crd .tb.on');
+  var crd=crdEl?crdEl.textContent.trim():'1~2개';
+  var guarEl=document.querySelector('#g-guar .tb.on');
+  var guar=guarEl?guarEl.textContent.trim():'없음';
   gofs(3);
   document.getElementById('d-load').style.display='block';
   document.getElementById('d-no').style.display='none';
@@ -1716,11 +1768,12 @@ function runDiag(){
   setTimeout(function(){
     clearInterval(t);
     document.getElementById('d-load').style.display='none';
-    var r=calcDiag(debt,inc,ast,dep,dtype);
+    var r=calcDiag(debt,inc,ast,dep,dtype,job,ovd,crd,guar,proc,age,minor,prev);
+    r.job=job; r.ovd=ovd; r.crd=crd; r.guar=guar; r.proc=proc; r.age=age; r.minor=minor; r.prev=prev;
     lastDiag=r;renderDiag(r);
   },2600);
 }
-function calcDiag(debt,inc,ast,dep,dtype){
+function calcDiag(debt,inc,ast,dep,dtype,job,ovd,crd,guar,proc,age,minor,prev){ job=job||'직장인'; ovd=ovd||'3개월 미만'; crd=crd||'1~2개'; guar=guar||'없음'; proc=proc||'개인회생'; age=age||'30대'; minor=minor||'없음'; prev=prev||'아니요';
   if(debt<1000)return{ok:false,why:'under',debt:debt,inc:inc};
   var minC=LIVING[Math.min(dep,3)];
   var disp=inc-minC;
@@ -1730,6 +1783,18 @@ function calcDiag(debt,inc,ast,dep,dtype){
   var avg=rates.length?rates.reduce(function(a,b){return a+b;},0)/rates.length/100:(FB[dtype]||.70);
   var final=base*.6+avg*.4;
   var astAdj=ast>debt*.3;if(astAdj)final-=.10;
+  if(job==='무직')final-=0.05;
+  else if(job==='자영업')final-=0.02;
+  else if(job==='프리랜서')final-=0.01;
+  if(ovd==='6개월 이상')final+=0.03;
+  else if(ovd==='3~6개월')final+=0.01;
+  if(guar==='있음')final-=0.02;
+  // 면책 이력 있으면 재신청 제한 → 가능성 대폭 하락
+  if(prev==='네')final-=0.15;
+  // 미성년 자녀 있으면 생계비 증가 → 탕감률 상승
+  if(minor==='1명')final+=0.02;
+  else if(minor==='2명')final+=0.04;
+  else if(minor==='3명 이상')final+=0.06;
   final=Math.max(.10,Math.min(.95,final));
   var ramt=Math.round(debt*(1-final)),monthly=Math.round(ramt/period),relief=debt-ramt;
   var conf=Math.min(93,72+CASE_DB.length);if(astAdj)conf-=5;conf=Math.max(60,Math.min(95,conf));
@@ -1750,6 +1815,28 @@ function renderDiag(r){
   document.getElementById('d-ramt').textContent='약 '+fw(r.relief);
   var bd='📌 <b>계산 근거</b><br>실수령액 '+fw(r.inc)+' — 최저생계비 '+fw(r.minC)+' = <b>가용소득 '+fw(r.disp)+'</b><br>판례 DB '+CASE_DB.length+'건 평균 탕감률 <b>'+Math.round(r.avg*100)+'%</b> 보정<br>→ 최종 탕감률 <b>'+pct+'%</b>';
   if(r.astAdj)bd+='<br>⚠️ 재산 채무의 30% 초과 → 탕감률 10%p 차감';
+  // 추가 정보 표시
+  var extraInfo = '';
+  if(r.job && r.job !== '직장인') {
+    extraInfo += '<div style="font-size:12px;color:var(--ts);margin-top:4px">직업: <b>'+r.job+'</b></div>';
+  }
+  if(r.guar && r.guar === '있음') {
+    extraInfo += '<div style="font-size:12px;color:var(--o);margin-top:2px">⚠️ 보증채무 포함</div>';
+  }
+  // 개인파산 안내
+  if(r.proc==='개인파산') {
+    extraInfo = '<div style="background:#FFF3E0;border-radius:8px;padding:10px 12px;font-size:12px;color:#7A3500;margin-bottom:8px">'
+      +'⚠️ <b>개인파산</b>은 재산을 처분하여 채무를 변제하는 절차입니다. 면책 후 일정 기간 불이익이 있을 수 있습니다.</div>' + extraInfo;
+  }
+  // 면책 이력 경고
+  if(r.prev==='네') {
+    extraInfo += '<div style="background:#FFF0F0;border-radius:8px;padding:10px 12px;font-size:12px;color:var(--r);margin-top:6px">'
+      +'⛔ <b>면책 이력</b>이 있어 재신청 제한이 적용될 수 있습니다. 전문 변호사 상담을 권장합니다.</div>';
+  }
+  if(extraInfo) {
+    var extraEl = document.getElementById('d-extra');
+    if(extraEl) extraEl.innerHTML = extraInfo;
+  }
   document.getElementById('d-breakdown').innerHTML=bd;
   document.getElementById('d-ok').style.display='block';
   // Firestore에 진단 결과 저장
@@ -2243,7 +2330,11 @@ function submitCase(){
     userEmail: window.FB_USER ? window.FB_USER.email : '',
     userName:  window.FB_USER ? (window.FB_USER.displayName||window.FB_USER.email.split('@')[0]) : '',
     at: new Date().toLocaleString('ko-KR'),
-    diag: lastDiag
+    diag: lastDiag,
+    proc:  lastDiag&&lastDiag.proc||'개인회생',
+    age:   lastDiag&&lastDiag.age||'',
+    minor: lastDiag&&lastDiag.minor||'없음',
+    prev:  lastDiag&&lastDiag.prev||'아니요',
   };
   DB.addCase(c);
   if(window.submitCaseFirebase) window.submitCaseFirebase(c);
@@ -2562,7 +2653,11 @@ function renderAttCaseList(cases) {
       +'<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:4px">'
       +'<span style="font-size:11px;font-weight:800;color:var(--p)">'+c.id+'</span>'
       +'<span style="font-size:11px;font-weight:700;background:'+(isClosed?'#F0F0F0':'var(--pl)')+';color:'+(isClosed?'var(--ts)':s.c)+';padding:2px 8px;border-radius:20px">'+(isClosed?'마감':s.l)+'</span>'
+      +(c.proc?'<span style="font-size:11px;font-weight:800;background:'+(c.proc==='개인파산'?'#FFF3E0':'var(--pl)')+';color:'+(c.proc==='개인파산'?'#7A3500':'var(--p)')+';padding:2px 8px;border-radius:20px;margin-left:4px">'+c.proc+'</span>':'')
       +(c.dtype?'<span style="font-size:11px;background:#FFF3E0;color:#7A3500;padding:2px 8px;border-radius:20px">'+c.dtype+'</span>':'')
+      +(c.age?'<span style="font-size:11px;background:#F0F4FF;color:var(--p);padding:2px 8px;border-radius:20px;margin-left:3px">'+c.age+'</span>':'')
+      +(c.minor&&c.minor!=='없음'?'<span style="font-size:11px;background:#F0FFF4;color:#005945;padding:2px 8px;border-radius:20px;margin-left:3px">미성년 '+c.minor+'</span>':'')
+      +(c.prev==='네'?'<span style="font-size:11px;background:#FFF0F0;color:var(--r);padding:2px 8px;border-radius:20px;margin-left:3px">⚠️ 면책이력</span>':'')
       +'</div>'
       +'<div style="font-size:15px;font-weight:700">'+(c.dtype||'')+'</div>'
       +'<div style="font-size:12px;color:var(--ts);margin-top:1px">'+(c.region||'')+' · '+(c.userName||c.userEmail||'채무자')+'</div>'
