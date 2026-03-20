@@ -4544,6 +4544,8 @@ function filterAttCases(el) {
 }
 
 function applyAttCaseFilter() {
+  // 항상 최신 데이터 사용
+  if(window._attAllCases && window._attAllCases.length > 0) _attAllCases = window._attAllCases;
   console.log('[att] applyAttCaseFilter - filter:', _attCaseFilter, 'cases:', _attAllCases.length, 'myBids:', (window._cachedMyBidCaseIds||[]).length);
   var f     = _attCaseFilter;
   var uid   = window.FB_USER ? window.FB_USER.uid   : '';
@@ -6154,6 +6156,8 @@ function filterAttCases(el) {
 }
 
 function applyAttCaseFilter() {
+  // 항상 최신 데이터 사용
+  if(window._attAllCases && window._attAllCases.length > 0) _attAllCases = window._attAllCases;
   console.log('[att] applyAttCaseFilter - filter:', _attCaseFilter, 'cases:', _attAllCases.length, 'myBids:', (window._cachedMyBidCaseIds||[]).length);
   var f     = _attCaseFilter;
   var uid   = window.FB_USER ? window.FB_USER.uid   : '';
@@ -7180,6 +7184,8 @@ function filterAttCases(el) {
 }
 
 function applyAttCaseFilter() {
+  // 항상 최신 데이터 사용
+  if(window._attAllCases && window._attAllCases.length > 0) _attAllCases = window._attAllCases;
   console.log('[att] applyAttCaseFilter - filter:', _attCaseFilter, 'cases:', _attAllCases.length, 'myBids:', (window._cachedMyBidCaseIds||[]).length);
   var f     = _attCaseFilter;
   var uid   = window.FB_USER ? window.FB_USER.uid   : '';
