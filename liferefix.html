@@ -6144,10 +6144,7 @@ window.markCaseDone      = markCaseDone;
 window.loadMyProgressInfo = loadMyProgressInfo;
 
 
-// ── 변호사 사건 필터 ──────────────────────────────────────
-var _attAllCases = [];
-window._attAllCases = _attAllCases;
-var _attCaseFilter = 'new';
+// (중복 선언 제거)
 
 function filterAttCases(el) {
   // 탭 토글
@@ -7173,10 +7170,7 @@ window.renderMyBidList=renderMyBidList; window.loadMyProgressInfo=loadMyProgress
 window.openSelectAttModal=openSelectAttModal; window.confirmSelectAtt=confirmSelectAtt;
 // 수익/결제
 
-// ── 변호사 사건 필터 ──────────────────────────────────────
-var _attAllCases = [];
-window._attAllCases = _attAllCases;
-var _attCaseFilter = 'new';
+// (중복 선언 제거2)
 
 function filterAttCases(el) {
   // 탭 토글
