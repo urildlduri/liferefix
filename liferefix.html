@@ -2669,7 +2669,9 @@ function renderAttCaseList(cases) {
   }).join('');
 }
 
-var _attCasesUnsubscribe = null;
+// 변호사 사건 필터 전역변수
+var _attCaseFilter = window._attCaseFilter || 'new';
+var _attAllCases   = window._attAllCases   || [];
 function renderAttCases(){
   var el = document.getElementById('att-case-list');
   if(!el){ console.log('[att] att-case-list 없음'); return; }
@@ -4535,9 +4537,7 @@ window.loadMyProgressInfo = loadMyProgressInfo;
 
 
 // ── 변호사 사건 필터 ──────────────────────────────────────
-var _attAllCases = [];
-window._attAllCases = _attAllCases;
-var _attCaseFilter = 'new';
+// (변수 선언 위로 이동됨)
 
 function filterAttCases(el) {
   // 탭 토글
