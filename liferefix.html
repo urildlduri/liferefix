@@ -2402,9 +2402,7 @@ function enterAttorney(){
       var role = snap.exists() ? snap.data().role : 'debtor';
       if(role === 'attorney' || role === 'admin') {
         go('s-att-dash');
-        updateAttStats();
-        renderAttCases();
-        loadAttProfile();
+
       } else if(role === 'pending_attorney') {
         toast('⏳ 입점 신청 검토 중입니다. 승인 후 이용 가능합니다.');
       } else {
@@ -2445,15 +2443,11 @@ function attDoLogin(){
       if(role === 'attorney') {
         // 승인된 파트너 변호사
         go('s-att-dash');
-        updateAttStats();
-        renderAttCases();
-        loadAttProfile();
+
       } else if(role === 'pending_attorney') {
         toast('⏳ 입점 신청이 검토 중입니다. 승인 후 이용 가능합니다.');
       } else if(role === 'admin') {
         go('s-att-dash');
-        updateAttStats();
-        renderAttCases();
       } else {
         toast('⚠️ 파트너 변호사만 접근 가능합니다. MY 페이지에서 입점 신청을 해주세요.');
       }
@@ -2466,8 +2460,6 @@ function attDoLogin(){
     var pw    = (document.getElementById('att-pw')||{}).value||'';
     if(email && pw) {
       go('s-att-dash');
-      updateAttStats();
-      renderAttCases();
     } else {
       toast('이메일과 비밀번호를 입력해주세요.');
     }
@@ -5136,8 +5128,19 @@ window.admRejectAttApp  = admRejectAttApp;
   var _go=go;
   window.go=function(id){_go(id);if(id==='s-home'){
     loadUserReviews();
-    updateStatAtt(); // 파트너 변호사 수 업데이트
-    renderAtts();    // 변호사 목록 렌더링 (att-list 있을 때만)
+    updateStatAtt();
+    renderAtts();
+  }
+  if(id==='s-att-dash'){
+    // Firebase 준비 후 대시보드 초기화
+    function initAttDash() {
+      if(window.FB_USER && window.FB_DB && window.FB_FUNCS) {
+        switchAttTab('dash');
+      } else {
+        setTimeout(initAttDash, 300);
+      }
+    }
+    initAttDash();
   }if(id==='s-my'){
     // 변호사는 변호사 포털로 즉시 리다이렉트
     if(window._userRole === 'attorney') {
