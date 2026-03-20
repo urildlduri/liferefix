@@ -2671,86 +2671,89 @@ function renderAttCaseList(cases) {
 
 var _attCasesUnsubscribe = null;
 function renderAttCases(){
-  var el = document.getElementById('att-case-list'); if(!el) { console.log('[att] att-case-list 없음'); return; }
+  var el = document.getElementById('att-case-list');
+  if(!el){ console.log('[att] att-case-list 없음'); return; }
   console.log('[att] renderAttCases 시작');
   el.innerHTML = '<div style="text-align:center;padding:30px;color:var(--ts)">🔄 사건 불러오는 중...</div>';
 
-  // 기존 리스너 해제
-  if(_attCasesUnsubscribe) { _attCasesUnsubscribe(); _attCasesUnsubscribe=null; }
+  if(_attCasesUnsubscribe){ _attCasesUnsubscribe(); _attCasesUnsubscribe=null; }
 
-  function startListen() {
-    if(window.listenCases) {
-      _attCasesUnsubscribe = window.listenCases(function(cases) {
-        console.log('[renderAttCases] 수신된 사건:', cases.length, '건');
-        if(window.checkExpiredCases) checkExpiredCases(cases);
-        _attAllCases = cases; window._attAllCases = cases;
-        applyAttCaseFilter();
-        // 신규 카운트 업데이트
-        var uid   = window.FB_USER ? window.FB_USER.uid   : '';
-        var myIds = window._cachedMyBidCaseIds || [];
-        var nw    = cases.filter(function(c){ return c.status==='new' && myIds.indexOf(c.id)<0; }).length;
-        var snEl  = document.getElementById('att-stat-new');
-        if(snEl) snEl.textContent = nw;
-        var noticeEl = document.getElementById('att-notice');
-        if(noticeEl) noticeEl.innerHTML = '📬 신규 사건 <b>'+nw+'건</b>이 등록되어 있습니다.';
-      }, function(err){
-        console.error('[renderAttCases] 오류:', err.code, err.message);
-        if(err.code === 'permission-denied') {
-          el.innerHTML = '<div style="text-align:center;padding:20px">'
-            +'<div style="font-size:13px;color:var(--r);margin-bottom:8px">⚠️ Firestore 권한 오류</div>'
-            +'<div style="font-size:12px;color:var(--ts)">Firebase 콘솔에서 보안 규칙을 확인해주세요.</div>'
-            +'</div>';
-        } else {
-          el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--r);font-size:13px">오류: '+err.message+'</div>';
-        }
-      });
-    } else {
-      // listenCases 없으면 getDocs로 직접 조회
-      if(window.FB_DB && window.FB_FUNCS) {
+  if(!window.FB_USER || !window.FB_DB || !window.FB_FUNCS){
+    el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--ts)">로그인이 필요합니다</div>';
+    return;
+  }
+
+  var uid_   = window.FB_USER.uid;
+  var email_ = window.FB_USER.email;
+
+  // bids 먼저 로드 후 cases 리스닝
+  window.FB_FUNCS.getDocs(window.FB_FUNCS.collection(window.FB_DB,'bids'))
+    .then(function(bSnap){
+      var rawIds = bSnap.docs
+        .map(function(d){ return d.data(); })
+        .filter(function(b){ return (b.attId===uid_||b.attEmail===email_) && b.caseId && b.caseId.indexOf('SMPL')<0; })
+        .map(function(b){ return b.caseId; })
+        .filter(function(id,i,a){ return a.indexOf(id)===i; }); // 중복제거
+      window._cachedMyBidCaseIds = rawIds;
+      console.log('[renderAttCases] 내 제안 캐시:', rawIds.length, '건');
+
+      // cases 실시간 리스닝
+      if(window.listenCases){
+        _attCasesUnsubscribe = window.listenCases(function(cases){
+          console.log('[renderAttCases] 수신된 사건:', cases.length, '건');
+
+          // 전역 변수 업데이트
+          window._attAllCases = cases;
+          _attAllCases        = cases;
+
+          // 필터 적용
+          var myIds = window._cachedMyBidCaseIds || [];
+          var filtered = cases.filter(function(c){
+            if(c.id.indexOf('SMPL')>-1) return false;
+            var iMine = myIds.indexOf(c.id)>-1;
+            if(_attCaseFilter==='new')  return c.status==='new' && !iMine;
+            if(_attCaseFilter==='bid')  return c.status==='bid' || iMine;
+            if(_attCaseFilter==='mine') return iMine;
+            return true;
+          });
+
+          console.log('[att] 필터 후 표시할 사건:', filtered.length, '건 (필터:', _attCaseFilter+')');
+
+          // 탭 카운트 업데이트
+          var newCnt  = cases.filter(function(c){ return c.status==='new'  && myIds.indexOf(c.id)<0 && c.id.indexOf('SMPL')<0; }).length;
+          var bidCnt  = cases.filter(function(c){ return c.status==='bid'  || myIds.indexOf(c.id)>-1; }).length;
+          var mineCnt = myIds.length;
+          var gEl = document.getElementById('g-case-filter');
+          if(gEl){ gEl.querySelectorAll('.tb').forEach(function(btn){
+            var f=btn.dataset.f;
+            btn.textContent = f==='new'?'🆕 신규 ('+newCnt+')':f==='bid'?'비딩중 ('+bidCnt+')':f==='mine'?'내 제안 ('+mineCnt+')':'전체 ('+cases.length+')';
+          });}
+          var snEl=document.getElementById('att-stat-new'); if(snEl) snEl.textContent=newCnt;
+          var notEl=document.getElementById('att-notice'); if(notEl) notEl.innerHTML='📬 신규 사건 <b>'+newCnt+'건</b>이 등록되어 있습니다.';
+
+          renderAttCaseList(filtered);
+        }, function(err){
+          console.error('[renderAttCases] 오류:', err.code, err.message);
+          el.innerHTML='<div style="text-align:center;padding:20px;color:var(--r)">오류: '+err.message+'</div>';
+        });
+      } else {
+        // listenCases 없으면 getDocs
         window.FB_FUNCS.getDocs(window.FB_FUNCS.collection(window.FB_DB,'cases'))
           .then(function(snap){
-            var cases = snap.docs.map(function(d){ return Object.assign({id:d.id},d.data()); });
-            console.log('[renderAttCases] getDocs:', cases.length, '건');
-            _attAllCases = cases; window._attAllCases = cases;
+            var cases=snap.docs.map(function(d){return Object.assign({id:d.id},d.data());});
+            window._attAllCases=cases; _attAllCases=cases;
             applyAttCaseFilter();
-          }).catch(function(e){
-            console.error('[renderAttCases] getDocs 오류:', e);
-            el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--r)">'+e.message+'</div>';
-          });
-      } else {
-        _attAllCases = getAttCases();
-        applyAttCaseFilter();
+          }).catch(function(e){ el.innerHTML='<div style="color:var(--r)">'+e.message+'</div>'; });
       }
-    }
-  }
-
-  // bids 캐시 먼저 로드 완료 후 listenCases 시작
-  if(window.FB_USER && window.FB_DB && window.FB_FUNCS) {
-    var uid_ = window.FB_USER.uid;
-    var email_ = window.FB_USER.email;
-    window.FB_FUNCS.getDocs(window.FB_FUNCS.collection(window.FB_DB,'bids'))
-      .then(function(bSnap){
-        var myBids = bSnap.docs
-          .map(function(d){ return d.data(); })
-          .filter(function(b){
-            // 정확히 현재 로그인 변호사가 제안한 것만 + 실제 사건 ID만 (SMPL 제외)
-            var isMyBid = b.attId===uid_ || b.attEmail===email_;
-            var isRealCase = b.caseId && b.caseId.indexOf('SMPL') < 0;
-            return isMyBid && isRealCase;
-          })
-          .map(function(b){ return b.caseId; });
-        // 중복 제거
-        window._cachedMyBidCaseIds = myBids.filter(function(id, idx){ return myBids.indexOf(id)===idx; });
-        console.log('[renderAttCases] 내 제안 캐시:', window._cachedMyBidCaseIds.length, '건');
-        startListen();
-      }).catch(function(){
-        window._cachedMyBidCaseIds = [];
-        startListen();
-      });
-  } else {
-    window._cachedMyBidCaseIds = [];
-    startListen();
-  }
+    }).catch(function(e){
+      window._cachedMyBidCaseIds=[];
+      console.error('[renderAttCases] bids 오류:', e);
+      if(window.listenCases){
+        _attCasesUnsubscribe=window.listenCases(function(cases){
+          window._attAllCases=cases; _attAllCases=cases; applyAttCaseFilter();
+        },function(err){ el.innerHTML='<div style="color:var(--r)">'+err.message+'</div>'; });
+      }
+    });
 }
 function attOpenBidForm(caseId){
   attBidId = caseId;
