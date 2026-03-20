@@ -1992,7 +1992,7 @@ function renderTpMineCase(c, sel, selStatus) {
 
   el.innerHTML='<div style="background:#fff;border-radius:var(--rad);padding:14px 16px;border:2px solid '+borderC+';box-shadow:var(--shs)">'
     +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'
-    +'<div style="font-size:11px;font-weight:800;color:var(--p)">'+c.id+'</div>'
+    +'<div style="font-size:11px;font-weight:800;color:var(--p);cursor:pointer;text-decoration:underline" class="case-user-btn" data-cid="'+c.id+'" data-uid="'+(c.userId||'')+'">'+c.id+' 👤</div>'
     +'<span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;background:var(--pl);color:'+st.c+'">'+st.l+'</span>'
     +'</div>'
     +'<div style="font-size:14px;font-weight:700">'+(c.dtype||'-')+' · '+(c.region||'-')+'</div>'
@@ -2117,7 +2117,7 @@ function renderTpMineCase(c, sel, selStatus) {
 
   el.innerHTML = '<div style="background:#fff;border-radius:var(--rad);padding:14px;border:2px solid '+borderC+';box-shadow:var(--shs)">'
     +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'
-    +'<div style="font-size:11px;font-weight:800;color:var(--p)">'+c.id+'</div>'
+    +'<div style="font-size:11px;font-weight:800;color:var(--p);cursor:pointer;text-decoration:underline" class="case-user-btn" data-cid="'+c.id+'" data-uid="'+(c.userId||'')+'">'+c.id+' 👤</div>'
     +'<span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;background:var(--pl);color:'+st.c+'">'+st.l+'</span>'
     +'</div>'
     +'<div style="font-size:14px;font-weight:700">'+(c.dtype||'-')+' · '+(c.region||'-')+'</div>'
@@ -3237,6 +3237,93 @@ function admShowAttDetail(jsonStr) {
   openM('m-adm-detail');
 }
 
+function showCaseUserDetail(caseId, userId) {
+  // cases에서 사건 정보 + users에서 유저 정보 조회
+  var modalBody = document.getElementById('m-case-user-body');
+  if(!modalBody) return;
+  modalBody.innerHTML = '<div style="text-align:center;padding:20px;color:var(--ts)">🔄 불러오는 중...</div>';
+  openM('m-case-user');
+
+  if(!window.FB_DB || !window.FB_FUNCS) {
+    modalBody.innerHTML = '<div style="color:var(--r)">Firebase 연결 필요</div>';
+    return;
+  }
+
+  var promises = [
+    window.FB_FUNCS.getDoc(window.FB_FUNCS.doc(window.FB_DB,'cases',caseId)),
+  ];
+  if(userId) {
+    promises.push(window.FB_FUNCS.getDoc(window.FB_FUNCS.doc(window.FB_DB,'users',userId)));
+  }
+  // selections에서 연락처 정보도 조회
+  promises.push(
+    window.FB_FUNCS.getDocs(window.FB_FUNCS.collection(window.FB_DB,'selections'))
+  );
+
+  Promise.all(promises).then(function(res){
+    var caseData = res[0].exists() ? Object.assign({id:res[0].id}, res[0].data()) : null;
+    var userData = (userId && res[1] && res[1].exists()) ? Object.assign({id:res[1].id}, res[1].data()) : null;
+    var selSnap  = res[promises.length-1];
+    var sel = selSnap.docs
+      .map(function(d){ return d.data(); })
+      .find(function(s){ return s.caseId===caseId; });
+
+    if(!caseData){ modalBody.innerHTML='<div style="color:var(--r)">사건 정보 없음</div>'; return; }
+
+    var diag = caseData.diag || {};
+    var rows = [
+      ['사건 ID',    caseData.id],
+      ['채무 유형',  caseData.dtype||'-'],
+      ['채무액',     caseData.drange||'-'],
+      ['희망 착수금',caseData.budget||'-'],
+      ['지역',       caseData.region||'-'],
+      ['신청 유형',  caseData.proc||'개인회생'],
+      ['나이대',     caseData.age||'-'],
+      ['미성년 자녀',caseData.minor||'-'],
+      ['면책 이력',  caseData.prev||'-'],
+      ['예상 탕감률',diag.final ? Math.round(diag.final*100)+'%' : '-'],
+      ['등록 시각',  caseData.at||'-'],
+    ];
+
+    // 연락처 (변호사가 수임한 경우)
+    if(sel) {
+      rows.push(['─────', '─ 채무자 연락처 ─']);
+      rows.push(['이름',  sel.userName||'-']);
+      rows.push(['전화',  sel.phone||'-']);
+      rows.push(['메모',  sel.memo||'-']);
+    } else if(userData && userData.phone) {
+      rows.push(['─────', '─ 회원 정보 ─']);
+      rows.push(['닉네임', userData.displayName||userData.nickname||'-']);
+      rows.push(['이메일', userData.email||'-']);
+      rows.push(['전화',   userData.phone||'-']);
+    }
+
+    modalBody.innerHTML =
+      '<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">'
+      +'<div style="width:44px;height:44px;border-radius:50%;background:var(--pl);display:flex;align-items:center;justify-content:center;font-size:20px">📋</div>'
+      +'<div>'
+      +'<div style="font-size:16px;font-weight:800">'+caseData.id+'</div>'
+      +'<span style="font-size:11px;font-weight:700;background:var(--pl);color:var(--p);padding:2px 8px;border-radius:20px">'+(caseData.status==='new'?'신규':caseData.status==='bid'?'비딩중':'수임완료')+'</span>'
+      +'</div></div>'
+      +'<table style="width:100%;border-collapse:collapse;font-size:13px">'
+      +rows.map(function(row){
+        if(row[0]==='─────') return '<tr><td colspan="2" style="padding:8px 0;font-size:11px;color:var(--ts);font-weight:700;border-top:1px solid var(--bd)">'+row[1]+'</td></tr>';
+        return '<tr style="border-bottom:1px solid var(--bd)">'
+          +'<td style="padding:8px;font-weight:700;color:var(--ts);width:85px;white-space:nowrap">'+row[0]+'</td>'
+          +'<td style="padding:8px;color:var(--dark);word-break:break-all">'
+          +(row[0]==='전화' && row[1]!=='-'
+            ? '<a href="tel:'+row[1]+'" style="color:var(--p);font-weight:800;text-decoration:none">📞 '+row[1]+'</a>'
+            : row[1])
+          +'</td></tr>';
+      }).join('')
+      +'</table>'
+      +(sel?'':'<div style="background:var(--pl);border-radius:8px;padding:10px;margin-top:12px;font-size:12px;color:var(--ts)">💡 채무자가 변호사를 선택하면 연락처가 공개됩니다.</div>');
+
+  }).catch(function(e){
+    modalBody.innerHTML = '<div style="color:var(--r)">오류: '+e.message+'</div>';
+  });
+}
+
 function admShowUserDetail(uid) {
   if(!window.FB_DB || !window.FB_FUNCS){ toast('Firebase 연결 필요'); return; }
   window.FB_FUNCS.getDoc(window.FB_FUNCS.doc(window.FB_DB,'users',uid))
@@ -3397,6 +3484,12 @@ document.addEventListener('click',function(e){
   if(e.target.classList.contains('adm-blk-btn'))      { admBlockAtt(e.target.dataset.aid); }
   if(e.target.classList.contains('adm-rst-btn'))      { admRestoreAtt(e.target.dataset.aid); }
   // 관리자 모달 버튼
+  if(e.target.classList.contains('case-user-btn')){
+    var cid = e.target.dataset.cid;
+    var uid = e.target.dataset.uid;
+    if(cid) showCaseUserDetail(cid, uid);
+    return;
+  }
   if(e.target.classList.contains('adm-modal-approve-btn')){
     var aid=e.target.dataset.aid; admApproveAtt(aid); closeM('m-adm-detail'); return;
   }
@@ -3852,7 +3945,7 @@ function renderMyCaseList(cases) {
     }
     return '<div style="background:#fff;border-radius:var(--rad);padding:16px;border:2px solid '+(c.status==='bid'?'var(--a)':'var(--bd)')+';margin-bottom:12px;box-shadow:var(--shs)">'
       +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'
-      +'<div style="font-size:11px;font-weight:800;color:var(--p)">'+c.id+'</div>'
+      +'<div style="font-size:11px;font-weight:800;color:var(--p);cursor:pointer;text-decoration:underline" class="case-user-btn" data-cid="'+c.id+'" data-uid="'+(c.userId||'')+'">'+c.id+' 👤</div>'
       +'<span style="font-size:11px;font-weight:700;background:var(--pl);color:'+s.c+';padding:3px 10px;border-radius:20px">'+s.l+'</span>'
       +'</div>'
       +'<div style="font-size:14px;font-weight:700">'+(c.dtype||'-')+' · '+(c.region||'-')+'</div>'
@@ -4861,7 +4954,7 @@ function renderAllActiveCases(cases) {
     return '<div style="background:#fff;border-radius:var(--rad);padding:14px 16px;border:1px solid var(--bd);margin-bottom:10px;box-shadow:var(--shs);border-left:4px solid '+s.c+'">'
       +'<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">'
       +'<div style="flex:1">'
-      +'<div style="font-size:11px;font-weight:800;color:var(--p)">'+c.id+'</div>'
+      +'<div style="font-size:11px;font-weight:800;color:var(--p);cursor:pointer;text-decoration:underline" class="case-user-btn" data-cid="'+c.id+'" data-uid="'+(c.userId||'')+'">'+c.id+' 👤</div>'
       +'<div style="font-size:14px;font-weight:700;margin-top:2px">'+(c.dtype||'-')+' · '+(c.region||'-')+'</div>'
       +'<div style="font-size:12px;color:var(--ts);margin-top:1px">'+(c.drange||'')+' · '+(c.budget||'')+'</div>'
       +diagStr
@@ -5470,7 +5563,7 @@ function renderMyCaseList(cases) {
     }
     return '<div style="background:#fff;border-radius:var(--rad);padding:16px;border:2px solid '+(c.status==='bid'?'var(--a)':'var(--bd)')+';margin-bottom:12px;box-shadow:var(--shs)">'
       +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'
-      +'<div style="font-size:11px;font-weight:800;color:var(--p)">'+c.id+'</div>'
+      +'<div style="font-size:11px;font-weight:800;color:var(--p);cursor:pointer;text-decoration:underline" class="case-user-btn" data-cid="'+c.id+'" data-uid="'+(c.userId||'')+'">'+c.id+' 👤</div>'
       +'<span style="font-size:11px;font-weight:700;background:var(--pl);color:'+s.c+';padding:3px 10px;border-radius:20px">'+s.l+'</span>'
       +'</div>'
       +'<div style="font-size:14px;font-weight:700">'+(c.dtype||'-')+' · '+(c.region||'-')+'</div>'
@@ -6472,7 +6565,7 @@ function renderAllActiveCases(cases) {
     return '<div style="background:#fff;border-radius:var(--rad);padding:14px 16px;border:1px solid var(--bd);margin-bottom:10px;box-shadow:var(--shs);border-left:4px solid '+s.c+'">'
       +'<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">'
       +'<div style="flex:1">'
-      +'<div style="font-size:11px;font-weight:800;color:var(--p)">'+c.id+'</div>'
+      +'<div style="font-size:11px;font-weight:800;color:var(--p);cursor:pointer;text-decoration:underline" class="case-user-btn" data-cid="'+c.id+'" data-uid="'+(c.userId||'')+'">'+c.id+' 👤</div>'
       +'<div style="font-size:14px;font-weight:700;margin-top:2px">'+(c.dtype||'-')+' · '+(c.region||'-')+'</div>'
       +'<div style="font-size:12px;color:var(--ts);margin-top:1px">'+(c.drange||'')+' · '+(c.budget||'')+'</div>'
       +diagStr
@@ -7048,7 +7141,7 @@ function loadMyCaseInline() {
 
     el.innerHTML = '<div style="background:#fff;border-radius:var(--rad);padding:14px 16px;border:2px solid '+borderC+';box-shadow:var(--shs)">'
       +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'
-      +'<div style="font-size:11px;font-weight:800;color:var(--p)">'+c.id+'</div>'
+      +'<div style="font-size:11px;font-weight:800;color:var(--p);cursor:pointer;text-decoration:underline" class="case-user-btn" data-cid="'+c.id+'" data-uid="'+(c.userId||'')+'">'+c.id+' 👤</div>'
       +'<span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;background:var(--pl);color:'+st.c+'">'+st.l+'</span>'
       +'</div>'
       +'<div style="font-size:14px;font-weight:700">'+(c.dtype||'-')+' · '+(c.region||'-')+'</div>'
@@ -7499,7 +7592,7 @@ function renderAllActiveCases(cases) {
     return '<div style="background:#fff;border-radius:var(--rad);padding:14px 16px;border:1px solid var(--bd);margin-bottom:10px;box-shadow:var(--shs);border-left:4px solid '+s.c+'">'
       +'<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">'
       +'<div style="flex:1">'
-      +'<div style="font-size:11px;font-weight:800;color:var(--p)">'+c.id+'</div>'
+      +'<div style="font-size:11px;font-weight:800;color:var(--p);cursor:pointer;text-decoration:underline" class="case-user-btn" data-cid="'+c.id+'" data-uid="'+(c.userId||'')+'">'+c.id+' 👤</div>'
       +'<div style="font-size:14px;font-weight:700;margin-top:2px">'+(c.dtype||'-')+' · '+(c.region||'-')+'</div>'
       +'<div style="font-size:12px;color:var(--ts);margin-top:1px">'+(c.drange||'')+' · '+(c.budget||'')+'</div>'
       +diagStr
@@ -8052,6 +8145,16 @@ window.go=function(id){
   }
 };
 </script>
+<!-- 사건 고객 정보 모달 -->
+<div class="ov" id="m-case-user" onclick="ovClose(event,'m-case-user')">
+  <div class="modal" style="position:relative">
+    <button class="mclose" onclick="closeM('m-case-user')">✕</button>
+    <div class="mhandle"></div>
+    <div class="mtitle">사건 상세 정보</div>
+    <div id="m-case-user-body"></div>
+  </div>
+</div>
+
 <!-- 관리자 상세 정보 모달 -->
 <div class="ov" id="m-adm-detail" onclick="ovClose(event,'m-adm-detail')">
   <div class="modal" style="position:relative">
