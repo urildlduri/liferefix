@@ -1196,7 +1196,7 @@ import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,
          signOut, onAuthStateChanged, GoogleAuthProvider, signInWithPopup }
   from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
 import { getFirestore, collection, addDoc, getDocs, doc, updateDoc,
-         deleteDoc, setDoc, getDoc, query, orderBy, onSnapshot, serverTimestamp }
+         deleteDoc, setDoc, getDoc, query, orderBy, onSnapshot, serverTimestamp, arrayUnion }
   from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -1606,7 +1606,7 @@ window.FB_FUNCS = {
   query: query,
   orderBy: orderBy,
   onSnapshot: onSnapshot,
-  serverTimestamp: serverTimestamp
+  serverTimestamp: serverTimestamp, arrayUnion
 };
 
 window.listenBidsForCase = function(caseId, callback) {
@@ -2597,6 +2597,16 @@ function renderAttCaseList(cases) {
           +'<div style="font-size:10px;color:var(--ts)">월변제금</div>'
           +'<div style="font-size:14px;font-weight:800;color:var(--o)">'+fw2(monthly)+'</div></div>'
         +'</div>'
+        // 진단 입력 정보
+        +'<div style="margin-top:8px;padding:8px 10px;background:#fff;border-radius:8px;font-size:11px;color:var(--ts);line-height:1.8">'
+        +(c.proc?'<span style="font-weight:700">신청유형</span> '+c.proc+'　':'')
+        +(c.age?'<span style="font-weight:700">나이대</span> '+c.age+'　':'')
+        +(diag&&diag.dep!==undefined?'<span style="font-weight:700">부양가족</span> '+(diag.dep===0?'없음':diag.dep+'명')+'　':'')
+        +(c.minor&&c.minor!=='없음'?'<span style="font-weight:700">미성년자녀</span> '+c.minor+'　':'')
+        +(diag&&diag.job?'<span style="font-weight:700">직업</span> '+diag.job+'　':'')
+        +(diag&&diag.ovd?'<span style="font-weight:700">연체기간</span> '+diag.ovd+'　':'')
+        +(c.prev==='네'?'<span style="font-weight:700;color:var(--r)">⚠️ 면책이력 있음</span>　':'')
+        +'</div>'
         +'</div>';
     } else if(c.drange || c.budget) {
       diagHtml = '<div style="background:var(--bg);border-radius:10px;padding:10px;margin:10px 0;font-size:12px;color:var(--ts)">'
@@ -3242,6 +3252,74 @@ function admShowAttDetail(jsonStr) {
   openM('m-adm-detail');
 }
 
+var _progressSelId = null;
+var _progressCaseId = null;
+
+function openProgressModal(selId, caseId, currentStage) {
+  _progressSelId  = selId;
+  _progressCaseId = caseId;
+  // 현재 단계 선택
+  var stageEl = document.querySelectorAll('#g-progress-stage .tb');
+  stageEl.forEach(function(btn){
+    btn.classList.toggle('on', btn.textContent.trim()===currentStage);
+  });
+  document.getElementById('progress-detail').value = '';
+  document.getElementById('progress-next-date').value = '';
+  var errEl = document.getElementById('progress-err');
+  if(errEl) errEl.style.display='none';
+  openM('m-progress');
+}
+
+function submitProgress() {
+  if(!_progressSelId){ closeM('m-progress'); return; }
+  var stageEl = document.querySelector('#g-progress-stage .tb.on');
+  var stage   = stageEl ? stageEl.textContent.trim() : '서류준비';
+  var detail  = (document.getElementById('progress-detail')||{}).value||'';
+  var nextDate= (document.getElementById('progress-next-date')||{}).value||'';
+
+  if(!window.FB_DB||!window.FB_FUNCS){ toast('Firebase 연결 필요'); return; }
+
+  var logEntry = {
+    stage:    stage,
+    detail:   detail || stage + ' 단계 진행중',
+    nextDate: nextDate,
+    at:       new Date().toLocaleString('ko-KR')
+  };
+
+  // selections 업데이트
+  window.FB_FUNCS.getDoc(window.FB_FUNCS.doc(window.FB_DB,'selections',_progressSelId))
+    .then(function(snap){
+      var logs = snap.exists() && snap.data().progressLog ? snap.data().progressLog : [];
+      logs.push(logEntry);
+      return window.FB_FUNCS.updateDoc(
+        window.FB_FUNCS.doc(window.FB_DB,'selections',_progressSelId),
+        {
+          currentStage: stage,
+          progressLog:  logs,
+          confirmed:    true,
+          status:       stage==='면책완료'?'done':'confirmed',
+          updatedAt:    window.FB_FUNCS.serverTimestamp()
+        }
+      );
+    })
+    .then(function(){
+      // cases 진행단계도 업데이트
+      if(_progressCaseId) {
+        window.FB_FUNCS.updateDoc(
+          window.FB_FUNCS.doc(window.FB_DB,'cases',_progressCaseId),
+          { currentStage: stage, status: stage==='면책완료'?'closed':'hired' }
+        ).catch(function(){});
+      }
+      closeM('m-progress');
+      toast('✅ 진행상황이 업데이트되었습니다!');
+      setTimeout(function(){ loadHiredCases(); }, 500);
+    })
+    .catch(function(e){
+      var errEl = document.getElementById('progress-err');
+      if(errEl){ errEl.style.display='block'; errEl.textContent='오류: '+e.message; }
+    });
+}
+
 function showCaseUserDetail(caseId, userId) {
   // cases에서 사건 정보 + users에서 유저 정보 조회
   var modalBody = document.getElementById('m-case-user-body');
@@ -3489,6 +3567,29 @@ document.addEventListener('click',function(e){
   if(e.target.classList.contains('adm-blk-btn'))      { admBlockAtt(e.target.dataset.aid); }
   if(e.target.classList.contains('adm-rst-btn'))      { admRestoreAtt(e.target.dataset.aid); }
   // 관리자 모달 버튼
+  if(e.target.classList.contains('att-progress-btn')){
+    var sid = e.target.dataset.sid;
+    var cid = e.target.dataset.cid;
+    var stage = e.target.closest('.hired-card') ? e.target.closest('.hired-card').dataset.stage : '서류준비';
+    openProgressModal(sid, cid, stage||'서류준비');
+    return;
+  }
+  if(e.target.classList.contains('open-progress-btn')){
+    var sid = e.target.dataset.selid;
+    if(sid) openProgressModal(sid);
+    return;
+  }
+  if(e.target.classList.contains('prog-stage-btn')){
+    var sid=e.target.dataset.selid, st=e.target.dataset.stage;
+    // 버튼 스타일 즉시 변경
+    document.querySelectorAll('.prog-stage-btn[data-selid="'+sid+'"]').forEach(function(b){
+      b.style.fontWeight='600'; b.style.border='2px solid var(--bd)'; b.style.background='#fff'; b.style.color='var(--ts)';
+    });
+    var sc2={'서류준비':'var(--o)','법원접수':'var(--p)','심사중':'#7B1FA2','변제계획인가':'var(--a)','변제중':'var(--a)','면책완료':'#005945'};
+    var c=sc2[st]||'var(--p)';
+    e.target.style.fontWeight='800'; e.target.style.border='2px solid '+c; e.target.style.background=c+'20'; e.target.style.color=c;
+    return;
+  }
   if(e.target.classList.contains('case-user-btn')){
     var cid = e.target.dataset.cid;
     var uid = e.target.dataset.uid;
@@ -4331,13 +4432,16 @@ function renderHiredList(items, el, isDone) {
     el.innerHTML='<div style="text-align:center;padding:20px;font-size:13px;color:var(--ts)">'+(isDone?'완료 사건 없음':'진행중 사건 없음')+'</div>';
     return;
   }
+  var STAGES = ['서류준비','법원접수','심사중','변제계획인가','변제중','면책완료'];
   var sc2={'서류준비':'var(--o)','법원접수':'var(--p)','심사중':'#7B1FA2','변제계획인가':'var(--a)','변제중':'var(--a)','면책완료':'#005945'};
+
   el.innerHTML = items.map(function(s){
     var isPending = s.status==='pending_confirm'||(!s.confirmed&&!s.currentStage&&s.status!=='rejected');
-    var stage=s.currentStage||'서류준비';
-    var sc=sc2[stage]||'var(--p)';
-    var lastLog=s.progressLog&&s.progressLog.length?s.progressLog[s.progressLog.length-1]:null;
+    var stage = s.currentStage||'서류준비';
+    var sc    = sc2[stage]||'var(--p)';
+    var lastLog = s.progressLog&&s.progressLog.length?s.progressLog[s.progressLog.length-1]:null;
 
+    // ── 수임 대기 카드 ──
     if(isPending){
       return '<div style="background:#fff;border-radius:var(--rad);padding:16px;border:2px solid var(--a);margin-bottom:12px;box-shadow:var(--shs)">'
         +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">'
@@ -4347,9 +4451,10 @@ function renderHiredList(items, el, isDone) {
         +'</div>'
         +'<div style="background:var(--al);border-radius:10px;padding:14px;margin-bottom:12px">'
         +'<div style="font-size:11px;font-weight:700;color:#005945;margin-bottom:8px">📋 채무자 정보</div>'
-        +'<div style="font-size:14px;font-weight:700">'+(s.userName||s.userEmail||'채무자')+'</div>'
+        +'<div style="font-size:15px;font-weight:800;cursor:pointer;text-decoration:underline" class="open-progress-btn" data-selid="'+s.id+'">'+(s.userName||s.userEmail||'채무자')+' ✏️</div>'
         +'<div style="font-size:12px;color:var(--ts)">'+(s.userEmail||'-')+'</div>'
-        +'<a href="tel:'+(s.phone||'')+'" style="font-size:20px;font-weight:900;color:var(--p);margin-top:6px;letter-spacing:2px;text-decoration:none;display:block">📞 '+(s.phone||'번호 없음')+'</a>'
+        +'<a href="tel:'+(s.phone||'')+'" style="display:flex;align-items:center;gap:6px;margin-top:8px;text-decoration:none">'
+        +'<span style="font-size:18px">📞</span><span style="font-size:16px;font-weight:900;color:var(--p)">'+(s.phone||'번호 없음')+'</span></a>'
         +(s.memo?'<div style="font-size:12px;color:#005945;margin-top:6px;background:#fff;border-radius:6px;padding:6px">💬 '+s.memo+'</div>':'')
         +'</div>'
         +'<div style="background:var(--bg);border-radius:8px;padding:10px;margin-bottom:12px;font-size:12px;color:var(--ts);line-height:1.8">'
@@ -4362,29 +4467,60 @@ function renderHiredList(items, el, isDone) {
         +'</div>';
     }
 
-    var progHtml=lastLog?('<div style="background:var(--bg);border-radius:8px;padding:10px;margin:8px 0;font-size:12px;color:var(--ts);line-height:1.7">'+lastLog.detail+(lastLog.nextDate?'<br>다음 예정: <b>'+lastLog.nextDate+'</b>':'')+'</div>'):'';
+    // ── 진행중 카드 ──
+    var stageIdx = STAGES.indexOf(stage);
+    var stageBtns = '<div style="margin:10px 0">'
+      +'<div style="font-size:11px;color:var(--ts);font-weight:700;margin-bottom:6px">진행 단계 선택:</div>'
+      +'<div style="display:flex;flex-wrap:wrap;gap:5px">'
+      +STAGES.map(function(st,i){
+        var isCur = st===stage;
+        var isDone2 = i<stageIdx;
+        var bg = isCur ? sc : isDone2 ? '#E8F5E9' : 'var(--bg)';
+        var color = isCur ? '#fff' : isDone2 ? '#005945' : 'var(--ts)';
+        var fw = isCur ? '800' : '600';
+        return '<button class="att-stage-btn" data-sid="'+s.id+'" data-cid="'+(s.caseId||s.id)+'" data-stage="'+st+'" '
+          +'style="padding:5px 10px;border-radius:20px;border:none;background:'+bg+';color:'+color+';font-size:11px;font-weight:'+fw+';cursor:pointer;font-family:inherit">'
+          +(isCur?'● ':isDone2?'✓ ':'')+st+'</button>';
+      }).join('')
+      +'</div></div>';
+
+    var progHtml = lastLog
+      ?'<div style="background:var(--bg);border-radius:8px;padding:10px;margin:8px 0;font-size:12px;color:var(--ts);line-height:1.7">'
+        +'<b>최근:</b> '+lastLog.detail+(lastLog.nextDate?'<br>다음 예정: <b>'+lastLog.nextDate+'</b>':'')+'</div>'
+      :'';
+
     return '<div style="background:#fff;border-radius:var(--rad);padding:14px 16px;border:1px solid var(--bd);margin-bottom:10px;box-shadow:var(--shs)">'
+      // 헤더
       +'<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">'
       +'<div style="flex:1">'
       +'<div style="font-size:12px;font-weight:800;color:var(--p)">'+(s.caseId||s.id)+'</div>'
-      +'<div style="font-size:14px;font-weight:700;margin-top:2px">'+(s.userEmail||'채무자')+'</div>'
-      +'<div style="font-size:12px;color:var(--ts)">착수금 '+(s.retainer||'-')+'만원'+(s.install&&s.install!=='none'?' · '+s.install+'개월 할부':'')+'</div>'
+      +'<div style="font-size:15px;font-weight:800;margin-top:2px">'+(s.userName||s.userEmail||'채무자')+'</div>'
+      +'<div style="font-size:12px;color:var(--ts)">'+(s.userEmail||'-')+'</div>'
       +'</div>'
       +'<span style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;background:'+sc+'20;color:'+sc+'">'+stage+'</span>'
       +'</div>'
-      +'<div style="background:var(--al);border-radius:8px;padding:10px;margin-bottom:10px;display:flex;align-items:center;gap:10px">'
+      // 채무자 연락처
+      +'<div style="background:var(--al);border-radius:8px;padding:10px;margin-bottom:8px">'
+      +'<a href="tel:'+(s.phone||'')+'" style="display:flex;align-items:center;gap:8px;text-decoration:none">'
       +'<span style="font-size:18px">📞</span>'
-      +'<div><div style="font-size:10px;color:#005945;font-weight:600">채무자 연락처</div>'
-      +'<a href="tel:'+(s.phone||'')+'" style="font-size:16px;font-weight:900;color:var(--p);letter-spacing:1px;text-decoration:none;display:block">'+(s.phone||'번호 없음')+'</a>'
-      +(s.memo?'<div style="font-size:11px;color:var(--ts)">'+s.memo+'</div>':'')
+      +'<div><div style="font-size:10px;color:#005945;font-weight:700">채무자 직통</div>'
+      +'<div style="font-size:15px;font-weight:900;color:var(--p)">'+(s.phone||'번호 없음')+'</div></div>'
+      +'</a>'
+      +(s.memo?'<div style="font-size:11px;color:var(--ts);margin-top:5px;padding-top:5px;border-top:1px solid #B2DFDB">💬 '+s.memo+'</div>':'')
       +'</div>'
+      // 수임 조건
+      +'<div style="font-size:12px;color:var(--ts);margin-bottom:8px">'
+      +'착수금 <b style="color:var(--p)">'+(s.retainer||'-')+'만원</b>'
+      +(s.install&&s.install!=='none'?' · '+s.install+'개월 할부':' · 일시불')
+      +' · 성공보수 <b>'+(s.success>0?s.success+'만원':'없음')+'</b>'
       +'</div>'
+      // 진행단계 선택 버튼
+      +(!isDone ? stageBtns : '')
+      // 최근 진행 로그
       +progHtml
+      // 버튼
       +(!isDone
-        ?'<div style="display:flex;gap:8px">'
-          +'<button class="att-progress-btn" data-sid="'+s.id+'" data-cid="'+(s.caseId||'')+'" style="flex:1;padding:9px;background:var(--pl);color:var(--p);border:none;border-radius:var(--rads);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">📋 진행상황 입력</button>'
-          +'<button class="att-done-btn" data-sid="'+s.id+'" style="padding:9px 14px;background:var(--al);color:#005945;border:none;border-radius:var(--rads);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">완료</button>'
-          +'</div>'
+        ?'<button class="att-progress-btn" data-sid="'+s.id+'" data-cid="'+(s.caseId||'')+'" style="width:100%;margin-top:6px;padding:9px;background:var(--pl);color:var(--p);border:none;border-radius:var(--rads);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">📝 상세 내용 입력</button>'
         :'<div style="font-size:12px;color:#005945;font-weight:700;margin-top:4px">✅ 면책 완료</div>')
       +'</div>';
   }).join('');
@@ -5987,11 +6123,11 @@ function renderHiredList(items, el, isDone) {
     }
 
     var progHtml=lastLog?('<div style="background:var(--bg);border-radius:8px;padding:10px;margin:8px 0;font-size:12px;color:var(--ts);line-height:1.7">'+lastLog.detail+(lastLog.nextDate?'<br>다음 예정: <b>'+lastLog.nextDate+'</b>':'')+'</div>'):'';
-    return '<div style="background:#fff;border-radius:var(--rad);padding:14px 16px;border:1px solid var(--bd);margin-bottom:10px;box-shadow:var(--shs)">'
+    return '<div class="hired-card" data-stage="'+stage+'" style="background:#fff;border-radius:var(--rad);padding:14px 16px;border:1px solid var(--bd);margin-bottom:10px;box-shadow:var(--shs)">'
       +'<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">'
       +'<div style="flex:1">'
-      +'<div style="font-size:12px;font-weight:800;color:var(--p)">'+(s.caseId||s.id)+'</div>'
-      +'<div style="font-size:14px;font-weight:700;margin-top:2px">'+(s.userEmail||'채무자')+'</div>'
+      +'<div style="font-size:12px;font-weight:800;color:var(--p);cursor:pointer" class="case-user-btn" data-cid="'+(s.caseId||s.id)+'" data-uid="'+(s.userId||'')+'">'+(s.caseId||s.id)+' 👤</div>'
+      +'<div style="font-size:14px;font-weight:700;margin-top:2px">'+(s.userName||s.userEmail||'채무자')+'</div>'
       +'<div style="font-size:12px;color:var(--ts)">착수금 '+(s.retainer||'-')+'만원'+(s.install&&s.install!=='none'?' · '+s.install+'개월 할부':'')+'</div>'
       +'</div>'
       +'<span style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;background:'+sc+'20;color:'+sc+'">'+stage+'</span>'
@@ -8165,6 +8301,40 @@ window.go=function(id){
   }
 };
 </script>
+<!-- 진행단계 입력 모달 -->
+<div class="ov" id="m-progress" onclick="ovClose(event,'m-progress')">
+  <div class="modal" style="position:relative">
+    <button class="mclose" onclick="closeM('m-progress')">✕</button>
+    <div class="mhandle"></div>
+    <div class="mtitle">📋 진행상황 업데이트</div>
+    <span class="flabel">현재 단계</span>
+    <div class="tg" id="g-progress-stage" style="flex-wrap:wrap">
+      <button class="tb on" onclick="sel(this,'g-progress-stage')">서류준비</button>
+      <button class="tb" onclick="sel(this,'g-progress-stage')">법원접수</button>
+      <button class="tb" onclick="sel(this,'g-progress-stage')">심사중</button>
+      <button class="tb" onclick="sel(this,'g-progress-stage')">변제계획인가</button>
+      <button class="tb" onclick="sel(this,'g-progress-stage')">변제중</button>
+      <button class="tb" onclick="sel(this,'g-progress-stage')">면책완료</button>
+    </div>
+    <span class="flabel">상세 내용 (선택)</span>
+    <textarea class="finput" id="progress-detail" rows="3" placeholder="예: 서류 제출 완료, 다음 기일 4월 5일"></textarea>
+    <span class="flabel">다음 예정일 (선택)</span>
+    <input type="text" class="finput" id="progress-next-date" placeholder="예: 2026.04.05">
+    <div id="progress-err" class="alert err" style="display:none"></div>
+    <button class="btn p" onclick="submitProgress()">✅ 업데이트</button>
+  </div>
+</div>
+
+<!-- 진행상황 관리 모달 -->
+<div class="ov" id="m-progress" onclick="ovClose(event,'m-progress')">
+  <div class="modal" style="position:relative;max-height:85vh;overflow-y:auto">
+    <button class="mclose" onclick="closeM('m-progress')">✕</button>
+    <div class="mhandle"></div>
+    <div class="mtitle">진행상황 관리</div>
+    <div id="m-progress-body"></div>
+  </div>
+</div>
+
 <!-- 사건 고객 정보 모달 -->
 <div class="ov" id="m-case-user" onclick="ovClose(event,'m-case-user')">
   <div class="modal" style="position:relative">
