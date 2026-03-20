@@ -1189,15 +1189,15 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
 
 <!-- Firebase SDK (module) -->
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
 import { getMessaging, getToken, onMessage }
-  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging.js";
+  from "https://www.gstatic.com/firebasejs/11.6.0/firebase-messaging.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,
          signOut, onAuthStateChanged, GoogleAuthProvider, signInWithPopup }
-  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
 import { getFirestore, collection, addDoc, getDocs, doc, updateDoc,
          deleteDoc, setDoc, getDoc, query, orderBy, onSnapshot, serverTimestamp }
-  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCf_42fqDDl2CR6js4M8Y9_jpQdvVGgNmM",
@@ -1437,7 +1437,7 @@ console.log('✅ Firebase 연결 완료 — liferefix-8f622');
 if('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/liferefix/firebase-messaging-sw.js', { scope: '/liferefix/' })
     .then(function(reg){ console.log('SW 등록 완료:', reg.scope); })
-    .catch(function(e){ console.log('SW 등록 실패:', e.message); });
+    .catch(function(e){ console.log('SW 등록 실패 (푸시알림 비활성화):', e.message); });
 }
 
 // ── FCM 푸시 알림 ──────────────────────────────────────────
