@@ -3576,6 +3576,10 @@ document.addEventListener('click',function(e){
   }
   if(e.target.classList.contains('open-progress-btn')){
     var sid = e.target.dataset.selid;
+    var cid = e.target.dataset.cid || '';
+    var uid = e.target.dataset.uid || '';
+    // 채무자 상세 정보 모달 (진단 정보 포함)
+    if(cid) { showCaseUserDetail(cid, uid); return; }
     if(sid) openProgressModal(sid);
     return;
   }
@@ -4451,7 +4455,7 @@ function renderHiredList(items, el, isDone) {
         +'</div>'
         +'<div style="background:var(--al);border-radius:10px;padding:14px;margin-bottom:12px">'
         +'<div style="font-size:11px;font-weight:700;color:#005945;margin-bottom:8px">📋 채무자 정보</div>'
-        +'<div style="font-size:15px;font-weight:800;cursor:pointer;text-decoration:underline" class="open-progress-btn" data-selid="'+s.id+'">'+(s.userName||s.userEmail||'채무자')+' ✏️</div>'
+        +'<div style="font-size:15px;font-weight:800;cursor:pointer;text-decoration:underline" class="open-progress-btn" data-selid="'+s.id+'" data-cid="'+(s.caseId||'')+'" data-uid="'+(s.userId||'')+'">'+(s.userName||s.userEmail||'채무자')+' 👤</div>'
         +'<div style="font-size:12px;color:var(--ts)">'+(s.userEmail||'-')+'</div>'
         +'<a href="tel:'+(s.phone||'')+'" style="display:flex;align-items:center;gap:6px;margin-top:8px;text-decoration:none">'
         +'<span style="font-size:18px">📞</span><span style="font-size:16px;font-weight:900;color:var(--p)">'+(s.phone||'번호 없음')+'</span></a>'
