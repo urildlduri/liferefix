@@ -2499,7 +2499,8 @@ function updateAttStats(){
       window.FB_FUNCS.collection(window.FB_DB,'cases')
     ).then(function(snap){
       var all = snap.docs.map(function(d){ return Object.assign({id:d.id},d.data()); });
-      var nw  = all.filter(function(c){ return c.status==='new'; }).length;
+      var myIds = window._cachedMyBidCaseIds || [];
+      var nw  = all.filter(function(c){ return c.status==='new' && myIds.indexOf(c.id)<0 && c.id.indexOf('SMPL')<0; }).length;
       var bd  = all.filter(function(c){ return c.status==='bid'; }).length;
 
       var el = document.getElementById('att-stat-new'); if(el) el.textContent=nw;
