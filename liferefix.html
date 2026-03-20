@@ -2670,7 +2670,7 @@ function renderAttCaseList(cases) {
 }
 
 // 변호사 사건 필터 전역변수
-var _attCaseFilter = window._attCaseFilter || 'new';
+var _attCaseFilter = 'new'; window._attCaseFilter = 'new';
 var _attAllCases   = window._attAllCases   || [];
 function renderAttCases(){
   var el = document.getElementById('att-case-list');
@@ -2710,16 +2710,17 @@ function renderAttCases(){
 
           // 필터 적용
           var myIds = window._cachedMyBidCaseIds || [];
+          var curFilter = window._attCaseFilter || _attCaseFilter || 'new';
           var filtered = cases.filter(function(c){
             if(c.id.indexOf('SMPL')>-1) return false;
             var iMine = myIds.indexOf(c.id)>-1;
-            if(_attCaseFilter==='new')  return c.status==='new' && !iMine;
-            if(_attCaseFilter==='bid')  return c.status==='bid' || iMine;
-            if(_attCaseFilter==='mine') return iMine;
+            if(curFilter==='new')  return c.status==='new' && !iMine;
+            if(curFilter==='bid')  return c.status==='bid' || iMine;
+            if(curFilter==='mine') return iMine;
             return true;
           });
 
-          console.log('[att] 필터 후 표시할 사건:', filtered.length, '건 (필터:', _attCaseFilter+')');
+          console.log('[att] 필터 후 표시할 사건:', filtered.length, '건 (필터:', curFilter+')');
 
           // 탭 카운트 업데이트
           var newCnt  = cases.filter(function(c){ return c.status==='new'  && myIds.indexOf(c.id)<0 && c.id.indexOf('SMPL')<0; }).length;
@@ -4542,7 +4543,7 @@ window.loadMyProgressInfo = loadMyProgressInfo;
 function filterAttCases(el) {
   // 탭 토글
   document.getElementById('g-case-filter').querySelectorAll('.tb').forEach(function(b){b.classList.remove('on');});
-  if(el) { el.classList.add('on'); _attCaseFilter = el.dataset.f || 'new'; }
+  if(el) { el.classList.add('on'); _attCaseFilter = el.dataset.f || 'new'; window._attCaseFilter = _attCaseFilter; }
   applyAttCaseFilter();
 }
 
@@ -6154,7 +6155,7 @@ window.loadMyProgressInfo = loadMyProgressInfo;
 function filterAttCases(el) {
   // 탭 토글
   document.getElementById('g-case-filter').querySelectorAll('.tb').forEach(function(b){b.classList.remove('on');});
-  if(el) { el.classList.add('on'); _attCaseFilter = el.dataset.f || 'new'; }
+  if(el) { el.classList.add('on'); _attCaseFilter = el.dataset.f || 'new'; window._attCaseFilter = _attCaseFilter; }
   applyAttCaseFilter();
 }
 
@@ -7182,7 +7183,7 @@ window.openSelectAttModal=openSelectAttModal; window.confirmSelectAtt=confirmSel
 function filterAttCases(el) {
   // 탭 토글
   document.getElementById('g-case-filter').querySelectorAll('.tb').forEach(function(b){b.classList.remove('on');});
-  if(el) { el.classList.add('on'); _attCaseFilter = el.dataset.f || 'new'; }
+  if(el) { el.classList.add('on'); _attCaseFilter = el.dataset.f || 'new'; window._attCaseFilter = _attCaseFilter; }
   applyAttCaseFilter();
 }
 
