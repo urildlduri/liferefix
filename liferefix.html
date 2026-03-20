@@ -2671,7 +2671,8 @@ function renderAttCaseList(cases) {
 
 // 변호사 사건 필터 전역변수
 var _attCaseFilter = 'new'; window._attCaseFilter = 'new';
-var _attAllCases   = window._attAllCases   || [];
+var _attAllCases   = []; window._attAllCases = [];
+var _attCasesUnsubscribe = null;
 function renderAttCases(){
   var el = document.getElementById('att-case-list');
   if(!el){ console.log('[att] att-case-list 없음'); return; }
