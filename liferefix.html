@@ -3564,14 +3564,18 @@ function bindStarGroup(){
 // 이벤트 위임
 // ═══════════════════════════════
 document.addEventListener('click',function(e){
+  // closest로 버튼 텍스트 클릭도 처리
+  var _sel = '.att-bid-btn,.il-submit-btn,.il-cancel-btn,.att-confirm-btn,.att-reject-hire-btn,.att-progress-btn,.att-done-btn,.open-progress-btn,.prog-stage-btn,.case-user-btn,.adm-modal-approve-btn,.adm-modal-reject-btn,.adm-modal-block-btn,.adm-app-att-btn,.adm-rej-att-btn,.adm-blk-att-btn,.my-go-bids-btn,.my-reg-case-btn,.go-bid-btn,.tp-go-list-btn,.tp-go-reg-btn,.save-progress-btn,.adm-del-btn,.adm-app-btn,.adm-blk-btn,.adm-rst-btn';
+  var t = (e.target.closest && e.target.closest(_sel)) || e.target;
+
   // 변호사 포털
-  if(e.target.classList.contains('att-bid-btn'))      { attOpenBidForm(e.target.dataset.cid); }
-  if(e.target.classList.contains('il-submit-btn'))    { submitInlineBid(); }
-  if(e.target.classList.contains('il-cancel-btn'))    { var f=document.getElementById('inline-bid-form'); if(f) f.remove(); }
-  if(e.target.classList.contains('att-confirm-btn'))  { confirmHire(e.target.dataset.sid); }
-  if(e.target.classList.contains('att-reject-hire-btn')){ rejectHire(e.target.dataset.sid); }
-  if(e.target.classList.contains('att-progress-btn')) { openProgressModal(e.target.dataset.sid, e.target.dataset.cid); }
-  if(e.target.classList.contains('att-done-btn'))     { markCaseDone(e.target.dataset.sid); }
+  if(t.classList.contains('att-bid-btn'))      { attOpenBidForm(t.dataset.cid); }
+  if(t.classList.contains('il-submit-btn'))    { submitInlineBid(); }
+  if(t.classList.contains('il-cancel-btn'))    { var f=document.getElementById('inline-bid-form'); if(f) f.remove(); }
+  if(t.classList.contains('att-confirm-btn'))  { confirmHire(t.dataset.sid); }
+  if(t.classList.contains('att-reject-hire-btn')){ rejectHire(t.dataset.sid); }
+  if(t.classList.contains('att-progress-btn')) { openProgressModal(t.dataset.sid, t.dataset.cid); }
+  if(t.classList.contains('att-done-btn'))     { markCaseDone(t.dataset.sid); }
   // 관리자 포털
   if(e.target.classList.contains('adm-del-btn'))      { admDeleteCase(e.target.dataset.cid); }
   if(e.target.classList.contains('adm-app-btn'))      { admApproveAtt(e.target.dataset.aid); }
@@ -3580,24 +3584,24 @@ document.addEventListener('click',function(e){
   if(e.target.classList.contains('adm-blk-btn'))      { admBlockAtt(e.target.dataset.aid); }
   if(e.target.classList.contains('adm-rst-btn'))      { admRestoreAtt(e.target.dataset.aid); }
   // 관리자 모달 버튼
-  if(e.target.classList.contains('att-progress-btn')){
-    var sid = e.target.dataset.sid;
-    var cid = e.target.dataset.cid;
+  if(t.classList.contains('att-progress-btn') && !t.classList.contains('att-bid-btn')){
+    var sid = t.dataset.sid;
+    var cid = t.dataset.cid;
     var stage = e.target.closest('.hired-card') ? e.target.closest('.hired-card').dataset.stage : '서류준비';
     openProgressModal(sid, cid, stage||'서류준비');
     return;
   }
-  if(e.target.classList.contains('open-progress-btn')){
-    var sid = e.target.dataset.selid;
-    var cid = e.target.dataset.cid || '';
-    var uid = e.target.dataset.uid || '';
+  if(t.classList.contains('open-progress-btn')){
+    var sid = t.dataset.selid;
+    var cid = t.dataset.cid || '';
+    var uid = t.dataset.uid || '';
     // 채무자 상세 정보 모달 (진단 정보 포함)
     if(cid) { showCaseUserDetail(cid, uid); return; }
     if(sid) openProgressModal(sid);
     return;
   }
-  if(e.target.classList.contains('prog-stage-btn')){
-    var sid=e.target.dataset.selid, st=e.target.dataset.stage;
+  if(t.classList.contains('prog-stage-btn')){
+    var sid=t.dataset.selid, st=t.dataset.stage;
     // 버튼 스타일 즉시 변경
     document.querySelectorAll('.prog-stage-btn[data-selid="'+sid+'"]').forEach(function(b){
       b.style.fontWeight='600'; b.style.border='2px solid var(--bd)'; b.style.background='#fff'; b.style.color='var(--ts)';
@@ -3607,20 +3611,20 @@ document.addEventListener('click',function(e){
     e.target.style.fontWeight='800'; e.target.style.border='2px solid '+c; e.target.style.background=c+'20'; e.target.style.color=c;
     return;
   }
-  if(e.target.classList.contains('case-user-btn')){
-    var cid = e.target.dataset.cid;
-    var uid = e.target.dataset.uid;
+  if(t.classList.contains('case-user-btn')){
+    var cid = t.dataset.cid;
+    var uid = t.dataset.uid;
     if(cid) showCaseUserDetail(cid, uid);
     return;
   }
-  if(e.target.classList.contains('adm-modal-approve-btn')){
-    var aid=e.target.dataset.aid; admApproveAtt(aid); closeM('m-adm-detail'); return;
+  if(t.classList.contains('adm-modal-approve-btn')){
+    var aid=t.dataset.aid; admApproveAtt(aid); closeM('m-adm-detail'); return;
   }
-  if(e.target.classList.contains('adm-modal-reject-btn')){
-    var aid=e.target.dataset.aid; admRejectAtt(aid); closeM('m-adm-detail'); return;
+  if(t.classList.contains('adm-modal-reject-btn')){
+    var aid=t.dataset.aid; admRejectAtt(aid); closeM('m-adm-detail'); return;
   }
-  if(e.target.classList.contains('adm-modal-block-btn')){
-    var aid=e.target.dataset.aid; admRejectAtt(aid); closeM('m-adm-detail'); return;
+  if(t.classList.contains('adm-modal-block-btn')){
+    var aid=t.dataset.aid; admRejectAtt(aid); closeM('m-adm-detail'); return;
   }
   if(e.target.classList.contains('adm-blk-att-btn')){
     if(confirm((e.target.dataset.email||'이 변호사')+' 파트너 자격을 정지하시겠습니까?')){
