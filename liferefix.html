@@ -2340,7 +2340,7 @@ function submitCase(){
   if(window.submitCaseFirebase) window.submitCaseFirebase(c);
   myCases.unshift(c);
   switchTab('mine');
-  toast('✅ 사건이 등록되었습니다! 파트너 변호사들이 24시간 이내에 제안을 보내드립니다.');
+  toast('✅ 사건이 등록되었습니다! 파트너 변호사들이 곧 제안을 보내드립니다.');
 
   // 파트너 변호사 전체에게 새 사건 알림
   if(window.FB_DB && window.FB_FUNCS && window.sendPushNotification) {
@@ -2471,8 +2471,21 @@ function switchAttTab(t){
     if(btn)btn.classList.toggle('on',x===t);
     if(panel)panel.style.display=x===t?'block':'none';
   });
-  if(t==='cases')renderAttCases();
-  if(t==='dash')updateAttStats();
+  if(t==='cases'){
+    // 기존 리스너 해제 후 재시작 (최신 데이터 보장)
+    if(_attCasesUnsubscribe){ _attCasesUnsubscribe(); _attCasesUnsubscribe=null; }
+    renderAttCases();
+  }
+  if(t==='dash'){
+    updateAttStats();
+    // 3초마다 자동 갱신 (탭 열어놓은 동안)
+    if(window._attDashInterval) clearInterval(window._attDashInterval);
+    window._attDashInterval = setInterval(function(){
+      var dashPanel = document.getElementById('atp-dash');
+      if(dashPanel && dashPanel.style.display!=='none') updateAttStats();
+      else clearInterval(window._attDashInterval);
+    }, 5000);
+  }
   if(t==='pay')renderPayPage();
   if(t==='profile')loadAttProfile();
   if(t==='hired')loadHiredCases();
@@ -5272,6 +5285,38 @@ window.admRejectAttApp  = admRejectAttApp;
     renderAtts();
   }
   if(id==='s-att-dash'){
+    updateAttStats();
+    // 백그라운드에서 실시간 사건 감지 시작
+    if(!_attCasesUnsubscribe && window.listenCases) {
+      _attCasesUnsubscribe = window.listenCases(function(cases){
+        window._attAllCases = cases;
+        _attAllCases = cases;
+        // 대시보드 숫자 업데이트
+        var myIds = window._cachedMyBidCaseIds || [];
+        var nw = cases.filter(function(c){
+          return c.status==='new' && myIds.indexOf(c.id)<0 && c.id.indexOf('SMPL')<0;
+        }).length;
+        var el = document.getElementById('att-stat-new');
+        if(el) el.textContent = nw;
+        var notEl = document.getElementById('att-notice');
+        if(notEl) notEl.innerHTML = '📬 신규 사건 <b>'+nw+'건</b>이 등록되어 있습니다.';
+        // cases 탭 열려있으면 자동 업데이트
+        var casesPanel = document.getElementById('atp-cases');
+        if(casesPanel && casesPanel.style.display!=='none') {
+          var myIds2 = window._cachedMyBidCaseIds || [];
+          var curFilter = window._attCaseFilter || 'new';
+          var filtered = cases.filter(function(c){
+            if(c.id.indexOf('SMPL')>-1) return false;
+            var iMine = myIds2.indexOf(c.id)>-1;
+            if(curFilter==='new')  return c.status==='new' && !iMine;
+            if(curFilter==='bid')  return c.status==='bid' || iMine;
+            if(curFilter==='mine') return iMine;
+            return true;
+          });
+          renderAttCaseList(filtered);
+        }
+      }, function(e){ console.error('백그라운드 listenCases 오류:', e.code); });
+    }
     // Firebase 준비 후 대시보드 초기화
     function initAttDash() {
       if(window.FB_USER && window.FB_DB && window.FB_FUNCS) {
