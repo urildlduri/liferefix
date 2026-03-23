@@ -2803,8 +2803,21 @@ var DEF_ATTS=[];
 function getAdmAtts(){return DB.load('attorneys',DEF_ATTS);}
 function saveAdmAtts(a){DB.save('attorneys',a);}
 function admDoLogin(){
-  go('s-adm-dash');admRefresh();admRenderCases();admRenderAtts();
-  var srch=document.getElementById('adm-search');if(srch)srch.oninput=admRenderCases;
+  // 로그인 확인
+  if(!window.FB_USER){ toast('먼저 로그인이 필요합니다.'); return; }
+  if(!window.FB_DB || !window.FB_FUNCS){ toast('Firebase 연결 필요'); return; }
+
+  // Firestore에서 role 확인
+  window.FB_FUNCS.getDoc(window.FB_FUNCS.doc(window.FB_DB,'users',window.FB_USER.uid))
+    .then(function(snap){
+      var role = snap.exists() ? snap.data().role : '';
+      if(role !== 'admin'){
+        toast('❌ 관리자 권한이 없습니다.');
+        return;
+      }
+      go('s-adm-dash');admRefresh();admRenderCases();admRenderAtts();
+      var srch=document.getElementById('adm-search');if(srch)srch.oninput=admRenderCases;
+    }).catch(function(e){ toast('오류: '+e.message); });
 }
 function switchAdmTab(t){
   ['overview','cases','users','atts','revenue','db','cfg'].forEach(function(x){
