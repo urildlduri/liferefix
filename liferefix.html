@@ -4561,14 +4561,32 @@ function applyAttCaseFilter() {
 
   var filtered = _attAllCases.filter(function(c){
     var iMine = myBidCaseIds.indexOf(c.id) > -1;
-    if(f === 'new')  return c.status==='new' && !iMine && c.id.indexOf('SMPL-')<0; // 신규 + 내가 제안 안 한 것만 + 샘플 제외
+    if(f === 'new') {
+      if(c.status !== 'new') return false;  // 신규 상태만
+      if(iMine) return false;               // 내가 이미 제안한 것 제외
+      if(c.id.indexOf('SMPL-') > -1) return false; // 샘플 제외
+      // 48시간 지난 것 제외
+      if(c.createdAt && c.createdAt.toDate) {
+        var elapsed = Date.now() - c.createdAt.toDate().getTime();
+        if(elapsed > 48 * 60 * 60 * 1000) return false;
+      }
+      return true;
+    }
     if(f === 'bid')  return c.status==='bid' || iMine;    // 비딩중 or 내가 제안한 것
     if(f === 'mine') return iMine;
     return true; // all
   });
 
   // 탭 카운트 업데이트
-  var newCnt  = _attAllCases.filter(function(c){ return c.status==='new' && myBidCaseIds.indexOf(c.id)<0 && c.id.indexOf('SMPL-')<0; }).length;
+  var newCnt  = _attAllCases.filter(function(c){
+    if(c.status!=='new') return false;
+    if(myBidCaseIds.indexOf(c.id)>-1) return false;
+    if(c.id.indexOf('SMPL-')>-1) return false;
+    if(c.createdAt && c.createdAt.toDate) {
+      if(Date.now() - c.createdAt.toDate().getTime() > 48*60*60*1000) return false;
+    }
+    return true;
+  }).length;
   var bidCnt  = _attAllCases.filter(function(c){ return c.status==='bid'  || myBidCaseIds.indexOf(c.id)>-1; }).length;
   var mineCnt = myBidCaseIds.length;
 
