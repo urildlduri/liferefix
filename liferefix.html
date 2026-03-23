@@ -1400,12 +1400,24 @@ window._switchLoginTab = function(tab) {
 // Firestore 사건 등록
 window.submitCaseFirebase = async function(c) {
   try {
+    // 로그인 확인
+    if(!window.FB_USER) {
+      window.toast&&window.toast('❌ 로그인이 필요합니다.');
+      return null;
+    }
     var ref = await addDoc(collection(fbDb,'cases'), Object.assign({},c,{
-      userId: window.FB_USER ? window.FB_USER.uid : 'anonymous',
+      userId:    window.FB_USER.uid,
+      userEmail: window.FB_USER.email,
       createdAt: serverTimestamp()
     }));
+    console.log('✅ 사건 Firestore 저장 완료:', ref.id);
+    window.toast&&window.toast('✅ 사건이 DB에 등록됐습니다!');
     return ref.id;
-  } catch(e){ console.error('Firestore 저장 실패:',e); return null; }
+  } catch(e){
+    console.error('Firestore 저장 실패:', e.code, e.message);
+    window.toast&&window.toast('❌ 저장 실패: ' + (e.code||e.message));
+    return null;
+  }
 };
 
 console.log('✅ Firebase 연결 완료 — liferefix-8f622');
