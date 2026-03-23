@@ -4539,14 +4539,8 @@ function applyAttCaseFilter() {
   var uid   = window.FB_USER ? window.FB_USER.uid   : '';
   var email = window.FB_USER ? window.FB_USER.email : '';
 
-  // 내가 제안한 사건 ID 목록 (localStorage + Firestore 캐시 _myBidCaseIds)
-  var localBidIds = DB.getBids()
-    .filter(function(b){ return b.attId===uid || b.attEmail===email; })
-    .map(function(b){ return b.caseId; });
-  // Firestore bids 캐시 (loadMyBidCaseIds에서 저장)
-  var myBidCaseIds = window._cachedMyBidCaseIds
-    ? localBidIds.concat(window._cachedMyBidCaseIds.filter(function(id){ return localBidIds.indexOf(id)<0; }))
-    : localBidIds;
+  // Firestore 캐시만 사용 (localStorage는 필터 오류 유발)
+  var myBidCaseIds = window._cachedMyBidCaseIds || [];
 
   var filtered = _attAllCases.filter(function(c){
     var iMine = myBidCaseIds.indexOf(c.id) > -1;
