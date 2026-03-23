@@ -3047,7 +3047,13 @@ function admRenderAtts(){
             +'<div style="font-size:12px;color:var(--ts)">'+(a.email||'-')+'</div>'
             +'</div>'
             +'<div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">'
+            +'<div style="display:flex;align-items:center;gap:4px;background:var(--pl);border-radius:20px;padding:3px 8px">'
+            +'<button onclick="admBidAdj(\''+(a.id||a.uid)+'\',\'dec\')" style="font-size:16px;font-weight:900;background:none;border:none;cursor:pointer;color:var(--p);line-height:1">−</button>'
+            +'<span style="font-size:11px;font-weight:700;color:var(--p);min-width:52px;text-align:center" id="adm-bid-'+(a.id||a.uid)+'">로딩중</span>'
+            +'<button onclick="admBidAdj(\''+(a.id||a.uid)+'\',\'inc\')" style="font-size:16px;font-weight:900;background:none;border:none;cursor:pointer;color:var(--p);line-height:1">+</button>'
+            +'</div>'
             +'<button class="adm-blk-att-btn" data-aid="'+(a.id||a.uid)+'" data-email="'+(a.email||'')+'" style="font-size:11px;font-weight:700;background:#FFF0F0;color:var(--r);border:none;padding:5px 11px;border-radius:20px;cursor:pointer;font-family:inherit">정지</button>'
+            +'</div>'
             +'</div>'
             +'</div>'
             +'</div>';
@@ -3058,6 +3064,15 @@ function admRenderAtts(){
     // 현황탭 카운트 업데이트
     var pendCntEl = document.getElementById('adm-att-pending-cnt');
     if(pendCntEl) pendCntEl.textContent = pending.length;
+
+    // 파트너 변호사 비딩권 현황 로드
+    var allAttsForBid = approved.concat(attUsers);
+    setTimeout(function(){
+      allAttsForBid.forEach(function(a){
+        var uid = a.id||a.uid;
+        if(uid) admLoadBidQuota(uid);
+      });
+    }, 300);
 
   }).catch(function(e){
     if(applyEl) applyEl.innerHTML='<div style="font-size:13px;color:var(--r)">오류: '+e.message+'</div>';
@@ -5099,6 +5114,53 @@ window.go=go; window.sel=sel; window.slid=slid; window.gofs=gofs;
   window.attSubmitBid=attSubmitBid; window.admDoLogin=admDoLogin; window.switchAdmTab=switchAdmTab;
   window.admRefresh=admRefresh; window.admRenderCases=admRenderCases; window.admDeleteCase=admDeleteCase;
   window.admRenderAtts=admRenderAtts; window.admApproveAtt=admApproveAtt;
+
+// ── 관리자: 변호사 비딩권 조정 ──────────────────────────────
+function admLoadBidQuota(uid) {
+  if(!window.FB_DB||!window.FB_FUNCS) return;
+  window.FB_FUNCS.getDoc(window.FB_FUNCS.doc(window.FB_DB,'users',uid))
+    .then(function(snap){
+      var el = document.getElementById('adm-bid-'+uid);
+      if(!el) return;
+      if(snap.exists()) {
+        var ud = snap.data();
+        var quota = (ud.plan==='premium'?20:10) + (ud.extraBids||0);
+        var used  = ud.bidUsed||0;
+        var remain = Math.max(0, quota-used);
+        el.textContent = '잔여 '+remain+'건';
+      } else {
+        el.textContent = '정보없음';
+      }
+    }).catch(function(){ });
+}
+
+function admBidAdj(uid, dir) {
+  if(!window.FB_DB||!window.FB_FUNCS){ toast('Firebase 연결 필요'); return; }
+  var userRef = window.FB_FUNCS.doc(window.FB_DB,'users',uid);
+  window.FB_FUNCS.getDoc(userRef).then(function(snap){
+    if(!snap.exists()){ toast('사용자를 찾을 수 없습니다.'); return; }
+    var ud    = snap.data();
+    var used  = ud.bidUsed  || 0;
+    var extra = ud.extraBids|| 0;
+    if(dir === 'inc') {
+      // 비딩권 1건 추가 (extraBids 증가)
+      return window.FB_FUNCS.updateDoc(userRef, { extraBids: extra+1 })
+        .then(function(){
+          toast('✅ 비딩권 1건 추가됐습니다.');
+          admLoadBidQuota(uid);
+        });
+    } else {
+      // 비딩권 1건 차감 (bidUsed 감소 - 즉, 사용한 것 돌려주기)
+      if(used <= 0){ toast('차감할 비딩권이 없습니다.'); return; }
+      return window.FB_FUNCS.updateDoc(userRef, { bidUsed: used-1 })
+        .then(function(){
+          toast('✅ 비딩권 1건 차감됐습니다.');
+          admLoadBidQuota(uid);
+        });
+    }
+  }).catch(function(e){ toast('오류: '+e.message); });
+}
+window.admBidAdj = admBidAdj;
 
 // ── 변호사 입점 승인/거절 ──────────────────────────────────
 function admApproveAttApp(appId) {
