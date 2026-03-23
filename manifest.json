@@ -1,22 +1,25 @@
 {
-  "name": "Liferefix",
+  "name": "Liferefix — 채무 해결 원스톱 플랫폼",
   "short_name": "Liferefix",
-  "description": "개인회생 AI 진단 및 변호사 매칭 플랫폼",
+  "description": "채무 진단부터 변호사 연결까지, 한 곳에서",
   "start_url": "/liferefix/liferefix.html",
   "display": "standalone",
-  "background_color": "#F4F7FF",
-  "theme_color": "#0B5FFF",
   "orientation": "portrait",
+  "theme_color": "#0B5FFF",
+  "background_color": "#F4F7FF",
+  "lang": "ko",
   "icons": [
     {
       "src": "https://via.placeholder.com/192x192/0B5FFF/ffffff?text=LR",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
       "src": "https://via.placeholder.com/512x512/0B5FFF/ffffff?text=LR",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }
