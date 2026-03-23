@@ -2577,33 +2577,10 @@ function renderAttCases(){
           window._attAllCases = cases;
           _attAllCases        = cases;
 
-          // 필터 적용
-          var myIds = window._cachedMyBidCaseIds || [];
-          var curFilter = window._attCaseFilter || _attCaseFilter || 'new';
-          var filtered = cases.filter(function(c){
-            if(c.id.indexOf('SMPL')>-1) return false;
-            var iMine = myIds.indexOf(c.id)>-1;
-            if(curFilter==='new')  return c.status==='new' && !iMine;
-            if(curFilter==='bid')  return c.status==='bid' || iMine;
-            if(curFilter==='mine') return iMine;
-            return true;
-          });
-
-          console.log('[att] 필터 후 표시할 사건:', filtered.length, '건 (필터:', curFilter+')');
-
-          // 탭 카운트 업데이트
-          var newCnt  = cases.filter(function(c){ return c.status==='new'  && myIds.indexOf(c.id)<0 && c.id.indexOf('SMPL')<0; }).length;
-          var bidCnt  = cases.filter(function(c){ return c.status==='bid'  || myIds.indexOf(c.id)>-1; }).length;
-          var mineCnt = myIds.length;
-          var gEl = document.getElementById('g-case-filter');
-          if(gEl){ gEl.querySelectorAll('.tb').forEach(function(btn){
-            var f=btn.dataset.f;
-            btn.textContent = f==='new'?'🆕 신규 ('+newCnt+')':f==='bid'?'비딩중 ('+bidCnt+')':f==='mine'?'내 제안 ('+mineCnt+')':'전체 ('+cases.length+')';
-          });}
-          var snEl=document.getElementById('att-stat-new'); if(snEl) snEl.textContent=newCnt;
-          var notEl=document.getElementById('att-notice'); if(notEl) notEl.innerHTML='📬 신규 사건 <b>'+newCnt+'건</b>이 등록되어 있습니다.';
-
-          renderAttCaseList(filtered);
+          // 전역 변수 업데이트 후 applyAttCaseFilter로 통일
+          window._attAllCases = cases;
+          _attAllCases        = cases;
+          applyAttCaseFilter();
         }, function(err){
           console.error('[renderAttCases] 오류:', err.code, err.message);
           el.innerHTML='<div style="text-align:center;padding:20px;color:var(--r)">오류: '+err.message+'</div>';
