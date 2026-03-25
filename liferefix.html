@@ -656,7 +656,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
     <div class="alert info" id="att-notice">📬 신규 사건을 확인해보세요.</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
       <div style="background:#fff;border-radius:var(--rad);padding:14px;border:1px solid var(--bd);box-shadow:var(--shs);cursor:pointer" onclick="switchAttTab('cases')"><div style="font-size:22px;font-weight:900;color:var(--p)" id="att-stat-new">0</div><div style="font-size:11px;color:var(--ts)">신규 사건</div></div>
-      <div style="background:#fff;border-radius:var(--rad);padding:14px;border:1px solid var(--bd);box-shadow:var(--shs)"><div style="font-size:22px;font-weight:900;color:var(--a)" id="att-stat-bid">0</div><div style="font-size:11px;color:var(--ts)">비딩 중</div></div>
+      <div style="background:#fff;border-radius:var(--rad);padding:14px;border:1px solid var(--bd);box-shadow:var(--shs);cursor:pointer" onclick="switchAttTab('cases');setTimeout(function(){filterAttCases(document.querySelector('#g-case-filter .tb[data-f=bid]'));},200)"><div style="font-size:22px;font-weight:900;color:var(--a)" id="att-stat-bid">0</div><div style="font-size:11px;color:var(--ts)">비딩 중 ›</div></div>
       <div style="background:#fff;border-radius:var(--rad);padding:14px;border:1px solid var(--bd);box-shadow:var(--shs);cursor:pointer" onclick="switchAttTab('hired')"><div style="font-size:22px;font-weight:900;color:#005945" id="att-stat-hired">0</div><div style="font-size:11px;color:var(--ts)">수임중 ›</div></div>
       <div style="background:linear-gradient(135deg,var(--p),var(--pd));border-radius:var(--rad);padding:14px;cursor:pointer" onclick="switchAttTab('pay')"><div style="font-size:22px;font-weight:900;color:#fff" id="att-stat-quota">10건</div><div style="font-size:11px;color:rgba(255,255,255,.8)">잔여 비딩권 ›</div></div>
     </div>
@@ -2400,10 +2400,11 @@ function updateAttStats(){
   var uid   = window.FB_USER ? window.FB_USER.uid   : '';
   var email = window.FB_USER ? window.FB_USER.email : '';
 
-  // bids + cases 동시 조회
+  // bids + cases + selections 동시 조회
   Promise.all([
     window.FB_FUNCS.getDocs(window.FB_FUNCS.collection(window.FB_DB,'bids')),
-    window.FB_FUNCS.getDocs(window.FB_FUNCS.collection(window.FB_DB,'cases'))
+    window.FB_FUNCS.getDocs(window.FB_FUNCS.collection(window.FB_DB,'cases')),
+    window.FB_FUNCS.getDocs(window.FB_FUNCS.collection(window.FB_DB,'selections'))
   ]).then(function(res){
     // 내가 제안한 사건 ID 캐시 업데이트
     var myIds = res[0].docs
@@ -2428,24 +2429,47 @@ function updateAttStats(){
     // 내가 비딩 중인 사건 수 (active bid가 있는 사건)
     var bd  = myIds.length;
 
-    var el = document.getElementById('att-stat-new'); if(el) el.textContent=nw;
-    el = document.getElementById('att-stat-bid');     if(el) el.textContent=bd;
+    // 수임중 카운트 (selections에서 내 것 중 confirmed + ongoing)
+    var mySelections = res[2].docs
+      .map(function(d){ return d.data(); })
+      .filter(function(s){ return s.attId===uid||s.attEmail===email; });
+    var hiredCnt = mySelections.filter(function(s){
+      return (s.status==='confirmed'||s.confirmed||s.status==='pending_confirm') && s.caseStatus!=='done';
+    }).length;
+
+    var el = document.getElementById('att-stat-new');    if(el) el.textContent=nw;
+    el = document.getElementById('att-stat-bid');        if(el) el.textContent=bd;
+    el = document.getElementById('att-stat-hired');      if(el) el.textContent=hiredCnt;
     el = document.getElementById('att-notice');
     if(el) el.innerHTML='📬 신규 사건 <b>'+nw+'건</b>이 등록되어 있습니다.';
   }).catch(function(e){ console.error('updateAttStats 오류:', e); });
 
-  // 비딩권 잔여
+  // 비딩권 잔여 - active 비딩 기준으로 계산
   if(window.FB_USER) {
-    window.FB_FUNCS.getDoc(
-      window.FB_FUNCS.doc(window.FB_DB,'users',window.FB_USER.uid)
-    ).then(function(snap){
-      if(snap.exists()){
-        var ud = snap.data();
-        var quota  = (ud.plan==='premium'?20:10) + (ud.extraBids||0);
-        var remain = Math.max(0, quota - (ud.bidUsed||0));
-        var sqEl = document.getElementById('att-stat-quota');
-        if(sqEl) sqEl.textContent = remain+'건';
-      }
+    var uid2   = window.FB_USER.uid;
+    var email2 = window.FB_USER.email;
+    Promise.all([
+      window.FB_FUNCS.getDoc(window.FB_FUNCS.doc(window.FB_DB,'users',uid2)),
+      window.FB_FUNCS.getDocs(window.FB_FUNCS.collection(window.FB_DB,'bids'))
+    ]).then(function(res){
+      var ud = res[0].exists() ? res[0].data() : {};
+      var quota = (ud.plan==='premium'?20:10) + (ud.extraBids||0);
+      // active 상태인 비딩만 카운트 (수임완료/거절 제외)
+      var activeBids = res[1].docs
+        .map(function(d){ return d.data(); })
+        .filter(function(b){
+          return (b.attId===uid2||b.attEmail===email2) &&
+                 b.status==='active' &&
+                 b.caseId && b.caseId.indexOf('SMPL')<0;
+        }).length;
+      var remain = Math.max(0, quota - activeBids);
+      var sqEl = document.getElementById('att-stat-quota');
+      if(sqEl) sqEl.textContent = remain+'건';
+      // bidUsed도 active 기준으로 동기화
+      window.FB_FUNCS.updateDoc(
+        window.FB_FUNCS.doc(window.FB_DB,'users',uid2),
+        { bidUsed: activeBids }
+      ).catch(function(){});
     }).catch(function(){});
   }
 }
@@ -4467,7 +4491,8 @@ function loadHiredCases() {
     if(pbEl){ pbEl.style.display=pendingCnt>0?'block':'none'; }
     if(pcEl){ pcEl.textContent=pendingCnt; }
     var tfEl=document.getElementById('hired-total-fee'); if(tfEl)tfEl.textContent=totalFee;
-    var shEl=document.getElementById('att-stat-hired');  if(shEl)shEl.textContent=all.length;
+    var activeHired = pending.length + ongoing.length;
+    var shEl=document.getElementById('att-stat-hired');  if(shEl)shEl.textContent=activeHired;
 
     // 비딩권 현황
     window.FB_FUNCS.getDoc(window.FB_FUNCS.doc(window.FB_DB,'users',window.FB_USER.uid))
