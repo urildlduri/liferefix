@@ -512,6 +512,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
     <div style="display:flex;background:#fff;border-bottom:2px solid var(--bd)">
       <button class="btab on" id="myt-diag" onclick="switchMyTab('diag')">내 진단</button>
       <button class="btab" id="myt-bids" onclick="switchMyTab('bids')">받은 제안</button>
+      <button class="btab" id="myt-done" onclick="switchMyTab('done')" style="display:none">🎉 면책완료</button>
       <button class="btab" id="myt-set"  onclick="switchMyTab('set')">설정</button>
     </div>
 
@@ -577,6 +578,19 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
           <div style="font-size:14px;font-weight:700;margin-bottom:6px">받은 제안이 없습니다</div>
           <div style="font-size:12px;color:var(--ts)">사건 등록 후 변호사들의 제안을 기다려보세요</div>
         </div>
+      </div>
+    </div>
+
+    <!-- ④ 면책완료 탭 -->
+    <div id="myp-done" style="padding:16px;display:none">
+      <div style="text-align:center;padding:30px 16px;background:linear-gradient(135deg,#00C6A2,#005945);border-radius:var(--rad);margin-bottom:16px;color:#fff">
+        <div style="font-size:48px;margin-bottom:12px">🎉</div>
+        <div style="font-size:22px;font-weight:900;margin-bottom:8px">면책 완료!</div>
+        <div style="font-size:14px;opacity:.85">채무 문제를 성공적으로 해결했습니다.</div>
+      </div>
+      <div id="my-done-info" style="background:#fff;border-radius:var(--rad);padding:16px;border:1px solid var(--bd);box-shadow:var(--shs)">
+        <div style="font-size:14px;font-weight:800;margin-bottom:12px;color:#005945">✅ 해결 완료 정보</div>
+        <div id="my-done-details" style="font-size:13px;color:var(--ts);line-height:1.9">불러오는 중...</div>
       </div>
     </div>
 
@@ -3813,10 +3827,11 @@ function initMyDash() {
   var av=document.getElementById('my-avatar');if(av)av.textContent=nick.charAt(0).toUpperCase();
 
   switchMyTab('diag');
+  setTimeout(function(){ if(window.checkMyDoneTab) checkMyDoneTab(); }, 500);
 }
 
 function switchMyTab(t) {
-  ['diag','bids','set'].forEach(function(x){
+  ['diag','bids','done','set'].forEach(function(x){
     var btn   = document.getElementById('myt-'+x);
     var panel = document.getElementById('myp-'+x);
     if(btn)   btn.classList.toggle('on', x===t);
@@ -3824,7 +3839,22 @@ function switchMyTab(t) {
   });
   if(t==='diag') { loadMyDiag(); loadMyCaseInline(); }
   if(t==='bids') loadMyBids();
+  if(t==='done') loadMyDoneInfo();
   window.scrollTo(0,0);
+}
+
+// 면책완료 탭 표시 여부 체크
+function checkMyDoneTab() {
+  if(!window.FB_USER||!window.FB_DB||!window.FB_FUNCS) return;
+  window.FB_FUNCS.getDoc(window.FB_FUNCS.doc(window.FB_DB,'users',window.FB_USER.uid))
+    .then(function(snap){
+      if(snap.exists() && snap.data().caseDone) {
+        var btn = document.getElementById('myt-done');
+        if(btn) btn.style.display = 'inline-block';
+        // 자동으로 면책완료 탭으로 이동
+        switchMyTab('done');
+      }
+    }).catch(function(){});
 }
 
 // 진단 결과 로드
@@ -4130,6 +4160,26 @@ function renderMyBidList(bids) {
 
 window.initMyDash   = initMyDash;
 window.switchMyTab  = switchMyTab;
+
+// 면책완료 정보 로드
+function loadMyDoneInfo() {
+  var el = document.getElementById('my-done-details');
+  if(!el) return;
+  if(!window.FB_USER||!window.FB_DB||!window.FB_FUNCS) return;
+  window.FB_FUNCS.getDocs(window.FB_FUNCS.collection(window.FB_DB,'selections'))
+    .then(function(snap){
+      var sel = snap.docs.map(function(d){return Object.assign({id:d.id},d.data());})
+        .filter(function(s){ return s.userId===window.FB_USER.uid && s.caseStatus==='done'; });
+      if(!sel.length){ el.textContent='완료 정보 없음'; return; }
+      var s = sel[0];
+      el.innerHTML = 
+        '<div style="margin-bottom:8px">📅 완료일: <b>'+(s.doneAt&&s.doneAt.toDate?s.doneAt.toDate().toLocaleDateString('ko-KR'):'-')+'</b></div>'+
+        '<div style="margin-bottom:8px">⚖️ 담당 변호사: <b>'+(s.attName||s.attEmail||'-')+'</b></div>'+
+        '<div style="margin-bottom:8px">💰 착수금: <b>'+(s.retainer||'-')+'만원</b></div>'+
+        '<div style="color:#005945;font-weight:700;margin-top:12px">🎊 채무 문제가 완전히 해결됐습니다!</div>';
+    }).catch(function(){});
+}
+window.loadMyDoneInfo = loadMyDoneInfo;
 window.loadMyDiag   = loadMyDiag;
 window.showMyDiag   = showMyDiag;
 window.loadMyCases  = loadMyCases;
@@ -4464,6 +4514,34 @@ function saveProgress() {
 }
 
 function markCaseDone(selId) {
+  if(!window.FB_DB||!window.FB_FUNCS){ toast('Firebase 연결 필요'); return; }
+  // selections에서 채무자 userId 가져오기
+  window.FB_FUNCS.getDoc(window.FB_FUNCS.doc(window.FB_DB,'selections',selId))
+    .then(function(snap){
+      var userId = snap.exists() ? snap.data().userId : null;
+      var caseId = snap.exists() ? snap.data().caseId : null;
+      // selections 완료 처리
+      return window.FB_FUNCS.updateDoc(window.FB_FUNCS.doc(window.FB_DB,'selections',selId),
+        {caseStatus:'done', currentStage:'면책완료', doneAt:window.FB_FUNCS.serverTimestamp()}
+      ).then(function(){
+        // cases도 완료 처리
+        if(caseId) {
+          window.FB_FUNCS.updateDoc(window.FB_FUNCS.doc(window.FB_DB,'cases',caseId),
+            {status:'done', doneAt:window.FB_FUNCS.serverTimestamp()}
+          ).catch(function(){});
+        }
+        // 채무자 users 문서에 면책완료 표시
+        if(userId) {
+          window.FB_FUNCS.updateDoc(window.FB_FUNCS.doc(window.FB_DB,'users',userId),
+            {caseDone:true, caseDoneAt:window.FB_FUNCS.serverTimestamp()}
+          ).catch(function(){});
+        }
+        toast('🎉 면책완료 처리됐습니다!');
+        loadHiredCases();
+      });
+    }).catch(function(e){ toast('오류: '+e.message); });
+}
+function markCaseDone_orig(selId) {
   if(!window.FB_DB||!window.FB_FUNCS){ toast('Firebase 연결 필요'); return; }
   window.FB_FUNCS.updateDoc(window.FB_FUNCS.doc(window.FB_DB,'selections',selId),
     {caseStatus:'done', currentStage:'면책완료', doneAt:window.FB_FUNCS.serverTimestamp()}
