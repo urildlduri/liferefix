@@ -2415,8 +2415,18 @@ function updateAttStats(){
 
     // 사건 카운트
     var all = res[1].docs.map(function(d){ return Object.assign({id:d.id},d.data()); });
-    var nw  = all.filter(function(c){ return c.status==='new' && myIds.indexOf(c.id)<0 && c.id.indexOf('SMPL')<0; }).length;
-    var bd  = all.filter(function(c){ return c.status==='bid'; }).length;
+    var nw  = all.filter(function(c){
+      if(c.status!=='new') return false;
+      if(myIds.indexOf(c.id)>-1) return false;
+      if(c.id.indexOf('SMPL')>-1) return false;
+      // 48시간 체크
+      if(c.createdAt && c.createdAt.toDate) {
+        if(Date.now() - c.createdAt.toDate().getTime() > 48*60*60*1000) return false;
+      }
+      return true;
+    }).length;
+    // 내가 비딩 중인 사건 수 (active bid가 있는 사건)
+    var bd  = myIds.length;
 
     var el = document.getElementById('att-stat-new'); if(el) el.textContent=nw;
     el = document.getElementById('att-stat-bid');     if(el) el.textContent=bd;
@@ -4785,19 +4795,22 @@ function applyAttCaseFilter() {
     }
     return true;
   }).length;
-  var bidCnt  = _attAllCases.filter(function(c){ return c.status==='bid'  || myBidCaseIds.indexOf(c.id)>-1; }).length;
+  var bidCnt  = _attAllCases.filter(function(c){
+    if(c.id.indexOf('SMPL-')>-1) return false;
+    return c.status==='bid' || myBidCaseIds.indexOf(c.id)>-1;
+  }).length;
   var mineCnt = myBidCaseIds.length;
 
   var gEl = document.getElementById('g-case-filter');
   if(gEl) {
-    var btns = gEl.querySelectorAll('.tb');
-    btns.forEach(function(btn){
-      var lbl = btn.dataset.f==='new'  ? '🆕 신규 ('+newCnt+')'
-              : btn.dataset.f==='bid'  ? '비딩중 ('+bidCnt+')'
-              : btn.dataset.f==='mine' ? '내 제안 ('+mineCnt+')'
-              : '전체 ('+_attAllCases.length+')';
-      btn.textContent = lbl;
-    });
+    var newBtn  = gEl.querySelector('.tb[data-f="new"]');
+    var bidBtn  = gEl.querySelector('.tb[data-f="bid"]');
+    var mineBtn = gEl.querySelector('.tb[data-f="mine"]');
+    var allBtn  = gEl.querySelector('.tb[data-f="all"]');
+    if(newBtn)  newBtn.textContent  = '🆕 신규 ('+newCnt+')';
+    if(bidBtn)  bidBtn.textContent  = '비딩중 ('+bidCnt+')';
+    if(mineBtn) mineBtn.textContent = '내 제안 ('+mineCnt+')';
+    if(allBtn)  allBtn.textContent  = '전체 ('+_attAllCases.length+')';
   }
 
   // 대시보드 신규 사건 수 업데이트
