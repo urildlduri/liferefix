@@ -1551,10 +1551,27 @@ window.sendPushNotification = async function(targetUid, title, body, data) {
 // ── Firestore 비딩 제출 ──────────────────────────────────
 window.submitBidFirebase = async function(bidData) {
   try {
-    // 1. bids 컬렉션에 저장
+    var attId    = window.FB_USER ? window.FB_USER.uid   : 'anonymous';
+    var attEmail = window.FB_USER ? window.FB_USER.email : '';
+
+    // 0. 동시 진행 비딩 5건 제한 체크
+    var MAX_CONCURRENT = 5;
+    var bidsSnap = await getDocs(collection(fbDb, 'bids'));
+    var myActiveBids = bidsSnap.docs
+      .map(function(d){ return d.data(); })
+      .filter(function(b){
+        return (b.attId===attId||b.attEmail===attEmail) && b.status==='active';
+      });
+    if(myActiveBids.length >= MAX_CONCURRENT) {
+      toast('⚠️ 동시 진행 비딩은 최대 '+MAX_CONCURRENT+'건까지 가능합니다.');
+      return null;
+    }
+
+    // 1. bids 컬렉션에 저장 (status: active)
     var ref = await addDoc(collection(fbDb, 'bids'), Object.assign({}, bidData, {
-      attId:    window.FB_USER ? window.FB_USER.uid   : 'anonymous',
-      attEmail: window.FB_USER ? window.FB_USER.email : '',
+      attId:     attId,
+      attEmail:  attEmail,
+      status:    'active',
       createdAt: serverTimestamp()
     }));
 
@@ -1563,7 +1580,7 @@ window.submitBidFirebase = async function(bidData) {
     var caseSnap = await getDoc(caseRef);
     if(caseSnap.exists()) {
       var newCnt = (caseSnap.data().bidCnt || 0) + 1;
-      var newStatus = newCnt >= 10 ? 'closed' : 'bid';
+      var newStatus = newCnt >= 7 ? 'closed' : 'bid';
       await updateDoc(caseRef, { bidCnt: newCnt, status: newStatus });
     }
 
@@ -2429,7 +2446,7 @@ function renderAttCaseList(cases) {
     el.innerHTML='<div style="text-align:center;padding:30px;color:var(--ts)">등록된 사건이 없습니다</div>';
     return;
   }
-  var MAX_BIDS = 10;
+  var MAX_BIDS = 7;
   var now = Date.now();
   var sm = {new:{l:'신규',c:'var(--p)'},bid:{l:'비딩중',c:'var(--a)'},closed:{l:'마감',c:'var(--ts)'},hired:{l:'수임중',c:'#005945'}};
 
@@ -2683,6 +2700,17 @@ function attOpenBidForm(caseId){
 function attSubmitBid(){
   if(!attBidId){toast('사건을 먼저 선택해주세요.');switchAttTab('cases');return;}
 
+  // 동시 진행 비딩 5건 제한 체크
+  if(window.FB_DB && window.FB_FUNCS && window.FB_USER) {
+    var MAX_CONCURRENT = 5;
+    var myIds = window._cachedMyBidCaseIds || [];
+    var activeCount = myIds.filter(function(id){ return id.indexOf('SMPL')<0; }).length;
+    if(activeCount >= MAX_CONCURRENT) {
+      toast('⚠️ 동시 진행 비딩은 최대 '+MAX_CONCURRENT+'건까지 가능합니다. 현재 '+activeCount+'건 진행 중.');
+      return;
+    }
+  }
+
   // 입찰 제한 체크 (Firestore에서 현재 사건 조회)
   if(window.FB_DB && window.FB_FUNCS) {
     window.FB_FUNCS.getDoc(
@@ -2693,7 +2721,7 @@ function attSubmitBid(){
         var bidCnt = cData.bidCnt || 0;
 
         // 마감 체크
-        if(bidCnt >= 10 || cData.status === 'closed') {
+        if(bidCnt >= 7 || cData.status === 'closed') {
           toast('❌ 이 사건은 입찰이 마감되었습니다.');
           switchAttTab('cases');
           return;
@@ -3227,6 +3255,60 @@ function submitProgress() {
     });
 }
 
+function showHiredCaseDetail(selId) {
+  var modalBody = document.getElementById('m-case-user-body');
+  if(!modalBody) return;
+  modalBody.innerHTML = '<div style="text-align:center;padding:20px;color:var(--ts)">🔄 불러오는 중...</div>';
+  openM('m-case-user');
+
+  if(!window.FB_DB || !window.FB_FUNCS) {
+    modalBody.innerHTML = '<div style="color:var(--r)">Firebase 연결 필요</div>';
+    return;
+  }
+
+  window.FB_FUNCS.getDoc(window.FB_FUNCS.doc(window.FB_DB,'selections',selId))
+    .then(function(snap){
+      if(!snap.exists()){ modalBody.innerHTML='<div style="color:var(--r)">사건 정보 없음</div>'; return; }
+      var s = Object.assign({id:snap.id}, snap.data());
+
+      var rows = [
+        ['사건 ID',    s.caseId||s.id],
+        ['채무자',     s.userName||s.userEmail||'-'],
+        ['이메일',     s.userEmail||'-'],
+        ['전화',       s.phone||'-'],
+        ['채무 유형',  s.dtype||'-'],
+        ['채무액',     s.drange||'-'],
+        ['희망 착수금',s.budget||'-'],
+        ['지역',       s.region||'-'],
+        ['신청 유형',  s.proc||'개인회생'],
+        ['─────',     '─ 수임 조건 ─'],
+        ['착수금',     (s.retainer||'-')+'만원'],
+        ['할부',       s.install&&s.install!=='none'?s.install+'개월':'일시불'],
+        ['성공보수',   s.success>0?s.success+'만원':'없음'],
+        ['진행 단계',  s.currentStage||'서류준비'],
+      ];
+      if(s.memo) rows.push(['메모', s.memo]);
+
+      modalBody.innerHTML =
+        '<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">'+
+        '<div style="width:44px;height:44px;border-radius:50%;background:var(--pl);display:flex;align-items:center;justify-content:center;font-size:20px">👤</div>'+
+        '<div>'+
+        '<div style="font-size:16px;font-weight:800">'+(s.userName||s.userEmail||'채무자')+'</div>'+
+        '<a href="tel:'+(s.phone||'')+'" style="font-size:13px;color:var(--p);font-weight:700;text-decoration:none">📞 '+(s.phone||'번호 없음')+'</a>'+
+        '</div></div>'+
+        '<table style="width:100%;border-collapse:collapse;font-size:13px">'+
+        rows.map(function(row){
+          if(row[0]==='─────') return '<tr><td colspan="2" style="padding:8px 0;font-size:11px;color:var(--ts);font-weight:700;border-top:1px solid var(--bd)">'+row[1]+'</td></tr>';
+          return '<tr><td style="padding:6px 0;color:var(--ts);width:35%">'+row[0]+'</td>'+
+            '<td style="padding:6px 0;font-weight:500;text-align:right">'+row[1]+'</td></tr>';
+        }).join('')+
+        '</table>';
+    }).catch(function(e){
+      modalBody.innerHTML='<div style="color:var(--r)">오류: '+e.message+'</div>';
+    });
+}
+window.showHiredCaseDetail = showHiredCaseDetail;
+
 function showCaseUserDetail(caseId, userId) {
   // cases에서 사건 정보 + users에서 유저 정보 조회
   var modalBody = document.getElementById('m-case-user-body');
@@ -3506,9 +3588,11 @@ document.addEventListener('click',function(e){
     return;
   }
   if(t.classList.contains('case-user-btn')){
-    var cid = t.dataset.cid;
-    var uid = t.dataset.uid;
-    if(cid) showCaseUserDetail(cid, uid);
+    var cid   = t.dataset.cid;
+    var uid   = t.dataset.uid;
+    var selId = t.dataset.selid;
+    if(selId) showHiredCaseDetail(selId);
+    else if(cid) showCaseUserDetail(cid, uid);
     return;
   }
   if(t.classList.contains('adm-modal-approve-btn')){
@@ -4264,17 +4348,34 @@ function confirmSelectAtt() {
         { phone: phone, displayName: userName }
       ).catch(function(){});
 
-      // 3. 비딩 상태 업데이트
-      if(_selectedBid.bidId) {
+      // 3. 선택된 bid → selected, 나머지 → rejected
+      var selectedBidId = _selectedBid.bidId;
+      var selectedCaseId = _selectedBid.caseId;
+      if(selectedBidId) {
         window.FB_FUNCS.updateDoc(
-          window.FB_FUNCS.doc(window.FB_DB,'bids',_selectedBid.bidId),
+          window.FB_FUNCS.doc(window.FB_DB,'bids',selectedBidId),
           { status:'selected', selectedAt: window.FB_FUNCS.serverTimestamp() }
         ).catch(function(){});
       }
+      // 같은 사건의 나머지 bid → rejected
+      if(selectedCaseId) {
+        window.FB_FUNCS.getDocs(window.FB_FUNCS.collection(window.FB_DB,'bids'))
+          .then(function(bSnap){
+            bSnap.docs.forEach(function(bd){
+              var b = bd.data();
+              if(b.caseId===selectedCaseId && bd.id!==selectedBidId && b.status==='active') {
+                window.FB_FUNCS.updateDoc(
+                  window.FB_FUNCS.doc(window.FB_DB,'bids',bd.id),
+                  { status:'rejected', rejectedAt: window.FB_FUNCS.serverTimestamp() }
+                ).catch(function(){});
+              }
+            });
+          }).catch(function(){});
+      }
       // 4. 사건 상태 → hired 업데이트
-      if(_selectedBid.caseId) {
+      if(selectedCaseId) {
         window.FB_FUNCS.updateDoc(
-          window.FB_FUNCS.doc(window.FB_DB,'cases',_selectedBid.caseId),
+          window.FB_FUNCS.doc(window.FB_DB,'cases',selectedCaseId),
           { status:'hired', hiredAttEmail:_selectedBid.email, hiredAt:window.FB_FUNCS.serverTimestamp() }
         ).catch(function(){});
       }
@@ -4446,7 +4547,7 @@ function renderHiredList(items, el, isDone) {
       +'<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">'
       +'<div style="flex:1">'
       +'<div style="font-size:12px;font-weight:800;color:var(--p)">'+(s.caseId||s.id)+'</div>'
-      +'<div style="font-size:15px;font-weight:800;margin-top:2px;cursor:pointer;text-decoration:underline" class="case-user-btn" data-cid="'+(s.caseId||s.id)+'" data-uid="'+(s.userId||'')+'">'+(s.userName||s.userEmail||'채무자')+' 👤</div>'
+      +'<div style="font-size:15px;font-weight:800;margin-top:2px;cursor:pointer;text-decoration:underline" class="case-user-btn" data-cid="'+(s.caseId||s.id)+'" data-uid="'+(s.userId||'')+'" data-selid="'+(s.id||'')+'">'+(s.userName||s.userEmail||'채무자')+' 👤</div>'
       +'<div style="font-size:12px;color:var(--ts)">'+(s.userEmail||'-')+'</div>'
       +'</div>'
       +'<span style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;background:'+sc+'20;color:'+sc+'">'+stage+'</span>'
@@ -4718,7 +4819,7 @@ function submitInlineBid() {
     ).then(function(snap){
       if(snap.exists()) {
         var cData = snap.data();
-        if((cData.bidCnt||0) >= 10 || cData.status==='closed') {
+        if((cData.bidCnt||0) >= 7 || cData.status==='closed') {
           toast('❌ 이 사건은 입찰이 마감되었습니다.');
           return;
         }
@@ -5067,9 +5168,9 @@ function renderAllActiveCases(cases) {
     var bidBar = (c.status==='new'||c.status==='bid') ?
       '<div style="margin-top:8px">'
       +'<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--ts);margin-bottom:3px">'
-      +'<span>입찰 현황</span><span style="font-weight:700;color:var(--p)">'+(c.bidCnt||0)+'/10명</span></div>'
+      +'<span>입찰 현황</span><span style="font-weight:700;color:var(--p)">'+(c.bidCnt||0)+'/7명</span></div>'
       +'<div style="height:5px;border-radius:3px;background:var(--bd);overflow:hidden">'
-      +'<div style="width:'+Math.min(100,((c.bidCnt||0)/10*100))+'%;height:100%;background:var(--p);border-radius:3px"></div>'
+      +'<div style="width:'+Math.min(100,((c.bidCnt||0)/7*100))+'%;height:100%;background:var(--p);border-radius:3px"></div>'
       +'</div></div>' : '';
 
     // 진단 정보
