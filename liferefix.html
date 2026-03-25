@@ -646,7 +646,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
   <div style="display:flex;background:#fff;border-bottom:2px solid var(--bd)">
     <button class="att-tab on" id="atab-dash" onclick="switchAttTab('dash')">대시보드</button>
     <button class="att-tab" id="atab-cases" onclick="switchAttTab('cases')">사건목록</button>
-    <button class="att-tab" id="atab-hired" onclick="switchAttTab('hired')">수임</button>
+    <button class="att-tab" id="atab-hired" onclick="switchAttTab('hired')">수임중</button>
     <button class="att-tab" id="atab-pay" onclick="switchAttTab('pay')">결제</button>
     <button class="att-tab" id="atab-profile" onclick="switchAttTab('profile')">프로필</button>
   </div>
@@ -657,7 +657,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
       <div style="background:#fff;border-radius:var(--rad);padding:14px;border:1px solid var(--bd);box-shadow:var(--shs);cursor:pointer" onclick="switchAttTab('cases')"><div style="font-size:22px;font-weight:900;color:var(--p)" id="att-stat-new">0</div><div style="font-size:11px;color:var(--ts)">신규 사건</div></div>
       <div style="background:#fff;border-radius:var(--rad);padding:14px;border:1px solid var(--bd);box-shadow:var(--shs)"><div style="font-size:22px;font-weight:900;color:var(--a)" id="att-stat-bid">0</div><div style="font-size:11px;color:var(--ts)">비딩 중</div></div>
-      <div style="background:#fff;border-radius:var(--rad);padding:14px;border:1px solid var(--bd);box-shadow:var(--shs);cursor:pointer" onclick="switchAttTab('hired')"><div style="font-size:22px;font-weight:900;color:#005945" id="att-stat-hired">0</div><div style="font-size:11px;color:var(--ts)">수임 완료 ›</div></div>
+      <div style="background:#fff;border-radius:var(--rad);padding:14px;border:1px solid var(--bd);box-shadow:var(--shs);cursor:pointer" onclick="switchAttTab('hired')"><div style="font-size:22px;font-weight:900;color:#005945" id="att-stat-hired">0</div><div style="font-size:11px;color:var(--ts)">수임중 ›</div></div>
       <div style="background:linear-gradient(135deg,var(--p),var(--pd));border-radius:var(--rad);padding:14px;cursor:pointer" onclick="switchAttTab('pay')"><div style="font-size:22px;font-weight:900;color:#fff" id="att-stat-quota">10건</div><div style="font-size:11px;color:rgba(255,255,255,.8)">잔여 비딩권 ›</div></div>
     </div>
     <div class="card">
@@ -954,7 +954,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
       <div style="background:#fff;border-radius:var(--rad);padding:14px;border:1px solid var(--bd);box-shadow:var(--shs)"><div style="font-size:22px;font-weight:900;color:var(--p)" id="adm-total">0</div><div style="font-size:11px;color:var(--ts)">전체 사건</div></div>
       <div style="background:#fff;border-radius:var(--rad);padding:14px;border:1px solid var(--bd);box-shadow:var(--shs)"><div style="font-size:22px;font-weight:900;color:var(--a)" id="adm-att-cnt">-</div><div style="font-size:11px;color:var(--ts)">파트너 변호사</div></div>
       <div style="background:#fff;border-radius:var(--rad);padding:14px;border:1px solid var(--bd);box-shadow:var(--shs)"><div style="font-size:22px;font-weight:900;color:var(--o)" id="adm-bid-cnt">0</div><div style="font-size:11px;color:var(--ts)">비딩 진행중</div></div>
-      <div style="background:#fff;border-radius:var(--rad);padding:14px;border:1px solid var(--bd);box-shadow:var(--shs)"><div style="font-size:22px;font-weight:900;color:#005945" id="adm-hired-cnt">0</div><div style="font-size:11px;color:var(--ts)">수임 완료</div></div>
+      <div style="background:#fff;border-radius:var(--rad);padding:14px;border:1px solid var(--bd);box-shadow:var(--shs)"><div style="font-size:22px;font-weight:900;color:#005945" id="adm-hired-cnt">0</div><div style="font-size:11px;color:var(--ts)">수임중</div></div>
       <div style="background:linear-gradient(135deg,var(--p),var(--pd));border-radius:var(--rad);padding:14px;cursor:pointer" onclick="switchAdmTab('revenue')"><div style="font-size:18px;font-weight:900;color:#fff" id="adm-rev-total">-</div><div style="font-size:11px;color:rgba(255,255,255,.8)">총 수익 (원) ›</div></div>
       <div style="background:linear-gradient(135deg,var(--a),#009B7E);border-radius:var(--rad);padding:14px;cursor:pointer" onclick="switchAdmTab('revenue')"><div style="font-size:18px;font-weight:900;color:#fff" id="adm-rev-pending">-</div><div style="font-size:11px;color:rgba(255,255,255,.8)">대기 결제 (건) ›</div></div>
     </div>
@@ -1933,7 +1933,7 @@ function renderTpMineCase(c, sel, selStatus) {
   }
 
   var stC={'서류준비':'var(--o)','법원접수':'var(--p)','심사중':'#7B1FA2','변제계획인가':'var(--a)','변제중':'var(--a)','면책완료':'#005945'};
-  var smC={new:{l:'비딩 대기',c:'var(--p)'},bid:{l:'제안 수신 ✨',c:'var(--a)'},hired:{l:'수임 완료',c:'#005945'},closed:{l:'마감',c:'var(--ts)'}};
+  var smC={new:{l:'비딩 대기',c:'var(--p)'},bid:{l:'제안 수신 ✨',c:'var(--a)'},hired:{l:'수임중',c:'#005945'},closed:{l:'마감',c:'var(--ts)'}};
   var st = smC[c.status]||{l:'대기',c:'#999'};
   var borderC = selStatus==='confirmed'?'#005945':c.status==='bid'?'var(--a)':'var(--bd)';
 
@@ -2431,7 +2431,7 @@ function renderAttCaseList(cases) {
   }
   var MAX_BIDS = 10;
   var now = Date.now();
-  var sm = {new:{l:'신규',c:'var(--p)'},bid:{l:'비딩중',c:'var(--a)'},closed:{l:'마감',c:'var(--ts)'},hired:{l:'수임완료',c:'#005945'}};
+  var sm = {new:{l:'신규',c:'var(--p)'},bid:{l:'비딩중',c:'var(--a)'},closed:{l:'마감',c:'var(--ts)'},hired:{l:'수임중',c:'#005945'}};
 
   el.innerHTML = cases.map(function(c){
     var bidCnt   = c.bidCnt || 0;
@@ -3293,7 +3293,7 @@ function showCaseUserDetail(caseId, userId) {
       +'<div style="width:44px;height:44px;border-radius:50%;background:var(--pl);display:flex;align-items:center;justify-content:center;font-size:20px">📋</div>'
       +'<div>'
       +'<div style="font-size:16px;font-weight:800">'+caseData.id+'</div>'
-      +'<span style="font-size:11px;font-weight:700;background:var(--pl);color:var(--p);padding:2px 8px;border-radius:20px">'+(caseData.status==='new'?'신규':caseData.status==='bid'?'비딩중':'수임완료')+'</span>'
+      +'<span style="font-size:11px;font-weight:700;background:var(--pl);color:var(--p);padding:2px 8px;border-radius:20px">'+(caseData.status==='new'?'신규':caseData.status==='bid'?'비딩중':caseData.status==='done'?'면책완료':'수임중')+'</span>'
       +'</div></div>'
       +'<table style="width:100%;border-collapse:collapse;font-size:13px">'
       +rows.map(function(row){
@@ -3958,7 +3958,7 @@ function renderMyCaseList(cases) {
     listEl.innerHTML=''; return;
   }
   if(emptyEl) emptyEl.style.display='none';
-  var sm={new:{l:'비딩 대기',c:'var(--p)'},bid:{l:'제안 수신',c:'var(--a)'},hired:{l:'수임 완료',c:'#005945'},closed:{l:'마감',c:'var(--ts)'}};
+  var sm={new:{l:'비딩 대기',c:'var(--p)'},bid:{l:'제안 수신',c:'var(--a)'},hired:{l:'수임중',c:'#005945'},closed:{l:'마감',c:'var(--ts)'}};
   listEl.innerHTML = cases.map(function(c){
     var s = sm[c.status]||{l:'대기',c:'#999'};
     var diag = c.diag;
@@ -5050,7 +5050,7 @@ function renderAllActiveCases(cases) {
   var smC = {
     new:    {l:'신규',    c:'var(--p)',  bg:'var(--pl)'},
     bid:    {l:'비딩중',  c:'var(--a)',  bg:'var(--al)'},
-    hired:  {l:'수임완료',c:'#005945',  bg:'#E0FAF5'},
+    hired:  {l:'수임중',c:'#005945',  bg:'#E0FAF5'},
     closed: {l:'마감',    c:'var(--ts)', bg:'#F0F0F0'}
   };
 
@@ -5157,7 +5157,7 @@ function renderMyBidCases(bids, caseMap) {
     return;
   }
 
-  var smC = {new:{l:'신규',c:'var(--p)'},bid:{l:'비딩중',c:'var(--a)'},hired:{l:'수임완료',c:'#005945'},closed:{l:'마감',c:'var(--ts)'}};
+  var smC = {new:{l:'신규',c:'var(--p)'},bid:{l:'비딩중',c:'var(--a)'},hired:{l:'수임중',c:'#005945'},closed:{l:'마감',c:'var(--ts)'}};
 
   el.innerHTML = bids.map(function(b){
     var c = caseMap[b.caseId] || {};
@@ -5638,7 +5638,7 @@ function loadMyCaseInline() {
     }
 
     var stC={'서류준비':'var(--o)','법원접수':'var(--p)','심사중':'#7B1FA2','변제계획인가':'var(--a)','변제중':'var(--a)','면책완료':'#005945'};
-    var smC={new:{l:'비딩 대기',c:'var(--p)'},bid:{l:'제안 수신 ✨',c:'var(--a)'},hired:{l:'수임 완료',c:'#005945'},closed:{l:'마감',c:'var(--ts)'}};
+    var smC={new:{l:'비딩 대기',c:'var(--p)'},bid:{l:'제안 수신 ✨',c:'var(--a)'},hired:{l:'수임중',c:'#005945'},closed:{l:'마감',c:'var(--ts)'}};
     var st = smC[c.status]||{l:'대기',c:'#999'};
     var borderC = selStatus==='confirmed'?'#005945':c.status==='bid'?'var(--a)':'var(--bd)';
 
