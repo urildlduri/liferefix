@@ -3552,9 +3552,10 @@ document.addEventListener('click',function(e){
       toast('사건 등록을 위해 로그인이 필요합니다.');
       return;
     }
-    // MY 대시보드로 이동 (채무자 대시보드)
-    go('s-my');
-    if(window.initMyDash) setTimeout(function(){ initMyDash(); }, 150);
+    // 비딩 탭 → 사건 등록 탭으로 이동 후 자동 제출
+    go('s-bid');
+    switchTab('reg');
+    setTimeout(function(){ submitCase(); }, 300);
   }
   if(e.target.classList.contains('pay-btn'))          { attRequestPay(e.target.dataset.plan, e.target.dataset.amount); }
   // 알림
