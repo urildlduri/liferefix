@@ -1,25 +1,21 @@
 {
-  "name": "Liferefix — 채무 해결 원스톱 플랫폼",
+  "name": "Liferefix",
   "short_name": "Liferefix",
-  "description": "채무 진단부터 변호사 연결까지, 한 곳에서",
-  "start_url": "/liferefix/liferefix.html",
+  "description": "AI 기반 개인회생 법률 서비스 플랫폼",
+  "start_url": "/",
   "display": "standalone",
-  "orientation": "portrait",
+  "background_color": "#ffffff",
   "theme_color": "#0B5FFF",
-  "background_color": "#F4F7FF",
-  "lang": "ko",
   "icons": [
     {
-      "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOTIgMTkyIj4KICA8cmVjdCB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgcng9IjQwIiBmaWxsPSIjMEI1RkZGIi8+CiAgPHRleHQgeD0iOTYiIHk9IjEyNSIgZm9udC1mYW1pbHk9IkFyaWFsLHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iOTAiIGZvbnQtd2VpZ2h0PSI5MDAiIGZpbGw9IndoaXRlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5MUjwvdGV4dD4KPC9zdmc+Cg==",
+      "src": "/icon-192.png",
       "sizes": "192x192",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "type": "image/png"
     },
     {
-      "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOTIgMTkyIj4KICA8cmVjdCB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgcng9IjQwIiBmaWxsPSIjMEI1RkZGIi8+CiAgPHRleHQgeD0iOTYiIHk9IjEyNSIgZm9udC1mYW1pbHk9IkFyaWFsLHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iOTAiIGZvbnQtd2VpZ2h0PSI5MDAiIGZpbGw9IndoaXRlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5MUjwvdGV4dD4KPC9zdmc+Cg==",
+      "src": "/icon-512.png",
       "sizes": "512x512",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "type": "image/png"
     }
   ]
 }
