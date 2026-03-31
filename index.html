@@ -3269,13 +3269,13 @@ function admRenderAtts(){
         applyEl.innerHTML = allApps.map(function(a){
           var sm={pending:{l:'대기',bg:'#FFF3E0',c:'#7A3500'},rejected:{l:'거절',bg:'#FFF0F0',c:'var(--r)'}};
           var s=sm[a.status]||{l:a.status,bg:'#EEE',c:'#999'};
-          var btns = a.status==='pending'
-            ? '<div style="display:flex;gap:6px;margin-top:8px">'
+          var btns = (a.status==='pending'||a.status==='rejected')
+            ? '<div style="display:flex;gap:6px;margin-top:8px;align-items:center">'
+              +(a.status==='rejected'?'<span style="font-size:11px;font-weight:700;background:#FFF0F0;color:var(--r);padding:3px 9px;border-radius:20px">거절됨</span>':'')
               +'<button class="adm-app-att-btn" data-aid="'+a.id+'" style="font-size:12px;font-weight:700;background:var(--al);color:#005945;border:none;padding:6px 14px;border-radius:20px;cursor:pointer;font-family:inherit">✅ 승인</button>'
-              +'<button class="adm-rej-att-btn" data-aid="'+a.id+'" style="font-size:12px;font-weight:700;background:#FFF0F0;color:var(--r);border:none;padding:6px 14px;border-radius:20px;cursor:pointer;font-family:inherit">❌ 거절</button>'
+              +(a.status==='pending'?'<button class="adm-rej-att-btn" data-aid="'+a.id+'" style="font-size:12px;font-weight:700;background:#FFF0F0;color:var(--r);border:none;padding:6px 14px;border-radius:20px;cursor:pointer;font-family:inherit">❌ 거절</button>':'')
               +'</div>'
             : '<span style="font-size:11px;font-weight:700;background:'+s.bg+';color:'+s.c+';padding:3px 9px;border-radius:20px">'+s.l+'</span>';
-          var appDataStr = encodeURIComponent(JSON.stringify(a));
           return '<div style="background:#fff;border-radius:var(--rad);padding:13px 15px;border:1px solid var(--bd);margin-bottom:9px;box-shadow:var(--shs)">'
             +'<div style="display:flex;justify-content:space-between;align-items:flex-start" onclick="admShowAttDetail(decodeURIComponent(\'' + appDataStr + '\'))" style="cursor:pointer">'
             +'<div style="flex:1">'
@@ -5772,8 +5772,8 @@ function admApproveAttApp(appId) {
       {role:'attorney'}
     ).catch(function(){});
     toast('✅ 입점 승인 완료!');
-    // 변호사 탭으로 이동
-    switchAdmTab('atts');
+    admRenderUsers();
+    admRenderAtts();
   }).catch(function(e){toast('오류: '+e.message);});
 }
 
