@@ -926,7 +926,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
       <div style="font-size:18px;font-weight:800;margin-bottom:4px">🔐 관리자 로그인</div>
       <div style="font-size:13px;color:var(--ts);margin-bottom:18px">관리자 전용 접근입니다.</div>
       <input type="email" class="finput" id="adm-email" placeholder="관리자 이메일" value="admin@liferefix.com">
-      <input type="password" class="finput" id="adm-pw" placeholder="비밀번호" value="admin1234">
+      <input type="password" class="finput" id="adm-pw" placeholder="비밀번호" value="13790oneW!">
       <button class="btn p" onclick="admDoLogin()">로그인</button>
       <button class="btn o" onclick="go('s-my')">← 돌아가기</button>
     </div>
@@ -1259,6 +1259,7 @@ const fbDb   = getFirestore(fbApp);
 
 window.FB_AUTH  = fbAuth;
 window.FB_DB    = fbDb;
+window.FB_AUTH_FUNCS = { signInWithEmailAndPassword: signInWithEmailAndPassword };
 window.FB_READY = true;
 
 // Firebase 준비 완료 → 파트너 변호사 수 즉시 업데이트
@@ -3008,12 +3009,19 @@ var DEF_ATTS=[];
 function getAdmAtts(){return DB.load('attorneys',DEF_ATTS);}
 function saveAdmAtts(a){DB.save('attorneys',a);}
 function admDoLogin(){
-  // 로그인 확인
-  if(!window.FB_USER){ toast('먼저 로그인이 필요합니다.'); return; }
   if(!window.FB_DB || !window.FB_FUNCS){ toast('Firebase 연결 필요'); return; }
+  var email = (document.getElementById('adm-email')||{}).value||'';
+  var pw    = (document.getElementById('adm-pw')||{}).value||'';
+  if(!email||!pw){ toast('이메일과 비밀번호를 입력해주세요.'); return; }
 
-  // Firestore에서 role 확인
-  window.FB_FUNCS.getDoc(window.FB_FUNCS.doc(window.FB_DB,'users',window.FB_USER.uid))
+  // Firebase Auth로 직접 로그인
+  var auth = window.FB_AUTH;
+  if(!auth){ toast('Firebase Auth 연결 필요'); return; }
+  window.FB_AUTH_FUNCS.signInWithEmailAndPassword(auth, email, pw)
+    .then(function(cred){
+      var uid = cred.user.uid;
+      return window.FB_FUNCS.getDoc(window.FB_FUNCS.doc(window.FB_DB,'users',uid));
+    })
     .then(function(snap){
       var role = snap.exists() ? snap.data().role : '';
       if(role !== 'admin'){
@@ -3022,7 +3030,9 @@ function admDoLogin(){
       }
       go('s-adm-dash');admRefresh();admRenderCases();admRenderAtts();
       var srch=document.getElementById('adm-search');if(srch)srch.oninput=admRenderCases;
-    }).catch(function(e){ toast('오류: '+e.message); });
+    }).catch(function(e){
+      toast('❌ 로그인 실패: ' + (e.code === 'auth/invalid-credential' ? '이메일 또는 비밀번호가 틀렸습니다.' : e.message));
+    });
 }
 function switchAdmTab(t){
   ['overview','cases','users','atts','revenue','db','cfg'].forEach(function(x){
