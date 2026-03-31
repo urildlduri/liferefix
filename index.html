@@ -518,22 +518,190 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
 
 <!-- INFO -->
 <div class="scr" id="s-info">
-  <div style="padding:20px">
-    <div class="sec-t">📋 개인회생 안내</div>
-    <p style="font-size:13px;color:var(--ts);margin-bottom:18px">개인회생 절차를 쉽고 정확하게 이해하세요</p>
-    <div class="sx" style="margin-bottom:20px">
-      <div class="sc" onclick="openM('m-i1')"><div class="sc-i">📌</div><div class="sc-t">개인회생이란?</div><div class="sc-d">개념과 조건 알아보기</div></div>
-      <div class="sc" onclick="openM('m-i2')"><div class="sc-i">📅</div><div class="sc-t">신청 절차</div><div class="sc-d">단계별 진행 과정</div></div>
-      <div class="sc" onclick="openM('m-i3')"><div class="sc-i">💰</div><div class="sc-t">변제 계획</div><div class="sc-d">변제금 산정 방식</div></div>
-      <div class="sc" onclick="openM('m-i4')"><div class="sc-i">⚠️</div><div class="sc-t">주의사항</div><div class="sc-d">제한사항 안내</div></div>
+  <div style="padding-bottom:80px">
+
+    <!-- 헤더 -->
+    <div style="background:linear-gradient(135deg,var(--p),var(--pd));padding:28px 20px 24px">
+      <div style="font-size:22px;font-weight:900;color:#fff;margin-bottom:6px">📋 개인회생 완전정복</div>
+      <div style="font-size:13px;color:rgba(255,255,255,.8);line-height:1.6">신청 조건부터 실제 판결 사례까지<br>꼭 필요한 정보만 모았어요</div>
     </div>
-    <div class="sec-t" style="margin-bottom:12px">자주 묻는 질문</div>
-    <div class="faq-item"><div class="faq-q" onclick="faq(this)"><span>개인회생 신청 자격이 있나요?</span><span class="faq-arr">▾</span></div><div class="faq-a">개인회생은 월 소득이 있거나 소득 발생 가능성이 있는 개인이라면 누구든 신청할 수 있습니다. 채무액 상한선은 없으나, 변제 가능한 소득이 있어야 합니다.</div></div>
-    <div class="faq-item"><div class="faq-q" onclick="faq(this)"><span>변제 기간은 보통 얼마나 되나요?</span><span class="faq-arr">▾</span></div><div class="faq-a">일반적으로 변제 기간은 3년(36개월)이며, 특별한 사정이 있는 경우 5년까지 연장될 수 있습니다.</div></div>
-    <div class="faq-item"><div class="faq-q" onclick="faq(this)"><span>담보 대출도 개인회생이 가능한가요?</span><span class="faq-arr">▾</span></div><div class="faq-a">담보채권은 원칙적으로 개인회생 변제계획 대상이 아니나, 담보권 실행 유예 등의 방법으로 처리될 수 있습니다.</div></div>
-    <div class="faq-item"><div class="faq-q" onclick="faq(this)"><span>변호사 비용이 얼마나 드나요?</span><span class="faq-arr">▾</span></div><div class="faq-a">일반적으로 착수금 100~400만 원, 성공보수 50~200만 원이 발생합니다. Liferefix 비딩 시스템으로 평균 35% 절감 효과를 기대할 수 있습니다.</div></div>
-    <div class="faq-item"><div class="faq-q" onclick="faq(this)"><span>신용등급에는 어떤 영향이 있나요?</span><span class="faq-arr">▾</span></div><div class="faq-a">개인회생 신청 시 신용등급이 하락하며 금융거래에 제한이 생깁니다. 변제 기간 완료 후 신용회복 지원 금융 상품을 통해 재무적 재기를 도울 수 있습니다.</div></div>
-    <div style="height:20px"></div>
+
+    <!-- 탭 -->
+    <div style="display:flex;background:#fff;border-bottom:2px solid var(--bd);position:sticky;top:0;z-index:10">
+      <button class="att-tab on" id="itab-guide" onclick="switchInfoTab('guide')">기본 안내</button>
+      <button class="att-tab" id="itab-cases" onclick="switchInfoTab('cases')">실제 사례</button>
+      <button class="att-tab" id="itab-faq" onclick="switchInfoTab('faq')">FAQ</button>
+      <button class="att-tab" id="itab-compare" onclick="switchInfoTab('compare')">회생 vs 파산</button>
+    </div>
+
+    <!-- 기본 안내 탭 -->
+    <div id="itp-guide" style="padding:20px">
+      <div style="font-size:15px;font-weight:800;margin-bottom:14px">📌 개인회생이란?</div>
+      <div style="background:var(--pl);border-radius:var(--rad);padding:16px;font-size:13px;line-height:1.9;margin-bottom:16px">
+        개인회생은 <b>갚을 능력이 부족한 채무자</b>가 법원의 감독 아래 일정 기간 동안 일부만 변제하고 나머지 채무를 <b style="color:var(--p)">면제받는 법적 절차</b>입니다.<br><br>
+        쉽게 말해, 내가 실제로 갚을 수 있는 만큼만 갚고 나머지는 탕감받는 제도예요.
+      </div>
+
+      <div style="font-size:15px;font-weight:800;margin-bottom:12px">✅ 신청 조건</div>
+      <div style="background:#fff;border:1px solid var(--bd);border-radius:var(--rad);padding:16px;margin-bottom:16px">
+        <div style="display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--bd)"><span style="font-size:18px">💼</span><div><div style="font-size:13px;font-weight:700">소득 요건</div><div style="font-size:12px;color:var(--ts);margin-top:2px">월 소득이 있거나 소득 가능성이 있는 개인. 직장인, 자영업자, 프리랜서 모두 가능</div></div></div>
+        <div style="display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--bd)"><span style="font-size:18px">💰</span><div><div style="font-size:13px;font-weight:700">채무액 요건</div><div style="font-size:12px;color:var(--ts);margin-top:2px">채무액 상한 없음. 단 변제 가능한 소득이 있어야 함</div></div></div>
+        <div style="display:flex;gap:10px;padding:8px 0"><span style="font-size:18px">🚫</span><div><div style="font-size:13px;font-weight:700">제외 대상</div><div style="font-size:12px;color:var(--ts);margin-top:2px">면책 이력 5~7년 이내, 파산 면책 이력 있는 경우 제한 가능</div></div></div>
+      </div>
+
+      <div style="font-size:15px;font-weight:800;margin-bottom:12px">📅 진행 절차</div>
+      <div style="margin-bottom:16px">
+        <div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:10px">
+          <div style="min-width:28px;height:28px;background:var(--p);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;color:#fff">1</div>
+          <div><div style="font-size:13px;font-weight:700">변호사 선임 및 서류 준비</div><div style="font-size:12px;color:var(--ts)">소득, 채무, 재산 자료 수집 (약 1~2개월)</div></div>
+        </div>
+        <div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:10px">
+          <div style="min-width:28px;height:28px;background:var(--p);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;color:#fff">2</div>
+          <div><div style="font-size:13px;font-weight:700">법원 신청 및 개시결정</div><div style="font-size:12px;color:var(--ts)">관할 법원 접수 → 개시결정 (약 1~3개월)</div></div>
+        </div>
+        <div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:10px">
+          <div style="min-width:28px;height:28px;background:var(--p);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;color:#fff">3</div>
+          <div><div style="font-size:13px;font-weight:700">변제 계획 인가</div><div style="font-size:12px;color:var(--ts)">법원의 변제계획 승인 (개시결정 후 1~2개월)</div></div>
+        </div>
+        <div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:10px">
+          <div style="min-width:28px;height:28px;background:var(--a);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;color:#fff">4</div>
+          <div><div style="font-size:13px;font-weight:700">변제 이행</div><div style="font-size:12px;color:var(--ts)">매월 변제금 납부 (3~5년)</div></div>
+        </div>
+        <div style="display:flex;gap:12px;align-items:flex-start">
+          <div style="min-width:28px;height:28px;background:#005945;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;color:#fff">5</div>
+          <div><div style="font-size:13px;font-weight:700">면책 결정 🎉</div><div style="font-size:12px;color:var(--ts)">변제 완료 후 나머지 채무 전액 면제</div></div>
+        </div>
+      </div>
+
+      <button class="btn p" onclick="go('s-diag')" style="margin-top:8px">🤖 AI 탕감률 무료 진단하기</button>
+    </div>
+
+    <!-- 실제 사례 탭 -->
+    <div id="itp-cases" style="padding:20px;display:none">
+      <div style="font-size:15px;font-weight:800;margin-bottom:4px">📊 실제 판결문 사례</div>
+      <div style="font-size:12px;color:var(--ts);margin-bottom:16px">law-story.com 수집 실제 판결문 81건 기반</div>
+
+      <!-- 통계 요약 -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:20px">
+        <div style="background:var(--pl);border-radius:10px;padding:12px;text-align:center">
+          <div style="font-size:20px;font-weight:900;color:var(--p)">62.8%</div>
+          <div style="font-size:11px;color:var(--ts)">평균 탕감률</div>
+        </div>
+        <div style="background:#E8F5E9;border-radius:10px;padding:12px;text-align:center">
+          <div style="font-size:20px;font-weight:900;color:#005945">221만</div>
+          <div style="font-size:11px;color:var(--ts)">평균 월소득</div>
+        </div>
+        <div style="background:#FFF3E0;border-radius:10px;padding:12px;text-align:center">
+          <div style="font-size:20px;font-weight:900;color:#7A3500">9,438만</div>
+          <div style="font-size:11px;color:var(--ts)">평균 채무액</div>
+        </div>
+      </div>
+
+      <!-- 사유별 탕감률 -->
+      <div style="font-size:14px;font-weight:800;margin-bottom:12px">사유별 평균 탕감률</div>
+      <div style="background:#fff;border:1px solid var(--bd);border-radius:var(--rad);padding:4px;margin-bottom:20px">
+        ${[
+          ['투자실패','94%','#005945'],['무리한사업확장','92%','#005945'],
+          ['사업실패','71.5%','var(--a)'],['병원비','62.6%','var(--p)'],
+          ['생활비','60.3%','var(--p)'],['돌려막기','50.3%','var(--o)'],
+          ['주식','36.7%','var(--r)'],['대환대출','13%','var(--r)']
+        ].map(function(r){
+          return '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-bottom:1px solid var(--bd)">'
+            +'<span style="font-size:13px;font-weight:600">'+r[0]+'</span>'
+            +'<span style="font-size:14px;font-weight:900;color:'+r[2]+'">'+r[1]+'</span>'
+            +'</div>';
+        }).join('')}
+      </div>
+
+      <!-- 실제 사례 카드 -->
+      <div style="font-size:14px;font-weight:800;margin-bottom:12px">실제 판결문 사례</div>
+      <div id="case-samples"></div>
+      <button class="btn o" onclick="go('s-diag')" style="margin-top:8px">내 탕감률도 알아보기 →</button>
+    </div>
+
+    <!-- FAQ 탭 -->
+    <div id="itp-faq" style="padding:20px;display:none">
+      <div style="font-size:15px;font-weight:800;margin-bottom:16px">❓ 자주 묻는 질문</div>
+
+      <div class="faq-item"><div class="faq-q" onclick="faq(this)"><span>개인회생 신청 자격이 있나요?</span><span class="faq-arr">▾</span></div><div class="faq-a">월 소득이 있거나 소득 발생 가능성이 있는 개인이라면 누구든 신청할 수 있습니다. 직장인, 자영업자, 프리랜서, 일용직 모두 가능하며 채무액 상한선은 없습니다.</div></div>
+
+      <div class="faq-item"><div class="faq-q" onclick="faq(this)"><span>변제 기간은 얼마나 되나요?</span><span class="faq-arr">▾</span></div><div class="faq-a">일반적으로 36개월(3년)이며 특별한 사정이 있는 경우 최대 60개월(5년)까지 연장될 수 있습니다. 변제 기간이 길수록 월 납부금이 줄어들어요.</div></div>
+
+      <div class="faq-item"><div class="faq-q" onclick="faq(this)"><span>개인회생하면 신용불량자가 되나요?</span><span class="faq-arr">▾</span></div><div class="faq-a">개인회생 신청 시 신용등급이 하락하고 신용정보에 등록됩니다. 하지만 면책 완료 후 신용 회복이 가능하며, 많은 분들이 면책 후 정상적인 금융생활로 돌아갑니다.</div></div>
+
+      <div class="faq-item"><div class="faq-q" onclick="faq(this)"><span>개인회생 중 취업/이직이 가능한가요?</span><span class="faq-arr">▾</span></div><div class="faq-a">네, 가능합니다. 단 소득이 크게 증가하면 변제금이 늘어날 수 있어요. 취업이나 소득 변동 시 변호사와 상담하는 것이 좋습니다.</div></div>
+
+      <div class="faq-item"><div class="faq-q" onclick="faq(this)"><span>변호사 없이 혼자 할 수 있나요?</span><span class="faq-arr">▾</span></div><div class="faq-a">법적으로는 본인 신청이 가능합니다. 하지만 서류 준비와 변제 계획 수립이 복잡해서 대부분 변호사의 도움을 받습니다. Liferefix를 통해 합리적인 수임료로 전문가 도움을 받아보세요.</div></div>
+
+      <div class="faq-item"><div class="faq-q" onclick="faq(this)"><span>개인회생 중 재산을 처분해야 하나요?</span><span class="faq-arr">▾</span></div><div class="faq-a">개인회생은 개인파산과 달리 재산을 처분하지 않아도 됩니다. 다만 재산 가액이 채무의 30%를 초과하는 경우 변제 계획에 영향을 줄 수 있어요.</div></div>
+
+      <div class="faq-item"><div class="faq-q" onclick="faq(this)"><span>가족에게 영향이 가나요?</span><span class="faq-arr">▾</span></div><div class="faq-a">원칙적으로 개인회생은 본인의 채무만 해당됩니다. 단 보증채무가 있는 경우 보증인에게 영향이 갈 수 있으니 확인이 필요해요.</div></div>
+
+      <div class="faq-item"><div class="faq-q" onclick="faq(this)"><span>면책 후 대출이 가능한가요?</span><span class="faq-arr">▾</span></div><div class="faq-a">면책 후 바로 일반 대출은 어렵습니다. 통상 면책 완료 후 1~2년이 지나면 서민금융진흥원, 신용회복위원회 연계 상품부터 이용 가능해지고, 이후 신용이 점차 회복됩니다.</div></div>
+
+      <div style="background:var(--pl);border-radius:var(--rad);padding:16px;margin-top:20px;text-align:center">
+        <div style="font-size:14px;font-weight:800;margin-bottom:8px">더 궁금한 게 있으신가요?</div>
+        <div style="font-size:12px;color:var(--ts);margin-bottom:12px">AI 진단을 받으시면 내 상황에 맞는 분석을 받을 수 있어요</div>
+        <button class="btn p" onclick="go('s-diag')" style="padding:10px 24px">🤖 무료 AI 진단 받기</button>
+      </div>
+    </div>
+
+    <!-- 비교 탭 -->
+    <div id="itp-compare" style="padding:20px;display:none">
+      <div style="font-size:15px;font-weight:800;margin-bottom:16px">⚖️ 개인회생 vs 개인파산</div>
+      <div style="overflow-x:auto;margin-bottom:20px">
+        <table style="width:100%;border-collapse:collapse;font-size:13px">
+          <tr style="background:var(--p);color:#fff">
+            <th style="padding:10px 8px;text-align:left;border-radius:8px 0 0 0">구분</th>
+            <th style="padding:10px 8px;text-align:center">개인회생</th>
+            <th style="padding:10px 8px;text-align:center;border-radius:0 8px 0 0">개인파산</th>
+          </tr>
+          <tr style="background:#F5F9FF">
+            <td style="padding:10px 8px;font-weight:700;border-bottom:1px solid var(--bd)">소득 요건</td>
+            <td style="padding:10px 8px;text-align:center;border-bottom:1px solid var(--bd)">✅ 필요</td>
+            <td style="padding:10px 8px;text-align:center;border-bottom:1px solid var(--bd)">❌ 불필요</td>
+          </tr>
+          <tr>
+            <td style="padding:10px 8px;font-weight:700;border-bottom:1px solid var(--bd)">재산 처분</td>
+            <td style="padding:10px 8px;text-align:center;border-bottom:1px solid var(--bd)">✅ 불필요</td>
+            <td style="padding:10px 8px;text-align:center;border-bottom:1px solid var(--bd)">⚠️ 필요</td>
+          </tr>
+          <tr style="background:#F5F9FF">
+            <td style="padding:10px 8px;font-weight:700;border-bottom:1px solid var(--bd)">변제 기간</td>
+            <td style="padding:10px 8px;text-align:center;border-bottom:1px solid var(--bd)">3~5년</td>
+            <td style="padding:10px 8px;text-align:center;border-bottom:1px solid var(--bd)">없음</td>
+          </tr>
+          <tr>
+            <td style="padding:10px 8px;font-weight:700;border-bottom:1px solid var(--bd)">채무 탕감</td>
+            <td style="padding:10px 8px;text-align:center;border-bottom:1px solid var(--bd)">일부 탕감</td>
+            <td style="padding:10px 8px;text-align:center;border-bottom:1px solid var(--bd)">전액 면제</td>
+          </tr>
+          <tr style="background:#F5F9FF">
+            <td style="padding:10px 8px;font-weight:700;border-bottom:1px solid var(--bd)">직업 제한</td>
+            <td style="padding:10px 8px;text-align:center;border-bottom:1px solid var(--bd)">✅ 없음</td>
+            <td style="padding:10px 8px;text-align:center;border-bottom:1px solid var(--bd)">⚠️ 일부 제한</td>
+          </tr>
+          <tr>
+            <td style="padding:10px 8px;font-weight:700">추천 대상</td>
+            <td style="padding:10px 8px;text-align:center;font-size:11px;color:var(--ts)">소득 있고 재산 지키고 싶은 분</td>
+            <td style="padding:10px 8px;text-align:center;font-size:11px;color:var(--ts)">소득 없고 재산도 없는 분</td>
+          </tr>
+        </table>
+      </div>
+
+      <div style="background:#FFF3E0;border-radius:var(--rad);padding:16px;margin-bottom:16px">
+        <div style="font-size:13px;font-weight:800;color:#7A3500;margin-bottom:6px">💡 어떤 걸 선택해야 할까요?</div>
+        <div style="font-size:12px;color:#7A3500;line-height:1.8">
+          ✔ 월급이나 사업 소득이 있다면 → <b>개인회생</b><br>
+          ✔ 소득이 전혀 없고 재산도 없다면 → <b>개인파산</b><br>
+          ✔ 재산을 지키고 싶다면 → <b>개인회생</b><br>
+          ✔ 직업 제한 없이 빠른 면책을 원한다면 → <b>개인파산 검토</b>
+        </div>
+      </div>
+
+      <button class="btn p" onclick="go('s-diag')" style="margin-top:8px">🤖 AI로 내게 맞는 절차 진단하기</button>
+    </div>
+
   </div>
 </div>
 
@@ -1201,6 +1369,15 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
       <span class="flabel">변호사 등록번호 *</span>
       <input type="text" class="finput" id="att-apply-regnum" placeholder="예: 제12345호">
 
+      <span class="flabel">사무소 주소 *</span>
+      <input type="text" class="finput" id="att-apply-addr" placeholder="예: 서울 서초구 서초대로 OO">
+
+      <span class="flabel">전화번호 *</span>
+      <input type="tel" class="finput" id="att-apply-tel" placeholder="예: 02-1234-5678">
+
+      <span class="flabel">휴대폰 번호 *</span>
+      <input type="tel" class="finput" id="att-apply-mobile" placeholder="예: 010-1234-5678">
+
       <span class="flabel">착수금 가격대</span>
       <div class="tg" id="g-att-price">
         <button class="tb on" onclick="sel(this,'g-att-price')">100만원 미만</button>
@@ -1209,18 +1386,43 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
         <button class="tb" onclick="sel(this,'g-att-price')">200만원 이상</button>
       </div>
 
+      <span class="flabel">월 처리 가능 사건 수</span>
+      <div class="tg" id="g-att-capacity">
+        <button class="tb on" onclick="sel(this,'g-att-capacity')">1~3건</button>
+        <button class="tb" onclick="sel(this,'g-att-capacity')">4~7건</button>
+        <button class="tb" onclick="sel(this,'g-att-capacity')">8~15건</button>
+        <button class="tb" onclick="sel(this,'g-att-capacity')">제한 없음</button>
+      </div>
+
       <span class="flabel">연락처 (이메일) *</span>
       <input type="email" class="finput" id="att-apply-email" placeholder="lawyer@example.com">
 
-      <span class="flabel">자기소개 (선택)</span>
-      <textarea class="finput" id="att-apply-intro" rows="3" placeholder="채무자에게 표시될 간단한 소개를 입력해주세요."></textarea>
+      <span class="flabel">홈페이지/블로그 URL (선택)</span>
+      <input type="text" class="finput" id="att-apply-url" placeholder="예: https://blog.naver.com/...">
+
+      <span class="flabel">수임 성공 건수 (선택)</span>
+      <input type="number" class="finput" id="att-apply-successes" placeholder="개인회생 수임 완료 건수 (예: 150)">
+
+      <span class="flabel">자기소개 *</span>
+      <textarea class="finput" id="att-apply-intro" rows="4" placeholder="채무자에게 표시될 소개를 입력해주세요. (전문 분야, 처리 방식, 강점 등)"></textarea>
+
+      <span class="flabel">개인정보 수집 동의 *</span>
+      <div style="background:#F5F9FF;border:1px solid var(--bd);border-radius:10px;padding:12px;margin-bottom:12px;font-size:12px;color:var(--ts);line-height:1.8">
+        수집 항목: 이름, 소속, 등록번호, 연락처, 사무소 주소<br>
+        수집 목적: 변호사 파트너 심사 및 서비스 운영<br>
+        보유 기간: 계약 종료 후 3년
+      </div>
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;margin-bottom:16px;cursor:pointer">
+        <input type="checkbox" id="att-apply-agree" style="width:18px;height:18px;accent-color:var(--p)">
+        개인정보 수집 및 이용에 동의합니다 (필수)
+      </label>
 
       <div id="att-apply-err" style="font-size:12px;color:var(--r);margin-bottom:10px;display:none"></div>
 
       <button class="btn p" onclick="submitAttApply()">🎯 파트너 신청하기</button>
       <div style="font-size:12px;color:var(--ts);text-align:center;margin-top:12px;line-height:1.7">
         신청 후 관리자 검토(1~2 영업일) 완료 시 승인 이메일이 발송됩니다.<br>
-        문의: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="eb9b8a999f858e99ab87828d8e998e8d8293c5888486">[email&#160;protected]</a>
+        문의: admin@liferefix.com
       </div>
     </div>
   </div>
@@ -1247,6 +1449,35 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
 
 
 <!-- 로그인/회원가입 모달 -->
+<!-- 연락처 입력 모달 (비딩 신청 시) -->
+<div class="ov" id="m-contact" onclick="ovClose(event,'m-contact')">
+  <div class="ov-box" style="max-width:360px">
+    <div style="text-align:center;margin-bottom:16px">
+      <div style="font-size:32px;margin-bottom:8px">📋</div>
+      <div style="font-size:17px;font-weight:900;margin-bottom:6px">변호사 제안 받기</div>
+      <div style="font-size:12px;color:var(--ts);line-height:1.8">
+        변호사가 고객님 상황을 분석하여<br>
+        <b>1:1 맞춤 제안서</b>를 작성합니다.<br>
+        평균 <b style="color:var(--p)">10~30분</b> 소요됩니다.
+      </div>
+    </div>
+    <div style="background:var(--pl);border-radius:10px;padding:12px;margin-bottom:16px;font-size:12px;color:var(--p);font-weight:700;text-align:center">
+      📱 제안서 도착 시 문자로 알림 드릴게요
+    </div>
+    <span class="flabel">이름 *</span>
+    <input type="text" class="finput" id="contact-name" placeholder="홍길동">
+    <span class="flabel">휴대폰 번호 *</span>
+    <input type="tel" class="finput" id="contact-phone" placeholder="010-1234-5678">
+    <div style="font-size:11px;color:var(--ts);margin-bottom:14px;line-height:1.7">
+      ※ 연락처는 담당 변호사에게만 공개됩니다.<br>
+      ※ 광고성 연락에 사용되지 않습니다.
+    </div>
+    <div id="contact-err" style="font-size:12px;color:var(--r);margin-bottom:10px;display:none"></div>
+    <button class="btn p" onclick="submitCaseWithContact()" style="margin-bottom:8px">⚖️ 변호사 제안 받기</button>
+    <button class="btn o" onclick="closeM('m-contact')">취소</button>
+  </div>
+</div>
+
 <div class="ov" id="m-login" onclick="ovClose(event,'m-login')">
   <div class="modal" style="position:relative">
     <button class="mclose" onclick="closeM('m-login')">✕</button>
@@ -2406,6 +2637,38 @@ function submitCase(){
     toast('사건 등록을 위해 로그인이 필요합니다.');
     return;
   }
+  // 연락처 입력 모달 오픈
+  var nameEl = document.getElementById('contact-name');
+  var phoneEl = document.getElementById('contact-phone');
+  if(nameEl) nameEl.value = window.FB_USER.displayName||'';
+  if(phoneEl) phoneEl.value = '';
+  openM('m-contact');
+}
+
+function submitCaseWithContact(){
+  var contactName  = (document.getElementById('contact-name')||{}).value||'';
+  var contactPhone = (document.getElementById('contact-phone')||{}).value||'';
+  var errEl = document.getElementById('contact-err');
+
+  if(!contactName||!contactPhone) {
+    if(errEl){ errEl.style.display='block'; errEl.textContent='이름과 휴대폰 번호를 입력해주세요.'; }
+    return;
+  }
+  if(!/^0\d{1,2}-?\d{3,4}-?\d{4}$/.test(contactPhone.replace(/-/g,''))) {
+    if(errEl){ errEl.style.display='block'; errEl.textContent='올바른 휴대폰 번호를 입력해주세요.'; }
+    return;
+  }
+  if(errEl) errEl.style.display='none';
+  closeM('m-contact');
+  _doSubmitCase(contactName, contactPhone);
+}
+
+function _doSubmitCase(contactName, contactPhone){
+  if(!window.FB_USER) return;
+  var dtype  = document.querySelector('#g-rtype .tb.on');
+  var drange = document.querySelector('#g-rdrange .tb.on');
+  var budget = document.querySelector('#g-rbudget .tb.on');
+  var region = document.querySelector('#g-rreg .tb.on');
   var dtype  = document.querySelector('#g-rtype .tb.on');
   var drange = document.querySelector('#g-rdrange .tb.on');
   var budget = document.querySelector('#g-rbudget .tb.on');
@@ -2420,7 +2683,8 @@ function submitCase(){
     status:'new', bidCnt:0,
     userId:    window.FB_USER ? window.FB_USER.uid   : 'anonymous',
     userEmail: window.FB_USER ? window.FB_USER.email : '',
-    userName:  window.FB_USER ? (window.FB_USER.displayName||window.FB_USER.email.split('@')[0]) : '',
+    userName:  contactName || (window.FB_USER ? (window.FB_USER.displayName||window.FB_USER.email.split('@')[0]) : ''),
+    userPhone: contactPhone || '',
     at: new Date().toLocaleString('ko-KR'),
     diag: lastDiag,
     proc:  lastDiag&&lastDiag.proc||'개인회생',
@@ -3165,11 +3429,7 @@ function admRefresh(){
       if(attEl) attEl.textContent = total;
     }).catch(function(){});
   }
-  el=document.getElementById('adm-notice');
-  if(el){if(pend>0)el.innerHTML='🔔 변호사 입점 신청 <b>'+pend+'건</b> 승인 대기';else if(total>0)el.innerHTML='📋 총 <b>'+total+'건</b> 사건';else el.innerHTML='✅ 특이 사항 없음';}
-  var acts=cases.slice(0,3).map(function(c){return '📋 사건 등록 CASE-'+c.id+' · '+c.dtype+' · '+(c.at||'');});
-  var recEl=document.getElementById('adm-recent');
-  if(recEl)recEl.innerHTML=acts.length?acts.map(function(a){return '<div class="card" style="font-size:13px;color:var(--ts);padding:11px 14px;margin-bottom:8px">'+a+'</div>';}).join(''):'<div class="card" style="font-size:13px;color:var(--ts)">활동 내역 없음</div>';
+  // notice는 Firestore 비동기 내에서 처리됨 (total 변수 범위 오류 방지)
 
   // 수익 요약 로드
   if(window.FB_DB && window.FB_FUNCS) {
@@ -3962,10 +4222,21 @@ document.addEventListener('click',function(e){
       toast('사건 등록을 위해 로그인이 필요합니다.');
       return;
     }
-    // 비딩 탭 → 사건 등록 탭으로 이동 후 자동 제출
-    go('s-bid');
-    switchTab('reg');
-    setTimeout(function(){ submitCase(); }, 300);
+    // 진단 결과가 있으면 연락처 모달, 없으면 진단 먼저
+    if(lastDiag && lastDiag.ok) {
+      // 연락처 입력 모달 오픈
+      var nameEl = document.getElementById('contact-name');
+      var phoneEl = document.getElementById('contact-phone');
+      if(nameEl) nameEl.value = window.FB_USER.displayName||'';
+      if(phoneEl) phoneEl.value = '';
+      var errEl = document.getElementById('contact-err');
+      if(errEl) errEl.style.display='none';
+      openM('m-contact');
+    } else {
+      // 진단 없으면 진단 화면으로
+      go('s-diag');
+      toast('먼저 AI 진단을 받아보세요!');
+    }
   }
   if(e.target.classList.contains('pay-btn'))          { attRequestPay(e.target.dataset.plan, e.target.dataset.amount); }
   // 알림
@@ -4255,7 +4526,7 @@ function checkMyDoneTab() {
 
 // 진단 결과 로드
 function loadMyDiag() {
-  function fw(v){ if(!v&&v!==0) return '-'; return v>=10000?(v/10000).toFixed(1)+'억':Math.round(v).toLocaleString()+'만'; }
+// [중복제거]   function fw(v){ if(!v&&v!==0) return '-'; return v>=10000?(v/10000).toFixed(1)+'억':Math.round(v).toLocaleString()+'만'; }
 
   // 1) 메모리의 lastDiag 우선
   if(lastDiag && lastDiag.ok) {
@@ -4293,7 +4564,7 @@ function _loadDiagFromCases() {
 }
 
 function showMyDiag(diag) {
-  function fw(v){ if(!v&&v!==0) return '-'; return v>=10000?(v/10000).toFixed(1)+'억':Math.round(v).toLocaleString()+'만'; }
+// [중복제거]   function fw(v){ if(!v&&v!==0) return '-'; return v>=10000?(v/10000).toFixed(1)+'억':Math.round(v).toLocaleString()+'만'; }
   var emptyEl  = document.getElementById('my-diag-empty');
   var resultEl = document.getElementById('my-diag-result');
   if(emptyEl)  emptyEl.style.display  = 'none';
@@ -4393,7 +4664,7 @@ function renderMyCaseList(cases) {
   }).join('');
 }
 
-function fw2(v){ if(!v&&v!==0) return '-'; return v>=10000?(v/10000).toFixed(1)+'억':Math.round(v).toLocaleString()+'만'; }
+// [중복제거] function fw2(v){ if(!v&&v!==0) return '-'; return v>=10000?(v/10000).toFixed(1)+'억':Math.round(v).toLocaleString()+'만'; }
 
 // 받은 제안 로드
 function loadMyBids() {
@@ -4630,13 +4901,23 @@ function confirmSelectAtt() {
     // 1. 연락처 정보 저장 (선택 기록)
     // bid 상세 정보 가져오기
     var bidData = _selectedBid.bidData || {};
+    // cases에서 userPhone 가져오기
+    var casePhone = '';
+    var caseIdForPhone = _selectedBid.caseId || '';
+    if(caseIdForPhone && window.FB_DB && window.FB_FUNCS) {
+      // 비동기지만 phone 우선순위: 입력값 > cases.userPhone
+      window.FB_FUNCS.getDoc(window.FB_FUNCS.doc(window.FB_DB,'cases',caseIdForPhone))
+        .then(function(cs){ if(cs.exists()) casePhone = cs.data().userPhone||''; })
+        .catch(function(){});
+    }
+
     window.FB_FUNCS.addDoc(
       window.FB_FUNCS.collection(window.FB_DB,'selections'),
       {
         userId:    window.FB_USER.uid,
         userEmail: window.FB_USER.email,
         userName:  userName,
-        phone:     phone,
+        phone:     phone || casePhone,
         memo:      memo,
         bidId:     _selectedBid.bidId,
         caseId:    _selectedBid.caseId   || bidData.caseId   || '',
@@ -5095,7 +5376,16 @@ function confirmHire(selId) {
       }
     }).catch(function(){});
 
-    toast('✅ 수임 확정! 채무자에게 연락해주세요.');
+    // 채무자 연락처 표시
+    var phone2 = sel.phone || '';
+    var uname2 = sel.userName || '채무자';
+    if(phone2) {
+      setTimeout(function(){
+        toast('✅ 수임 확정! ' + uname2 + '님 연락처: ' + phone2);
+      }, 500);
+    } else {
+      toast('✅ 수임 확정! 수임 탭에서 채무자 연락처를 확인하세요.');
+    }
     loadHiredCases();
   }).catch(function(e){ toast('오류: '+e.message); });
 }
@@ -5111,12 +5401,66 @@ function rejectHire(selId) {
   }).catch(function(e){ toast('오류: '+e.message); });
 }
 window.confirmHire = confirmHire;
+window.submitProgress = submitProgress;
 window.rejectHire  = rejectHire;
 
 window.loadHiredCases    = loadHiredCases;
 window.openProgressModal = openProgressModal;
 window.saveProgress      = saveProgress;
 window.markCaseDone      = markCaseDone;
+
+// ═══════════════════════════════
+// 정보 탭
+// ═══════════════════════════════
+function switchInfoTab(t) {
+  ['guide','cases','faq','compare'].forEach(function(x){
+    var btn = document.getElementById('itab-'+x);
+    var panel = document.getElementById('itp-'+x);
+    if(btn) btn.classList.toggle('on', x===t);
+    if(panel) panel.style.display = x===t ? 'block' : 'none';
+  });
+  if(t==='cases') renderCaseSamples();
+}
+
+function renderCaseSamples() {
+  var el = document.getElementById('case-samples');
+  if(!el) return;
+  if(el.innerHTML.trim()) return; // 이미 렌더링됨
+
+  var samples = CASE_DB.slice(0,8);
+  if(!samples.length) {
+    el.innerHTML = '<div style="font-size:13px;color:var(--ts)">사례 데이터 로딩 중...</div>';
+    setTimeout(renderCaseSamples, 1000);
+    return;
+  }
+
+  var reasonColor = {
+    '투자실패':'#005945','사업실패':'var(--a)','무리한사업확장':'#005945',
+    '생활비':'var(--p)','병원비':'var(--p)','실직':'var(--o)',
+    '주식':'var(--r)','도박':'var(--r)','돌려막기':'var(--o)','대환대출':'var(--r)'
+  };
+
+  el.innerHTML = samples.map(function(c){
+    var ratioColor = c.relief_rate >= 70 ? '#005945' : c.relief_rate >= 50 ? 'var(--p)' : 'var(--r)';
+    var rColor = reasonColor[c.reason] || 'var(--ts)';
+    return '<div style="background:#fff;border:1px solid var(--bd);border-radius:var(--rad);padding:14px;margin-bottom:10px;box-shadow:var(--shs)">'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'
+      +'<div style="display:flex;gap:6px;flex-wrap:wrap">'
+      +'<span style="font-size:11px;font-weight:700;background:var(--pl);color:var(--p);padding:2px 8px;border-radius:20px">'+c.court+'</span>'
+      +'<span style="font-size:11px;font-weight:700;background:#F5F5F5;color:var(--ts);padding:2px 8px;border-radius:20px">'+c.age_group+' '+c.gender+'</span>'
+      +(c.reason?'<span style="font-size:11px;font-weight:700;background:'+rColor+'15;color:'+rColor+';padding:2px 8px;border-radius:20px">'+c.reason+'</span>':'')
+      +'</div>'
+      +'<span style="font-size:20px;font-weight:900;color:'+ratioColor+'">'+c.relief_rate+'%</span>'
+      +'</div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;font-size:11px;color:var(--ts)">'
+      +(c.income?'<div>월소득 <b style="color:var(--ink)">'+c.income+'만</b></div>':'')
+      +(c.debt?'<div>채무액 <b style="color:var(--ink)">'+(c.debt>=10000?(c.debt/10000).toFixed(1)+'억':c.debt+'만')+'</b></div>':'')
+      +(c.months?'<div>변제 <b style="color:var(--ink)">'+c.months+'개월</b></div>':'')
+      +'</div>'
+      +'</div>';
+  }).join('');
+}
+window.switchInfoTab = switchInfoTab;
 
 // ═══════════════════════════════
 // 관리자 DB 관리
@@ -5807,12 +6151,12 @@ window.go=go; window.sel=sel; window.slid=slid; window.gofs=gofs;
   window.runDiag=runDiag; window.resetDiag=resetDiag; window.renderAtts=renderAtts;
   window.sortAtt=sortAtt; window.openAtt=openAtt; window.toggleCmp=toggleCmp;
   window.openCompare=openCompare; window.switchTab=switchTab; window.loadRegPrev=loadRegPrev;
-  window.submitCase=submitCase; window.simBid=simBid; window.renderMy=renderMy;
+  window.submitCase=submitCase; window.submitCaseWithContact=submitCaseWithContact; window._doSubmitCase=_doSubmitCase; window.simBid=simBid; window.renderMy=renderMy;
   window.faq=faq; window.openM=openM; window.closeM=closeM; window.ovClose=ovClose;
   window.toast=toast; window.enterAttorney=enterAttorney; window.enterAdmin=enterAdmin;
   window.attDoLogin=attDoLogin; window.switchAttTab=switchAttTab; window.attOpenBidForm=attOpenBidForm;
   window.attSubmitBid=attSubmitBid; window.admDoLogin=admDoLogin; window.switchAdmTab=switchAdmTab;
-  window.admRefresh=admRefresh; window.admRenderCases=admRenderCases; window.admDeleteCase=admDeleteCase;
+  window.admRefresh=admRefresh; window.admRenderCases=admRenderCases; window.admRenderUsers=admRenderUsers; window.admDeleteCase=admDeleteCase;
   window.admRenderAtts=admRenderAtts; window.admApproveAtt=admApproveAtt;
 
 // ── 관리자: 변호사 비딩권 조정 ──────────────────────────────
@@ -5979,36 +6323,56 @@ function goAttApply() {
 window.goAttApply = goAttApply;
 
 function submitAttApply() {
-  var name   = (document.getElementById('apply-name')||{}).value||'';
-  var firm   = (document.getElementById('apply-firm')||{}).value||'';
-  var career = (document.getElementById('apply-career')||{}).value||'';
-  var type   = document.querySelector('#g-apply-type .tb.on');
-  var region = document.querySelector('#g-apply-region .tb.on');
-  var phone  = (document.getElementById('att-apply-phone')||{}).value||'';
-  var bio    = (document.getElementById('att-apply-intro')||{}).value||
-               (document.getElementById('apply-bio')||{}).value||'';
-  var errEl  = document.getElementById('apply-err');
+  var name     = (document.getElementById('att-apply-name')||{}).value||'';
+  var firm     = (document.getElementById('att-apply-firm')||{}).value||'';
+  var regnum   = (document.getElementById('att-apply-regnum')||{}).value||'';
+  var addr     = (document.getElementById('att-apply-addr')||{}).value||'';
+  var tel      = (document.getElementById('att-apply-tel')||{}).value||'';
+  var mobile   = (document.getElementById('att-apply-mobile')||{}).value||'';
+  var email    = (document.getElementById('att-apply-email')||{}).value||'';
+  var url      = (document.getElementById('att-apply-url')||{}).value||'';
+  var successes= (document.getElementById('att-apply-successes')||{}).value||'';
+  var bio      = (document.getElementById('att-apply-intro')||{}).value||'';
+  var agree    = document.getElementById('att-apply-agree');
+  var careerEl = document.querySelector('#g-att-career .tb.on');
+  var typeEl   = document.querySelector('#g-att-type .tb.on');
+  var regionEl = document.querySelector('#g-att-region .tb.on');
+  var priceEl  = document.querySelector('#g-att-price .tb.on');
+  var capEl    = document.querySelector('#g-att-capacity .tb.on');
+  var errEl    = document.getElementById('att-apply-err');
 
-  if(!name || !firm || !career) {
-    if(errEl){ errEl.style.display='block'; errEl.textContent='이름, 소속, 경력은 필수입니다.'; }
+  // 유효성 검사
+  if(!name||!firm||!regnum||!addr||!mobile||!email||!bio) {
+    if(errEl){ errEl.style.display='block'; errEl.textContent='필수 항목을 모두 입력해주세요.'; }
+    return;
+  }
+  if(agree && !agree.checked) {
+    if(errEl){ errEl.style.display='block'; errEl.textContent='개인정보 수집 동의가 필요합니다.'; }
     return;
   }
   if(!window.FB_USER){ toast('로그인이 필요합니다.'); return; }
   if(errEl) errEl.style.display='none';
 
   var applyData = {
-    uid:      window.FB_USER.uid,
-    email:    window.FB_USER.email,
-    name:     name,
-    firm:     firm,
-    career:   parseInt(career)||0,
-    type:     type ? type.textContent.trim() : '',
-    region:   region ? region.textContent.trim() : '',
-    phone:    phone,
-    bio:      bio,
-    intro:    bio,
-    status:   'pending',
-    appliedAt: new Date().toLocaleString('ko-KR')
+    uid:        window.FB_USER.uid,
+    email:      email || window.FB_USER.email,
+    name:       name,
+    firm:       firm,
+    regnum:     regnum,
+    addr:       addr,
+    tel:        tel,
+    mobile:     mobile,
+    url:        url,
+    successes:  parseInt(successes)||0,
+    career:     careerEl ? careerEl.textContent.trim() : '',
+    type:       typeEl   ? typeEl.textContent.trim()   : '',
+    region:     regionEl ? regionEl.textContent.trim() : '',
+    priceRange: priceEl  ? priceEl.textContent.trim()  : '',
+    capacity:   capEl    ? capEl.textContent.trim()    : '',
+    bio:        bio,
+    intro:      bio,
+    status:     'pending',
+    appliedAt:  new Date().toLocaleString('ko-KR')
   };
 
   if(window.FB_DB && window.FB_FUNCS) {
