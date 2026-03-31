@@ -379,6 +379,19 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
         <button class="tb on" onclick="sel(this,'g-guar')">없음</button>
         <button class="tb" onclick="sel(this,'g-guar')">있음</button>
       </div>
+      <span class="flabel">채무 발생 주요 사유 <span style="font-size:11px;color:var(--p);font-weight:700">AI 분석에 활용됩니다</span></span>
+      <div class="tg" id="g-reason" style="flex-wrap:wrap;gap:6px">
+        <button class="tb on" onclick="sel(this,'g-reason')">생활비</button>
+        <button class="tb" onclick="sel(this,'g-reason')">사업실패</button>
+        <button class="tb" onclick="sel(this,'g-reason')">투자실패</button>
+        <button class="tb" onclick="sel(this,'g-reason')">실직</button>
+        <button class="tb" onclick="sel(this,'g-reason')">병원비</button>
+        <button class="tb" onclick="sel(this,'g-reason')">돌려막기</button>
+        <button class="tb" onclick="sel(this,'g-reason')">주식</button>
+        <button class="tb" onclick="sel(this,'g-reason')">도박</button>
+        <button class="tb" onclick="sel(this,'g-reason')">보증채무</button>
+        <button class="tb" onclick="sel(this,'g-reason')">기타</button>
+      </div>
       <button class="btn p" onclick="runDiag()">📊 진단 시작하기</button>
       <button class="btn o" onclick="gofs(1)">← 이전으로</button>
     </div>
@@ -1897,8 +1910,8 @@ function runDiag(){
     clearInterval(t);
     document.getElementById('d-load').style.display='none';
     // 기존 calcDiag로 기본값 계산
-    var r = calcDiag(debt,inc,ast,dep,dtype,job,ovd,crd,guar,proc,age,minor,prev);
-    r.job=job; r.ovd=ovd; r.crd=crd; r.guar=guar; r.proc=proc; r.age=age; r.minor=minor; r.prev=prev;
+    var r = calcDiag(debt,inc,ast,dep,dtype,job,ovd,crd,guar,proc,age,minor,prev,reason);
+    r.job=job; r.ovd=ovd; r.crd=crd; r.guar=guar; r.proc=proc; r.age=age; r.minor=minor; r.prev=prev; r.reason=reason;
     // AI 결과로 탕감률 덮어쓰기
     if(ai && ai.ratio && !ai.error) {
       r.final = ai.ratio / 100;
@@ -1933,12 +1946,12 @@ function runDiag(){
     clearInterval(t);
     document.getElementById('d-load').style.display='none';
     console.warn('AI 진단 실패, 기존 방식 사용:', fetchErr);
-    var r = calcDiag(debt,inc,ast,dep,dtype,job,ovd,crd,guar,proc,age,minor,prev);
-    r.job=job; r.ovd=ovd; r.crd=crd; r.guar=guar; r.proc=proc; r.age=age; r.minor=minor; r.prev=prev;
+    var r = calcDiag(debt,inc,ast,dep,dtype,job,ovd,crd,guar,proc,age,minor,prev,reason);
+    r.job=job; r.ovd=ovd; r.crd=crd; r.guar=guar; r.proc=proc; r.age=age; r.minor=minor; r.prev=prev; r.reason=reason;
     lastDiag=r; renderDiag(r);
   });
 }
-function calcDiag(debt,inc,ast,dep,dtype,job,ovd,crd,guar,proc,age,minor,prev){ job=job||'직장인'; ovd=ovd||'3개월 미만'; crd=crd||'1~2개'; guar=guar||'없음'; proc=proc||'개인회생'; age=age||'30대'; minor=minor||'없음'; prev=prev||'아니요';
+function calcDiag(debt,inc,ast,dep,dtype,job,ovd,crd,guar,proc,age,minor,prev,reason){ job=job||'직장인'; ovd=ovd||'3개월 미만'; crd=crd||'1~2개'; guar=guar||'없음'; proc=proc||'개인회생'; age=age||'30대'; minor=minor||'없음'; prev=prev||'아니요'; reason=reason||'';
   if(debt<1000)return{ok:false,why:'under',debt:debt,inc:inc};
   var minC=LIVING[Math.min(dep,3)];
   var disp=inc-minC;
@@ -1952,15 +1965,16 @@ function calcDiag(debt,inc,ast,dep,dtype,job,ovd,crd,guar,proc,age,minor,prev){ 
     .map(function(c){return c.relief_rate;})
     .filter(function(r){return r>0;});
   var avg=rates.length?rates.reduce(function(a,b){return a+b;},0)/rates.length/100:(FB[dtype]||.70);
-  // 사유별 보정
-  var reasonAdj = 0;
-  if(typeof DB_REASON_AVG !== 'undefined') {
-    var reasons2 = similar.filter(function(c){ return c.reason; });
-    // 입력한 사유와 같은 케이스만 추가 보정
-    var matchReason = CASE_DB.filter(function(c){ return c.reason && c.reason===c.reason; });
+  // 사유별 보정 — DB_REASON_AVG 직접 활용
+  if(reason && typeof DB_REASON_AVG !== 'undefined' && DB_REASON_AVG[reason]) {
+    var reasonAvg = DB_REASON_AVG[reason];
+    avg = avg * 0.5 + reasonAvg * 0.5;
+  } else if(reason) {
+    // 같은 사유 케이스 찾기
+    var matchReason = CASE_DB.filter(function(c){ return c.reason === reason; });
     if(matchReason.length >= 3) {
       var rAvg = matchReason.reduce(function(s,c){ return s+c.relief_rate; },0)/matchReason.length/100;
-      avg = avg*0.7 + rAvg*0.3;
+      avg = avg*0.6 + rAvg*0.4;
     }
   }
   var final=base*.6+avg*.4;
