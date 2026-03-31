@@ -5713,6 +5713,7 @@ window.go=go; window.sel=sel; window.slid=slid; window.gofs=gofs;
   window.admRenderAtts=admRenderAtts; window.admApproveAtt=admApproveAtt;
 
 // ── 관리자: 변호사 비딩권 조정 ──────────────────────────────
+window.admLoadBidQuota = admLoadBidQuota;
 function admLoadBidQuota(uid) {
   if(!window.FB_DB||!window.FB_FUNCS) return;
   window.FB_FUNCS.getDoc(window.FB_FUNCS.doc(window.FB_DB,'users',uid))
