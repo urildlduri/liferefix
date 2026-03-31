@@ -3091,23 +3091,41 @@ function switchAdmTab(t){
   window.scrollTo(0,0);
 }
 function admRefresh(){
-  var cases=DB.getCases();
-  var total=cases.length,bidC=cases.filter(function(c){return c.status==='bid';}).length;
-  var pend=getAdmAtts().filter(function(a){return a.status==='pending';}).length;
-  // Firestore 입점 신청 건수도 확인
+  // Firestore에서 사건 수 가져오기
   if(window.FB_DB && window.FB_FUNCS) {
-    var q = window.FB_FUNCS.collection(window.FB_DB,'att_applications');
-    window.FB_FUNCS.getDocs(q).then(function(snap){
-      var apps = snap.docs.map(function(d){return Object.assign({id:d.id},d.data());});
-      var pendApps = apps.filter(function(a){return a.status==='pending';});
-      var noticeEl = document.getElementById('adm-notice');
-      if(noticeEl && pendApps.length > 0) {
-        noticeEl.innerHTML = '🔔 변호사 입점 신청 <b>'+pendApps.length+'건</b> 승인 대기 · 사건 <b>'+total+'건</b>';
-      }
-    }).catch(function(){});
+    window.FB_FUNCS.getDocs(window.FB_FUNCS.collection(window.FB_DB,'cases'))
+      .then(function(snap){
+        var cases = snap.docs.map(function(d){ return Object.assign({id:d.id},d.data()); });
+        var total = cases.length;
+        var bidC = cases.filter(function(c){ return c.status==='bid'; }).length;
+        var el = document.getElementById('adm-total');
+        if(el) el.textContent = total;
+        el = document.getElementById('adm-bid-cnt');
+        if(el) el.textContent = bidC;
+        // 최근 활동
+        var acts = cases.slice(0,3).map(function(c){
+          return '📋 사건 등록 '+c.id+' · '+(c.dtype||'-')+' · '+(c.region||'-');
+        });
+        var recEl = document.getElementById('adm-recent');
+        if(recEl) recEl.innerHTML = acts.length
+          ? acts.map(function(a){ return '<div class="card" style="font-size:13px;color:var(--ts);padding:11px 14px;margin-bottom:8px">'+a+'</div>'; }).join('')
+          : '<div class="card" style="font-size:13px;color:var(--ts)">활동 내역 없음</div>';
+        // 공지
+        var noticeEl = document.getElementById('adm-notice');
+        if(noticeEl) noticeEl.innerHTML = total>0 ? '📋 총 <b>'+total+'건</b> 사건' : '✅ 특이 사항 없음';
+      }).catch(function(){});
+
+    // 입점 신청 대기
+    window.FB_FUNCS.getDocs(window.FB_FUNCS.collection(window.FB_DB,'att_applications'))
+      .then(function(snap){
+        var pendApps = snap.docs.filter(function(d){ return d.data().status==='pending'; });
+        var noticeEl = document.getElementById('adm-notice');
+        if(noticeEl && pendApps.length > 0) {
+          noticeEl.innerHTML = '🔔 변호사 입점 신청 <b>'+pendApps.length+'건</b> 승인 대기';
+        }
+      }).catch(function(){});
   }
-  var el=document.getElementById('adm-total');if(el)el.textContent=total;
-  el=document.getElementById('adm-bid-cnt');if(el)el.textContent=bidC;
+  var pend=0;
   // 파트너 변호사 수 Firestore에서 실시간 조회
   if(window.FB_DB && window.FB_FUNCS) {
     window.FB_FUNCS.getDocs(window.FB_FUNCS.collection(window.FB_DB,'users'))
