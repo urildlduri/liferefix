@@ -1433,6 +1433,7 @@ window.submitCaseFirebase = async function(c) {
 };
 
 console.log('✅ Firebase 연결 완료 — liferefix-8f622');
+  loadCaseDB();
 
 // Service Worker 등록 (FCM 필수)
 if('serviceWorker' in navigator) {
@@ -1663,89 +1664,22 @@ window.addEventListener('storage',function(e){if(e.key&&e.key.startsWith('lrx_')
 // ═══════════════════════════════
 // CASE DB
 // ═══════════════════════════════
-var CASE_DB=[
-  {no:580,court:"서울회생법원",relief_rate:84,age_group:"30대",gender:"남",region:"서울",reason:"생활비",income:157,debt:5100,months:36},
-  {no:579,court:"서울회생법원",relief_rate:86,age_group:"40대",gender:"여",region:"서울",reason:"교육비 多",income:197,debt:6700,months:36},
-  {no:578,court:"대구지방법원",relief_rate:54,age_group:"30대",gender:"여",region:"대구",reason:"실직",income:174,debt:7700,months:52},
-  {no:577,court:"수원지방법원",relief_rate:50,age_group:"40대",gender:"남",region:"수원",reason:"생활비",income:311,debt:13000,months:50},
-  {no:576,court:"서울회생법원",relief_rate:76,age_group:"20대",gender:"남",region:"서울",reason:"영업비용",income:115,debt:4000,months:36},
-  {no:575,court:"서울회생법원",relief_rate:49,age_group:"20대",gender:"남",region:"서울",reason:"도박",income:257,debt:10000,months:36},
-  {no:574,court:"대구지방법원",relief_rate:46,age_group:"30대",gender:"남",region:"대구",reason:"생활비",income:188,debt:6100,months:40},
-  {no:573,court:"전주지방법원",relief_rate:39,age_group:"40대",gender:"여",region:"전주",reason:"병원비",income:563,debt:22000,months:36},
-  {no:572,court:"창원지방법원",relief_rate:50,age_group:"50대",gender:"여",region:"창원",reason:"생활비",income:227,debt:8800,months:36},
-  {no:571,court:"서울회생법원",relief_rate:64,age_group:"30대",gender:"남",region:"서울",reason:"생활비",income:153,debt:4800,months:36},
-  {no:570,court:"서울회생법원",relief_rate:86,age_group:"30대",gender:"여",region:"서울",reason:"코로나적자",income:218,debt:50000,months:60},
-  {no:569,court:"서울회생법원",relief_rate:28,age_group:"40대",gender:"여",region:"서울",reason:"주식",income:502,debt:24000,months:41},
-  {no:567,court:"부산지방법원",relief_rate:60,age_group:"20대",gender:"남",region:"부산",reason:"코로나로 소득감소",income:147,debt:3800,months:36},
-  {no:566,court:"서울회생법원",relief_rate:94,age_group:"40대",gender:"남",region:"서울",reason:"투자실패",income:121,debt:13000,months:36},
-  {no:565,court:"서울회생법원",relief_rate:79,age_group:"20대",gender:"여",region:"서울",reason:"사업실패",income:163,debt:9900,months:36},
-  {no:564,court:"서울회생법원",relief_rate:78,age_group:"50대",gender:"남",region:"서울",reason:"생활비",income:108,debt:3200,months:36},
-  {no:563,court:"서울회생법원",relief_rate:13,age_group:"nan",gender:"nan",region:"서울",reason:"대환대출",income:262,debt:6400,months:36},
-  {no:562,court:"서울회생법원",relief_rate:94,age_group:"20대",gender:"남",region:"서울",reason:"사업실패",income:150,debt:28000,months:36},
-  {no:561,court:"대전지방법원",relief_rate:72,age_group:"40대",gender:"남",region:"대전",reason:"사업실패",income:150,debt:5600,months:36},
-  {no:560,court:"대구지방법원",relief_rate:88,age_group:"nan",gender:"nan",region:"대구",reason:"생활비",income:206,debt:5400,months:36},
-  {no:558,court:"서울회생법원",relief_rate:83,age_group:"40대",gender:"남",region:"서울",reason:"사업실패",income:196,debt:12000,months:36},
-  {no:557,court:"대전지방법원",relief_rate:93,age_group:"30대",gender:"남",region:"대전",reason:"잦은 이직",income:164,debt:12000,months:36},
-  {no:555,court:"대전지방법원",relief_rate:38,age_group:"50대",gender:"남",region:"대전",reason:"사업실패",income:216,debt:10000,months:56},
-  {no:553,court:"대전지방법원",relief_rate:81,age_group:"40대",gender:"여",region:"대전",reason:"병원비",income:202,debt:7500,months:46},
-  {no:551,court:"광주지방법원",relief_rate:54,age_group:"30대",gender:"남",region:"광주",reason:"보증채무",income:580,debt:37000,months:36},
-  {no:549,court:"대전지방법원",relief_rate:99,age_group:"nan",gender:"nan",region:"대전",reason:"생활비",income:130,debt:2200,months:36},
-  {no:548,court:"서울회생법원",relief_rate:53,age_group:"30대",gender:"남",region:"서울",reason:"병원비",income:133,debt:2500,months:36},
-  {no:547,court:"서울회생법원",relief_rate:75,age_group:"20대",gender:"여",region:"서울",reason:"돌려막기",income:160,debt:7100,months:36},
-  {no:546,court:"청주지방법원",relief_rate:58,age_group:"20대",gender:"남",region:"청주",reason:"돌려막기",income:130,debt:4400,months:60},
-  {no:545,court:"서울회생법원",relief_rate:75,age_group:"40대",gender:"남",region:"서울",reason:"사업실패",income:150,debt:6500,months:36},
-  {no:542,court:"인천지방법원",relief_rate:31,age_group:"20대",gender:"남",region:"인천",reason:"생활비",income:230,debt:6200,months:36},
-  {no:541,court:"인천지방법원",relief_rate:77,age_group:"40대",gender:"여",region:"인천",reason:"사기",income:230,debt:20000,months:36},
-  {no:540,court:"서울회생법원",relief_rate:57,age_group:"50대",gender:"여",region:"서울",reason:"사업실패",income:121,debt:1300,months:36},
-  {no:539,court:"서울회생법원",relief_rate:65,age_group:"30대",gender:"남",region:"서울",reason:"사업실패",income:182,debt:7900,months:36},
-  {no:538,court:"인천지방법원",relief_rate:49,age_group:"30대",gender:"여",region:"인천",reason:"자녀부양",income:158,debt:3700,months:36},
-  {no:537,court:"서울회생법원",relief_rate:82,age_group:"40대",gender:"여",region:"서울",reason:"오래된 채무",income:135,debt:6100,months:38},
-  {no:535,court:"서울회생법원",relief_rate:58,age_group:"20대",gender:"남",region:"서울",reason:"자녀부양",income:145,debt:3300,months:36},
-  {no:534,court:"서울회생법원",relief_rate:37,age_group:"40대",gender:"여",region:"서울",reason:"사기",income:218,debt:6400,months:36},
-  {no:533,court:"서울회생법원",relief_rate:56,age_group:"30대",gender:"남",region:"서울",reason:"생활비",income:197,debt:4500,months:36},
-  {no:532,court:"서울회생법원",relief_rate:85,age_group:"40대",gender:"남",region:"서울",reason:"사기",income:132,debt:6400,months:36},
-  {no:531,court:"서울회생법원",relief_rate:87,age_group:"50대",gender:"여",region:"서울",reason:"사기",income:130,debt:6800,months:36},
-  {no:529,court:"서울회생법원",relief_rate:49,age_group:"30대",gender:"남",region:"서울",reason:"주식",income:467,debt:16000,months:36},
-  {no:528,court:"인천지방법원",relief_rate:68,age_group:"40대",gender:"여",region:"인천",reason:"돌려막기",income:120,debt:2400,months:36},
-  {no:527,court:"서울회생법원",relief_rate:79,age_group:"20대",gender:"여",region:"서울",reason:"도박",income:130,debt:4200,months:36},
-  {no:526,court:"대구지방법원",relief_rate:86,age_group:"30대",gender:"여",region:"대구",reason:"사기",income:125,debt:5200,months:36},
-  {no:525,court:"광주지방법원",relief_rate:74,age_group:"20대",gender:"남",region:"광주",reason:"생활비",income:127,debt:4000,months:36},
-  {no:524,court:"광주지방법원",relief_rate:73,age_group:"30대",gender:"남",region:"광주",reason:"사기",income:139,debt:4600,months:36},
-  {no:521,court:"서울회생법원",relief_rate:51,age_group:"40대",gender:"여",region:"서울",reason:"사업실패",income:130,debt:3000,months:45},
-  {no:520,court:"서울회생법원",relief_rate:37,age_group:"20대",gender:"남",region:"서울",reason:"생활비",income:123,debt:1000,months:36},
-  {no:519,court:"서울회생법원",relief_rate:24,age_group:"30대",gender:"남",region:"서울",reason:"사기피해",income:242,debt:6500,months:36},
-  {no:518,court:"서울회생법원",relief_rate:45,age_group:"20대",gender:"남",region:"서울",reason:"사기피해",income:357,debt:12000,months:55},
-  {no:517,court:"수원지방법원",relief_rate:86,age_group:"40대",gender:"여",region:"수원",reason:"사업실패",income:141,debt:8900,months:36},
-  {no:516,court:"인천지방법원",relief_rate:91,age_group:"30대",gender:"여",region:"인천",reason:"사업실패",income:152,debt:19000,months:36},
-  {no:515,court:"수원지방법원",relief_rate:50,age_group:"50대",gender:"남",region:"수원",reason:"사업자금지원",income:148,debt:6800,months:57},
-  {no:514,court:"서울회생법원",relief_rate:82,age_group:"40대",gender:"남",region:"서울",reason:"사업실패",income:220,debt:9000,months:54},
-  {no:513,court:"서울회생법원",relief_rate:46,age_group:"40대",gender:"여",region:"서울",reason:"사기",income:377,debt:17000,months:36},
-  {no:511,court:"서울회생법원",relief_rate:29,age_group:"30대",gender:"여",region:"서울",reason:"돌려막기",income:400,debt:8600,months:36},
-  {no:508,court:"의정부지방법원",relief_rate:62,age_group:"30대",gender:"남",region:"의정부",reason:"병원비",income:384,debt:16000,months:36},
-  {no:507,court:"수원지방법원",relief_rate:79,age_group:"40대",gender:"남",region:"수원",reason:"사업매출감소",income:204,debt:14000,months:40},
-  {no:506,court:"수원지방법원",relief_rate:70,age_group:"50대",gender:"남",region:"수원",reason:"병원비",income:361,debt:20000,months:36},
-  {no:505,court:"서울회생법원",relief_rate:78,age_group:"20대",gender:"여",region:"서울",reason:"잦은 이직",income:262,debt:9200,months:41},
-  {no:504,court:"수원지방법원",relief_rate:27,age_group:"nan",gender:"nan",region:"수원",reason:"생활비",income:242,debt:1900,months:36},
-  {no:503,court:"서울회생법원",relief_rate:70,age_group:"30대",gender:"여",region:"서울",reason:"사업실패",income:142,debt:4400,months:36},
-  {no:502,court:"서울회생법원",relief_rate:34,age_group:"20대",gender:"남",region:"서울",reason:"영업비용",income:719,debt:25000,months:36},
-  {no:501,court:"서울회생법원",relief_rate:36,age_group:"30대",gender:"여",region:"서울",reason:"돌려막기",income:200,debt:5300,months:36},
-  {no:499,court:"의정부지방법원",relief_rate:0,age_group:"nan",gender:"nan",region:"의정부",reason:"도박",income:398,debt:4700,months:17},
-  {no:498,court:"광주지방법원",relief_rate:24,age_group:"20대",gender:"남",region:"광주",reason:"사기",income:252,debt:8000,months:42},
-  {no:496,court:"춘천지방법원",relief_rate:63,age_group:"40대",gender:"남",region:"춘천",reason:"병원비",income:268,debt:3500,months:36},
-  {no:495,court:"서울회생법원",relief_rate:85,age_group:"30대",gender:"남",region:"서울",reason:"병원비",income:135,debt:9000,months:36},
-  {no:494,court:"서울회생법원",relief_rate:82,age_group:"30대",gender:"여",region:"서울",reason:"영업부진",income:122,debt:6000,months:36},
-  {no:493,court:"의정부지방법원",relief_rate:41,age_group:"40대",gender:"여",region:"의정부",reason:"사업실패",income:167,debt:2700,months:36},
-  {no:492,court:"서울회생법원",relief_rate:48,age_group:"20대",gender:"여",region:"서울",reason:"병원비",income:160,debt:3800,months:36},
-  {no:491,court:"수원지방법원",relief_rate:43,age_group:"20대",gender:"남",region:"수원",reason:"돌려막기",income:281,debt:6000,months:57},
-  {no:490,court:"수원지방법원",relief_rate:43,age_group:"50대",gender:"여",region:"수원",reason:"돌려막기",income:281,debt:6000,months:57},
-  {no:488,court:"서울회생법원",relief_rate:92,age_group:"40대",gender:"남",region:"서울",reason:"채무보증",income:157,debt:9200,months:36},
-  {no:487,court:"서울회생법원",relief_rate:52,age_group:"30대",gender:"남",region:"서울",reason:"사기피해",income:282,debt:13000,months:36},
-  {no:486,court:"서울회생법원",relief_rate:43,age_group:"20대",gender:"여",region:"서울",reason:"생활비부족",income:163,debt:3600,months:36},
-  {no:485,court:"서울회생법원",relief_rate:33,age_group:"40대",gender:"남",region:"서울",reason:"주식",income:466,debt:19000,months:36},
-  {no:484,court:"청주지방법원",relief_rate:85,age_group:"30대",gender:"여",region:"청주",reason:"무리한부동산매매",income:121,debt:4700,months:36},
-  {no:483,court:"창원지방법원",relief_rate:92,age_group:"40대",gender:"남",region:"창원",reason:"무리한사업확장",income:250,debt:10000,months:36},
-  {no:482,court:"서울회생법원",relief_rate:89,age_group:"30대",gender:"남",region:"서울",reason:"사업실패",income:162,debt:20000,months:36},
-];
+var CASE_DB=[];  // Firestore에서 로드됨
+
+// Firestore에서 caseDB 로드
+function loadCaseDB() {
+  if(!window.FB_DB || !window.FB_FUNCS) {
+    setTimeout(loadCaseDB, 1000);
+    return;
+  }
+  window.FB_FUNCS.getDocs(window.FB_FUNCS.collection(window.FB_DB,'caseDB'))
+    .then(function(snap){
+      CASE_DB = snap.docs.map(function(d){ return d.data(); });
+      console.log('✅ caseDB 로드 완료:', CASE_DB.length + '건');
+    }).catch(function(e){
+      console.error('caseDB 로드 실패:', e);
+    });
+}
 
 // ═══════════════════════════════
 // ATTORNEYS
