@@ -3276,6 +3276,7 @@ function admRenderAtts(){
               +(a.status==='pending'?'<button class="adm-rej-att-btn" data-aid="'+a.id+'" style="font-size:12px;font-weight:700;background:#FFF0F0;color:var(--r);border:none;padding:6px 14px;border-radius:20px;cursor:pointer;font-family:inherit">❌ 거절</button>':'')
               +'</div>'
             : '<span style="font-size:11px;font-weight:700;background:'+s.bg+';color:'+s.c+';padding:3px 9px;border-radius:20px">'+s.l+'</span>';
+          var appDataStr = encodeURIComponent(JSON.stringify(a));
           return '<div style="background:#fff;border-radius:var(--rad);padding:13px 15px;border:1px solid var(--bd);margin-bottom:9px;box-shadow:var(--shs)">'
             +'<div style="display:flex;justify-content:space-between;align-items:flex-start" onclick="admShowAttDetail(decodeURIComponent(\'' + appDataStr + '\'))" style="cursor:pointer">'
             +'<div style="flex:1">'
