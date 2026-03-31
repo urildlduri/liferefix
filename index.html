@@ -3099,14 +3099,61 @@ function admRefresh(){
   }
 }
 function admRenderCases(){
-  var cases=DB.getCases();
-  var search=(document.getElementById('adm-search')||{}).value||'';
-  if(search){search=search.toLowerCase();cases=cases.filter(function(c){return (c.id||'').toLowerCase().includes(search)||(c.dtype||'').includes(search)||(c.region||'').includes(search);});}
   var el=document.getElementById('adm-case-list');if(!el)return;
-  if(!cases.length){el.innerHTML='<div style="text-align:center;padding:30px;color:var(--ts)">사건 없음</div>';return;}
-  el.innerHTML=cases.map(function(c){
-    return '<div style="background:#fff;border-radius:var(--rad);padding:13px 15px;border:1px solid var(--bd);margin-bottom:9px;box-shadow:var(--shs);display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:11px;font-weight:800;color:var(--p)">CASE-'+c.id+'</div><div style="font-size:14px;font-weight:600;margin-top:1px">'+(c.dtype||'')+' · '+(c.region||'')+'</div><div style="font-size:12px;color:var(--ts);margin-top:2px">'+(c.at||'')+'</div></div><button class="adm-del-btn" style="font-size:11px;font-weight:700;background:#FFF0F0;color:var(--r);border:none;padding:5px 11px;border-radius:20px;cursor:pointer;font-family:inherit" data-cid="'+c.id+'">삭제</button></div>';
-  }).join('');
+  el.innerHTML='<div style="text-align:center;padding:20px;color:var(--ts)">🔄 불러오는 중...</div>';
+
+  if(!window.FB_DB||!window.FB_FUNCS){
+    el.innerHTML='<div style="text-align:center;padding:20px;color:var(--ts)">Firebase 연결 필요</div>';
+    return;
+  }
+
+  window.FB_FUNCS.getDocs(window.FB_FUNCS.collection(window.FB_DB,'cases'))
+    .then(function(snap){
+      var cases = snap.docs.map(function(d){ return Object.assign({id:d.id},d.data()); });
+      var search=(document.getElementById('adm-search')||{}).value||'';
+      if(search){
+        search=search.toLowerCase();
+        cases=cases.filter(function(c){
+          return (c.id||'').toLowerCase().includes(search)||(c.dtype||'').includes(search)||(c.region||'').includes(search);
+        });
+      }
+      // 최신순 정렬
+      cases.sort(function(a,b){
+        var ta=a.createdAt&&a.createdAt.toDate?a.createdAt.toDate().getTime():0;
+        var tb=b.createdAt&&b.createdAt.toDate?b.createdAt.toDate().getTime():0;
+        return tb-ta;
+      });
+
+      var statusMap = {
+        new:{l:'신규',c:'var(--p)'},bid:{l:'비딩중',c:'var(--a)'},
+        hired:{l:'수임중',c:'#005945'},done:{l:'완료',c:'#666'},closed:{l:'마감',c:'var(--ts)'}
+      };
+
+      if(!cases.length){
+        el.innerHTML='<div style="text-align:center;padding:30px;color:var(--ts)">사건 없음</div>';
+        return;
+      }
+      el.innerHTML=cases.map(function(c){
+        var sm=statusMap[c.status]||{l:c.status,c:'#999'};
+        var at=c.createdAt&&c.createdAt.toDate?c.createdAt.toDate().toLocaleDateString('ko-KR'):c.at||'-';
+        return '<div style="background:#fff;border-radius:var(--rad);padding:13px 15px;border:1px solid var(--bd);margin-bottom:9px;box-shadow:var(--shs);display:flex;justify-content:space-between;align-items:center">'+
+          '<div>'+
+          '<div style="font-size:11px;font-weight:800;color:var(--p)">'+c.id+'</div>'+
+          '<div style="font-size:14px;font-weight:600;margin-top:1px">'+(c.dtype||'-')+' · '+(c.region||'-')+'</div>'+
+          '<div style="font-size:12px;color:var(--ts);margin-top:2px">'+at+' · 비딩 '+(c.bidCnt||0)+'건</div>'+
+          '</div>'+
+          '<div style="display:flex;align-items:center;gap:8px">'+
+          '<span style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;background:'+sm.c+'20;color:'+sm.c+'">'+sm.l+'</span>'+
+          '<button class="adm-del-btn" style="font-size:11px;font-weight:700;background:#FFF0F0;color:var(--r);border:none;padding:5px 11px;border-radius:20px;cursor:pointer;font-family:inherit" data-cid="'+c.id+'">삭제</button>'+
+          '</div></div>';
+      }).join('');
+
+      // 총 건수 업데이트
+      var cntEl = document.getElementById('adm-total-cases');
+      if(cntEl) cntEl.textContent = cases.length;
+    }).catch(function(e){
+      el.innerHTML='<div style="color:var(--r);padding:16px">오류: '+e.message+'</div>';
+    });
 }
 function admDeleteCase(id){var cases=DB.getCases().filter(function(x){return x.id!==id;});DB.saveCases(cases);admRenderCases();admRefresh();toast('삭제되었습니다.');}
 function admRenderUsers(){
