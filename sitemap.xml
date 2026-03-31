@@ -1369,6 +1369,15 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
       <span class="flabel">변호사 등록번호 *</span>
       <input type="text" class="finput" id="att-apply-regnum" placeholder="예: 제12345호">
 
+      <span class="flabel">사무소 주소 *</span>
+      <input type="text" class="finput" id="att-apply-addr" placeholder="예: 서울 서초구 서초대로 OO">
+
+      <span class="flabel">전화번호 *</span>
+      <input type="tel" class="finput" id="att-apply-tel" placeholder="예: 02-1234-5678">
+
+      <span class="flabel">휴대폰 번호 *</span>
+      <input type="tel" class="finput" id="att-apply-mobile" placeholder="예: 010-1234-5678">
+
       <span class="flabel">착수금 가격대</span>
       <div class="tg" id="g-att-price">
         <button class="tb on" onclick="sel(this,'g-att-price')">100만원 미만</button>
@@ -1377,18 +1386,43 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
         <button class="tb" onclick="sel(this,'g-att-price')">200만원 이상</button>
       </div>
 
+      <span class="flabel">월 처리 가능 사건 수</span>
+      <div class="tg" id="g-att-capacity">
+        <button class="tb on" onclick="sel(this,'g-att-capacity')">1~3건</button>
+        <button class="tb" onclick="sel(this,'g-att-capacity')">4~7건</button>
+        <button class="tb" onclick="sel(this,'g-att-capacity')">8~15건</button>
+        <button class="tb" onclick="sel(this,'g-att-capacity')">제한 없음</button>
+      </div>
+
       <span class="flabel">연락처 (이메일) *</span>
       <input type="email" class="finput" id="att-apply-email" placeholder="lawyer@example.com">
 
-      <span class="flabel">자기소개 (선택)</span>
-      <textarea class="finput" id="att-apply-intro" rows="3" placeholder="채무자에게 표시될 간단한 소개를 입력해주세요."></textarea>
+      <span class="flabel">홈페이지/블로그 URL (선택)</span>
+      <input type="text" class="finput" id="att-apply-url" placeholder="예: https://blog.naver.com/...">
+
+      <span class="flabel">수임 성공 건수 (선택)</span>
+      <input type="number" class="finput" id="att-apply-successes" placeholder="개인회생 수임 완료 건수 (예: 150)">
+
+      <span class="flabel">자기소개 *</span>
+      <textarea class="finput" id="att-apply-intro" rows="4" placeholder="채무자에게 표시될 소개를 입력해주세요. (전문 분야, 처리 방식, 강점 등)"></textarea>
+
+      <span class="flabel">개인정보 수집 동의 *</span>
+      <div style="background:#F5F9FF;border:1px solid var(--bd);border-radius:10px;padding:12px;margin-bottom:12px;font-size:12px;color:var(--ts);line-height:1.8">
+        수집 항목: 이름, 소속, 등록번호, 연락처, 사무소 주소<br>
+        수집 목적: 변호사 파트너 심사 및 서비스 운영<br>
+        보유 기간: 계약 종료 후 3년
+      </div>
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;margin-bottom:16px;cursor:pointer">
+        <input type="checkbox" id="att-apply-agree" style="width:18px;height:18px;accent-color:var(--p)">
+        개인정보 수집 및 이용에 동의합니다 (필수)
+      </label>
 
       <div id="att-apply-err" style="font-size:12px;color:var(--r);margin-bottom:10px;display:none"></div>
 
       <button class="btn p" onclick="submitAttApply()">🎯 파트너 신청하기</button>
       <div style="font-size:12px;color:var(--ts);text-align:center;margin-top:12px;line-height:1.7">
         신청 후 관리자 검토(1~2 영업일) 완료 시 승인 이메일이 발송됩니다.<br>
-        문의: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="eb9b8a999f858e99ab87828d8e998e8d8293c5888486">[email&#160;protected]</a>
+        문의: admin@liferefix.com
       </div>
     </div>
   </div>
@@ -1415,6 +1449,35 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
 
 
 <!-- 로그인/회원가입 모달 -->
+<!-- 연락처 입력 모달 (비딩 신청 시) -->
+<div class="ov" id="m-contact" onclick="ovClose(event,'m-contact')">
+  <div class="ov-box" style="max-width:360px">
+    <div style="text-align:center;margin-bottom:16px">
+      <div style="font-size:32px;margin-bottom:8px">📋</div>
+      <div style="font-size:17px;font-weight:900;margin-bottom:6px">변호사 제안 받기</div>
+      <div style="font-size:12px;color:var(--ts);line-height:1.8">
+        변호사가 고객님 상황을 분석하여<br>
+        <b>1:1 맞춤 제안서</b>를 작성합니다.<br>
+        평균 <b style="color:var(--p)">10~30분</b> 소요됩니다.
+      </div>
+    </div>
+    <div style="background:var(--pl);border-radius:10px;padding:12px;margin-bottom:16px;font-size:12px;color:var(--p);font-weight:700;text-align:center">
+      📱 제안서 도착 시 문자로 알림 드릴게요
+    </div>
+    <span class="flabel">이름 *</span>
+    <input type="text" class="finput" id="contact-name" placeholder="홍길동">
+    <span class="flabel">휴대폰 번호 *</span>
+    <input type="tel" class="finput" id="contact-phone" placeholder="010-1234-5678">
+    <div style="font-size:11px;color:var(--ts);margin-bottom:14px;line-height:1.7">
+      ※ 연락처는 담당 변호사에게만 공개됩니다.<br>
+      ※ 광고성 연락에 사용되지 않습니다.
+    </div>
+    <div id="contact-err" style="font-size:12px;color:var(--r);margin-bottom:10px;display:none"></div>
+    <button class="btn p" onclick="submitCaseWithContact()" style="margin-bottom:8px">⚖️ 변호사 제안 받기</button>
+    <button class="btn o" onclick="closeM('m-contact')">취소</button>
+  </div>
+</div>
+
 <div class="ov" id="m-login" onclick="ovClose(event,'m-login')">
   <div class="modal" style="position:relative">
     <button class="mclose" onclick="closeM('m-login')">✕</button>
@@ -2574,6 +2637,38 @@ function submitCase(){
     toast('사건 등록을 위해 로그인이 필요합니다.');
     return;
   }
+  // 연락처 입력 모달 오픈
+  var nameEl = document.getElementById('contact-name');
+  var phoneEl = document.getElementById('contact-phone');
+  if(nameEl) nameEl.value = window.FB_USER.displayName||'';
+  if(phoneEl) phoneEl.value = '';
+  openM('m-contact');
+}
+
+function submitCaseWithContact(){
+  var contactName  = (document.getElementById('contact-name')||{}).value||'';
+  var contactPhone = (document.getElementById('contact-phone')||{}).value||'';
+  var errEl = document.getElementById('contact-err');
+
+  if(!contactName||!contactPhone) {
+    if(errEl){ errEl.style.display='block'; errEl.textContent='이름과 휴대폰 번호를 입력해주세요.'; }
+    return;
+  }
+  if(!/^0\d{1,2}-?\d{3,4}-?\d{4}$/.test(contactPhone.replace(/-/g,''))) {
+    if(errEl){ errEl.style.display='block'; errEl.textContent='올바른 휴대폰 번호를 입력해주세요.'; }
+    return;
+  }
+  if(errEl) errEl.style.display='none';
+  closeM('m-contact');
+  _doSubmitCase(contactName, contactPhone);
+}
+
+function _doSubmitCase(contactName, contactPhone){
+  if(!window.FB_USER) return;
+  var dtype  = document.querySelector('#g-rtype .tb.on');
+  var drange = document.querySelector('#g-rdrange .tb.on');
+  var budget = document.querySelector('#g-rbudget .tb.on');
+  var region = document.querySelector('#g-rreg .tb.on');
   var dtype  = document.querySelector('#g-rtype .tb.on');
   var drange = document.querySelector('#g-rdrange .tb.on');
   var budget = document.querySelector('#g-rbudget .tb.on');
@@ -2588,7 +2683,8 @@ function submitCase(){
     status:'new', bidCnt:0,
     userId:    window.FB_USER ? window.FB_USER.uid   : 'anonymous',
     userEmail: window.FB_USER ? window.FB_USER.email : '',
-    userName:  window.FB_USER ? (window.FB_USER.displayName||window.FB_USER.email.split('@')[0]) : '',
+    userName:  contactName || (window.FB_USER ? (window.FB_USER.displayName||window.FB_USER.email.split('@')[0]) : ''),
+    userPhone: contactPhone || '',
     at: new Date().toLocaleString('ko-KR'),
     diag: lastDiag,
     proc:  lastDiag&&lastDiag.proc||'개인회생',
@@ -6028,7 +6124,7 @@ window.go=go; window.sel=sel; window.slid=slid; window.gofs=gofs;
   window.runDiag=runDiag; window.resetDiag=resetDiag; window.renderAtts=renderAtts;
   window.sortAtt=sortAtt; window.openAtt=openAtt; window.toggleCmp=toggleCmp;
   window.openCompare=openCompare; window.switchTab=switchTab; window.loadRegPrev=loadRegPrev;
-  window.submitCase=submitCase; window.simBid=simBid; window.renderMy=renderMy;
+  window.submitCase=submitCase; window.submitCaseWithContact=submitCaseWithContact; window._doSubmitCase=_doSubmitCase; window.simBid=simBid; window.renderMy=renderMy;
   window.faq=faq; window.openM=openM; window.closeM=closeM; window.ovClose=ovClose;
   window.toast=toast; window.enterAttorney=enterAttorney; window.enterAdmin=enterAdmin;
   window.attDoLogin=attDoLogin; window.switchAttTab=switchAttTab; window.attOpenBidForm=attOpenBidForm;
@@ -6200,36 +6296,56 @@ function goAttApply() {
 window.goAttApply = goAttApply;
 
 function submitAttApply() {
-  var name   = (document.getElementById('apply-name')||{}).value||'';
-  var firm   = (document.getElementById('apply-firm')||{}).value||'';
-  var career = (document.getElementById('apply-career')||{}).value||'';
-  var type   = document.querySelector('#g-apply-type .tb.on');
-  var region = document.querySelector('#g-apply-region .tb.on');
-  var phone  = (document.getElementById('att-apply-phone')||{}).value||'';
-  var bio    = (document.getElementById('att-apply-intro')||{}).value||
-               (document.getElementById('apply-bio')||{}).value||'';
-  var errEl  = document.getElementById('apply-err');
+  var name     = (document.getElementById('att-apply-name')||{}).value||'';
+  var firm     = (document.getElementById('att-apply-firm')||{}).value||'';
+  var regnum   = (document.getElementById('att-apply-regnum')||{}).value||'';
+  var addr     = (document.getElementById('att-apply-addr')||{}).value||'';
+  var tel      = (document.getElementById('att-apply-tel')||{}).value||'';
+  var mobile   = (document.getElementById('att-apply-mobile')||{}).value||'';
+  var email    = (document.getElementById('att-apply-email')||{}).value||'';
+  var url      = (document.getElementById('att-apply-url')||{}).value||'';
+  var successes= (document.getElementById('att-apply-successes')||{}).value||'';
+  var bio      = (document.getElementById('att-apply-intro')||{}).value||'';
+  var agree    = document.getElementById('att-apply-agree');
+  var careerEl = document.querySelector('#g-att-career .tb.on');
+  var typeEl   = document.querySelector('#g-att-type .tb.on');
+  var regionEl = document.querySelector('#g-att-region .tb.on');
+  var priceEl  = document.querySelector('#g-att-price .tb.on');
+  var capEl    = document.querySelector('#g-att-capacity .tb.on');
+  var errEl    = document.getElementById('att-apply-err');
 
-  if(!name || !firm || !career) {
-    if(errEl){ errEl.style.display='block'; errEl.textContent='이름, 소속, 경력은 필수입니다.'; }
+  // 유효성 검사
+  if(!name||!firm||!regnum||!addr||!mobile||!email||!bio) {
+    if(errEl){ errEl.style.display='block'; errEl.textContent='필수 항목을 모두 입력해주세요.'; }
+    return;
+  }
+  if(agree && !agree.checked) {
+    if(errEl){ errEl.style.display='block'; errEl.textContent='개인정보 수집 동의가 필요합니다.'; }
     return;
   }
   if(!window.FB_USER){ toast('로그인이 필요합니다.'); return; }
   if(errEl) errEl.style.display='none';
 
   var applyData = {
-    uid:      window.FB_USER.uid,
-    email:    window.FB_USER.email,
-    name:     name,
-    firm:     firm,
-    career:   parseInt(career)||0,
-    type:     type ? type.textContent.trim() : '',
-    region:   region ? region.textContent.trim() : '',
-    phone:    phone,
-    bio:      bio,
-    intro:    bio,
-    status:   'pending',
-    appliedAt: new Date().toLocaleString('ko-KR')
+    uid:        window.FB_USER.uid,
+    email:      email || window.FB_USER.email,
+    name:       name,
+    firm:       firm,
+    regnum:     regnum,
+    addr:       addr,
+    tel:        tel,
+    mobile:     mobile,
+    url:        url,
+    successes:  parseInt(successes)||0,
+    career:     careerEl ? careerEl.textContent.trim() : '',
+    type:       typeEl   ? typeEl.textContent.trim()   : '',
+    region:     regionEl ? regionEl.textContent.trim() : '',
+    priceRange: priceEl  ? priceEl.textContent.trim()  : '',
+    capacity:   capEl    ? capEl.textContent.trim()    : '',
+    bio:        bio,
+    intro:      bio,
+    status:     'pending',
+    appliedAt:  new Date().toLocaleString('ko-KR')
   };
 
   if(window.FB_DB && window.FB_FUNCS) {
