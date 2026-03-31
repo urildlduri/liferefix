@@ -1451,7 +1451,9 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
 <!-- 로그인/회원가입 모달 -->
 <!-- 연락처 입력 모달 (비딩 신청 시) -->
 <div class="ov" id="m-contact" onclick="ovClose(event,'m-contact')">
-  <div class="ov-box" style="max-width:360px">
+  <div class="modal" style="position:relative">
+    <button class="mclose" onclick="closeM('m-contact')">✕</button>
+    <div class="mhandle"></div>
     <div style="text-align:center;margin-bottom:16px">
       <div style="font-size:32px;margin-bottom:8px">📋</div>
       <div style="font-size:17px;font-weight:900;margin-bottom:6px">변호사 제안 받기</div>
@@ -2695,8 +2697,13 @@ function _doSubmitCase(contactName, contactPhone){
   DB.addCase(c);
   if(window.submitCaseFirebase) window.submitCaseFirebase(c);
   myCases.unshift(c);
-  switchTab('mine');
   toast('✅ 사건이 등록되었습니다! 파트너 변호사들이 곧 제안을 보내드립니다.');
+  // 내 진단 탭으로 이동
+  setTimeout(function(){
+    go('s-my');
+    if(window.switchMyTab) switchMyTab('diag');
+    if(window.loadMyCaseInline) loadMyCaseInline();
+  }, 500);
 
   // 파트너 변호사 전체에게 새 사건 알림
   if(window.FB_DB && window.FB_FUNCS && window.sendPushNotification) {
