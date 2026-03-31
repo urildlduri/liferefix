@@ -4519,7 +4519,7 @@ function checkMyDoneTab() {
 
 // 진단 결과 로드
 function loadMyDiag() {
-  function fw(v){ if(!v&&v!==0) return '-'; return v>=10000?(v/10000).toFixed(1)+'억':Math.round(v).toLocaleString()+'만'; }
+// [중복제거]   function fw(v){ if(!v&&v!==0) return '-'; return v>=10000?(v/10000).toFixed(1)+'억':Math.round(v).toLocaleString()+'만'; }
 
   // 1) 메모리의 lastDiag 우선
   if(lastDiag && lastDiag.ok) {
@@ -4557,7 +4557,7 @@ function _loadDiagFromCases() {
 }
 
 function showMyDiag(diag) {
-  function fw(v){ if(!v&&v!==0) return '-'; return v>=10000?(v/10000).toFixed(1)+'억':Math.round(v).toLocaleString()+'만'; }
+// [중복제거]   function fw(v){ if(!v&&v!==0) return '-'; return v>=10000?(v/10000).toFixed(1)+'억':Math.round(v).toLocaleString()+'만'; }
   var emptyEl  = document.getElementById('my-diag-empty');
   var resultEl = document.getElementById('my-diag-result');
   if(emptyEl)  emptyEl.style.display  = 'none';
@@ -4657,7 +4657,7 @@ function renderMyCaseList(cases) {
   }).join('');
 }
 
-function fw2(v){ if(!v&&v!==0) return '-'; return v>=10000?(v/10000).toFixed(1)+'억':Math.round(v).toLocaleString()+'만'; }
+// [중복제거] function fw2(v){ if(!v&&v!==0) return '-'; return v>=10000?(v/10000).toFixed(1)+'억':Math.round(v).toLocaleString()+'만'; }
 
 // 받은 제안 로드
 function loadMyBids() {
@@ -5394,6 +5394,7 @@ function rejectHire(selId) {
   }).catch(function(e){ toast('오류: '+e.message); });
 }
 window.confirmHire = confirmHire;
+window.submitProgress = submitProgress;
 window.rejectHire  = rejectHire;
 
 window.loadHiredCases    = loadHiredCases;
@@ -6148,7 +6149,7 @@ window.go=go; window.sel=sel; window.slid=slid; window.gofs=gofs;
   window.toast=toast; window.enterAttorney=enterAttorney; window.enterAdmin=enterAdmin;
   window.attDoLogin=attDoLogin; window.switchAttTab=switchAttTab; window.attOpenBidForm=attOpenBidForm;
   window.attSubmitBid=attSubmitBid; window.admDoLogin=admDoLogin; window.switchAdmTab=switchAdmTab;
-  window.admRefresh=admRefresh; window.admRenderCases=admRenderCases; window.admDeleteCase=admDeleteCase;
+  window.admRefresh=admRefresh; window.admRenderCases=admRenderCases; window.admRenderUsers=admRenderUsers; window.admDeleteCase=admDeleteCase;
   window.admRenderAtts=admRenderAtts; window.admApproveAtt=admApproveAtt;
 
 // ── 관리자: 변호사 비딩권 조정 ──────────────────────────────
