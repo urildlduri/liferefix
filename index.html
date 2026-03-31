@@ -3126,14 +3126,21 @@ function admRefresh(){
       }).catch(function(){});
   }
   var pend=0;
-  // 파트너 변호사 수 Firestore에서 실시간 조회
+  // 파트너 변호사 수 — users + att_applications 합산
   if(window.FB_DB && window.FB_FUNCS) {
-    window.FB_FUNCS.getDocs(window.FB_FUNCS.collection(window.FB_DB,'users'))
-      .then(function(snap){
-        var attCnt = snap.docs.filter(function(d){ return d.data().role==='attorney'; }).length;
-        var attEl = document.getElementById('adm-att-cnt');
-        if(attEl) attEl.textContent = attCnt;
-      }).catch(function(){});
+    Promise.all([
+      window.FB_FUNCS.getDocs(window.FB_FUNCS.collection(window.FB_DB,'users')),
+      window.FB_FUNCS.getDocs(window.FB_FUNCS.collection(window.FB_DB,'att_applications'))
+    ]).then(function(results){
+      var userAtts = results[0].docs.filter(function(d){ return d.data().role==='attorney'; });
+      var appAtts  = results[1].docs.filter(function(d){ return d.data().status==='approved'||d.data().status==='active'; });
+      // 중복 제거 (email 기준)
+      var userEmails = userAtts.map(function(d){ return d.data().email; });
+      var extraAtts  = appAtts.filter(function(d){ return !userEmails.includes(d.data().email); });
+      var total = userAtts.length + extraAtts.length;
+      var attEl = document.getElementById('adm-att-cnt');
+      if(attEl) attEl.textContent = total;
+    }).catch(function(){});
   }
   el=document.getElementById('adm-notice');
   if(el){if(pend>0)el.innerHTML='🔔 변호사 입점 신청 <b>'+pend+'건</b> 승인 대기';else if(total>0)el.innerHTML='📋 총 <b>'+total+'건</b> 사건';else el.innerHTML='✅ 특이 사항 없음';}
