@@ -1039,8 +1039,41 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
 </div>
 
 <div id="dtp-db" style="padding:14px;display:none">
-    <div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-weight:700">총 판결문 DB</div><div style="font-size:12px;color:var(--ts)">law-story.com 수집</div></div><b style="font-size:16px;color:var(--p)">33건</b></div></div>
-    <button class="btn p" style="padding:12px" onclick="toast('크롤러를 실행합니다. 약 8~10분 소요됩니다.')">🔄 크롤러 실행</button>
+    <!-- DB 현황 -->
+    <div class="card" style="margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-weight:700">총 판결문 DB</div>
+          <div style="font-size:12px;color:var(--ts)">Firestore caseDB 컬렉션</div>
+        </div>
+        <b style="font-size:20px;color:var(--p)" id="adm-casedb-cnt">-</b>
+      </div>
+    </div>
+
+    <!-- 엑셀 업로드 -->
+    <div class="card" style="margin-bottom:12px">
+      <div style="font-size:14px;font-weight:800;margin-bottom:8px">📊 판결문 데이터 업로드</div>
+      <div style="font-size:12px;color:var(--ts);margin-bottom:12px;line-height:1.7">
+        엑셀 파일(.xlsx)을 업로드하면 Firestore caseDB에 자동 반영됩니다.<br>
+        컬럼: NO, 진행법원, 나이대, 성별, 사유, 월평균소득, 변제개월수, 월변제금, 소요기간, 총변제금액, 총채무액, 탕감률
+      </div>
+      <input type="file" id="casedb-file-input" accept=".xlsx,.xls" style="display:none" onchange="handleCaseDBUpload(this)">
+      <button class="btn p" style="padding:12px;width:100%;margin-bottom:8px" onclick="document.getElementById('casedb-file-input').click()">
+        📁 엑셀 파일 선택
+      </button>
+      <div id="casedb-upload-status" style="font-size:12px;color:var(--ts);text-align:center"></div>
+      <div id="casedb-upload-bar" style="display:none;margin-top:8px">
+        <div style="background:var(--bd);border-radius:4px;height:6px;overflow:hidden">
+          <div id="casedb-upload-progress" style="background:var(--p);height:100%;width:0%;transition:width .3s;border-radius:4px"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DB 목록 미리보기 -->
+    <div class="card">
+      <div style="font-size:14px;font-weight:800;margin-bottom:8px">📋 최근 등록 데이터</div>
+      <div id="adm-casedb-list" style="font-size:12px;color:var(--ts)">로딩 중...</div>
+    </div>
   </div>
   <div id="dtp-cfg" style="padding:14px;display:none">
     <div class="card">
@@ -3002,6 +3035,7 @@ function switchAdmTab(t){
   if(t==='users')admRenderUsers();
   if(t==='atts')admRenderAtts();
   if(t==='revenue')loadRevenue();
+  if(t==='db') setTimeout(function(){ if(window.loadAdmCaseDB) loadAdmCaseDB(); }, 200);
   window.scrollTo(0,0);
 }
 function admRefresh(){
@@ -4923,6 +4957,125 @@ window.loadHiredCases    = loadHiredCases;
 window.openProgressModal = openProgressModal;
 window.saveProgress      = saveProgress;
 window.markCaseDone      = markCaseDone;
+
+// ═══════════════════════════════
+// 관리자 DB 관리
+// ═══════════════════════════════
+function loadAdmCaseDB() {
+  if(!window.FB_DB || !window.FB_FUNCS) return;
+  window.FB_FUNCS.getDocs(window.FB_FUNCS.collection(window.FB_DB,'caseDB'))
+    .then(function(snap){
+      var cnt = snap.docs.length;
+      var el = document.getElementById('adm-casedb-cnt');
+      if(el) el.textContent = cnt + '건';
+      // 최근 5건 미리보기
+      var listEl = document.getElementById('adm-casedb-list');
+      if(listEl) {
+        var items = snap.docs.slice(0,5).map(function(d){
+          var d2 = d.data();
+          return '<div style="padding:6px 0;border-bottom:1px solid var(--bd)">'
+            + '<b>'+d2.no+'</b> '+d2.court+' / '+d2.age_group+' '+d2.gender
+            + ' / '+d2.reason+' / 탕감률 <b style="color:var(--p)">'+d2.relief_rate+'%</b>'
+            + '</div>';
+        }).join('');
+        listEl.innerHTML = items + '<div style="font-size:11px;color:var(--ts);margin-top:6px">총 '+cnt+'건 저장됨</div>';
+      }
+      // CASE_DB 업데이트
+      CASE_DB = snap.docs.map(function(d){ return d.data(); });
+    }).catch(function(e){ console.error('caseDB 로드 실패:', e); });
+}
+
+function handleCaseDBUpload(input) {
+  var file = input.files[0];
+  if(!file) return;
+  var statusEl = document.getElementById('casedb-upload-status');
+  var barEl = document.getElementById('casedb-upload-bar');
+  var progressEl = document.getElementById('casedb-upload-progress');
+  statusEl.textContent = '파일 읽는 중...';
+  barEl.style.display = 'block';
+
+  var reader = new FileReader();
+  reader.onload = async function(e) {
+    try {
+      // SheetJS로 엑셀 파싱
+      var XLSX = window.XLSX;
+      if(!XLSX) {
+        // SheetJS 동적 로드
+        await new Promise(function(resolve, reject){
+          var s = document.createElement('script');
+          s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+          s.onload = resolve; s.onerror = reject;
+          document.head.appendChild(s);
+        });
+        XLSX = window.XLSX;
+      }
+
+      var data = new Uint8Array(e.target.result);
+      var wb = XLSX.read(data, {type:'array'});
+      var ws = wb.Sheets[wb.SheetNames[0]];
+      var rows = XLSX.utils.sheet_to_json(ws);
+
+      var reasonMap = {
+        '생홥비':'생활비','생활비 多':'생활비',
+        '병원비 多':'병원비','병원비 ':'병원비',
+        '사기패해':'사기피해','잦은이직':'잦은 이직','가족 부양':'자녀부양'
+      };
+
+      var records = rows.filter(function(r){ return r['사유']; }).map(function(r){
+        var court = String(r['진행법원']||'').trim();
+        var region = court.replace('지방법원','').replace('회생법원','').replace('지방','');
+        var reason = String(r['사유']||'').trim();
+        reason = reasonMap[reason] || reason;
+        return {
+          no:          parseInt(r['NO'])||0,
+          court:       court,
+          relief_rate: parseInt(r['탕감률\n(%)']||r['탕감률(%)']||r['탕감률'])||0,
+          age_group:   String(r['나이대']||'').trim(),
+          gender:      String(r['성별']||'').trim(),
+          region:      region,
+          reason:      reason,
+          income:      parseInt(r['월평균소득\n(만원)']||r['월평균소득(만원)']||r['월평균소득'])||0,
+          debt:        parseInt(r['총채무액\n(만원)']||r['총채무액(만원)']||r['총채무액'])||0,
+          months:      parseInt(r['변제개월수\n(개월)']||r['변제개월수(개월)']||r['변제개월수'])||0,
+        };
+      }).filter(function(r){ return r.no > 0; });
+
+      statusEl.textContent = records.length + '건 파싱 완료. 업로드 중...';
+
+      var success = 0;
+      for(var i=0; i<records.length; i++) {
+        var pct = Math.round((i+1)/records.length*100);
+        progressEl.style.width = pct + '%';
+        statusEl.textContent = '업로드 중... ' + (i+1) + ' / ' + records.length;
+        try {
+          await window.FB_FUNCS.setDoc(
+            window.FB_FUNCS.doc(window.FB_DB,'caseDB','case_'+records[i].no),
+            records[i]
+          );
+          success++;
+        } catch(err) {
+          console.error('오류:', records[i].no, err);
+        }
+        await new Promise(function(r){ setTimeout(r, 80); });
+      }
+
+      statusEl.textContent = '✅ 완료! ' + success + '/' + records.length + '건 업로드';
+      statusEl.style.color = '#005945';
+      progressEl.style.background = '#00C6A2';
+      input.value = '';
+      loadAdmCaseDB();
+      loadCaseDB();
+      toast('✅ 판결문 DB ' + success + '건 업로드 완료!');
+
+    } catch(err) {
+      statusEl.textContent = '❌ 오류: ' + err.message;
+      statusEl.style.color = 'var(--r)';
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+window.handleCaseDBUpload = handleCaseDBUpload;
+window.loadAdmCaseDB = loadAdmCaseDB;
 window.loadMyProgressInfo = loadMyProgressInfo;
 
 
