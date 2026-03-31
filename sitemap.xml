@@ -4894,13 +4894,23 @@ function confirmSelectAtt() {
     // 1. 연락처 정보 저장 (선택 기록)
     // bid 상세 정보 가져오기
     var bidData = _selectedBid.bidData || {};
+    // cases에서 userPhone 가져오기
+    var casePhone = '';
+    var caseIdForPhone = _selectedBid.caseId || '';
+    if(caseIdForPhone && window.FB_DB && window.FB_FUNCS) {
+      // 비동기지만 phone 우선순위: 입력값 > cases.userPhone
+      window.FB_FUNCS.getDoc(window.FB_FUNCS.doc(window.FB_DB,'cases',caseIdForPhone))
+        .then(function(cs){ if(cs.exists()) casePhone = cs.data().userPhone||''; })
+        .catch(function(){});
+    }
+
     window.FB_FUNCS.addDoc(
       window.FB_FUNCS.collection(window.FB_DB,'selections'),
       {
         userId:    window.FB_USER.uid,
         userEmail: window.FB_USER.email,
         userName:  userName,
-        phone:     phone,
+        phone:     phone || casePhone,
         memo:      memo,
         bidId:     _selectedBid.bidId,
         caseId:    _selectedBid.caseId   || bidData.caseId   || '',
@@ -5359,7 +5369,16 @@ function confirmHire(selId) {
       }
     }).catch(function(){});
 
-    toast('✅ 수임 확정! 채무자에게 연락해주세요.');
+    // 채무자 연락처 표시
+    var phone2 = sel.phone || '';
+    var uname2 = sel.userName || '채무자';
+    if(phone2) {
+      setTimeout(function(){
+        toast('✅ 수임 확정! ' + uname2 + '님 연락처: ' + phone2);
+      }, 500);
+    } else {
+      toast('✅ 수임 확정! 수임 탭에서 채무자 연락처를 확인하세요.');
+    }
     loadHiredCases();
   }).catch(function(e){ toast('오류: '+e.message); });
 }
