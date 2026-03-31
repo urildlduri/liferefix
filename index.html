@@ -1363,6 +1363,15 @@ onAuthStateChanged(fbAuth, function(user) {
   if(window.initMyDash) {
     setTimeout(function(){ window.initMyDash(); }, 100);
   }
+  // 로그인 시 실시간 진행상황 리스너 시작
+  if(user && window.loadMyProgressInfo) {
+    setTimeout(function(){ loadMyProgressInfo(function(){}); }, 500);
+  }
+  // 로그아웃 시 리스너 해제
+  if(!user && window._mySelectionsUnsub) {
+    window._mySelectionsUnsub();
+    window._mySelectionsUnsub = null;
+  }
   // 로그인 후 사건등록 이동 처리
   if(user && window._afterLoginGoReg) {
     window._afterLoginGoReg = false;
@@ -5016,15 +5025,27 @@ function markCaseDone_orig(selId) {
 // 채무자 내 사건 진행상황 표시
 function loadMyProgressInfo(callback) {
   if(!window.FB_USER||!window.FB_DB||!window.FB_FUNCS){ callback([]); return; }
-  window.FB_FUNCS.getDocs(
-    window.FB_FUNCS.collection(window.FB_DB,'selections')
-  ).then(function(snap){
+
+  // 기존 리스너 해제
+  if(window._mySelectionsUnsub) {
+    window._mySelectionsUnsub();
+    window._mySelectionsUnsub = null;
+  }
+
+  // onSnapshot으로 실시간 감지
+  var q = window.FB_FUNCS.collection(window.FB_DB, 'selections');
+  window._mySelectionsUnsub = window.FB_FUNCS.onSnapshot(q, function(snap){
     var sels = snap.docs
       .map(function(d){ return Object.assign({id:d.id}, d.data()); })
       .filter(function(s){ return s.userId===window.FB_USER.uid; });
     window._mySelections = sels;
     callback(sels);
-  }).catch(function(){ callback([]); });
+    // 내 사건 탭이 열려있으면 자동 갱신
+    var myScreen = document.getElementById('s-my');
+    if(myScreen && myScreen.classList.contains('on')) {
+      loadMyCases();
+    }
+  }, function(){ callback([]); });
 }
 
 
