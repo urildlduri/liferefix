@@ -360,7 +360,8 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
         <button class="tb on" data-v="0" onclick="sel(this,'g-dep')">없음</button>
         <button class="tb" data-v="1" onclick="sel(this,'g-dep')">1명</button>
         <button class="tb" data-v="2" onclick="sel(this,'g-dep')">2명</button>
-        <button class="tb" data-v="3" onclick="sel(this,'g-dep')">3명 이상</button>
+        <button class="tb" data-v="3" onclick="sel(this,'g-dep')">3명</button>
+        <button class="tb" data-v="4" onclick="sel(this,'g-dep')">4명 이상</button>
       </div>
       <span class="flabel">연체 기간</span>
       <div class="tg" id="g-ovd">
@@ -600,17 +601,14 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
       <!-- 사유별 탕감률 -->
       <div style="font-size:14px;font-weight:800;margin-bottom:12px">사유별 평균 탕감률</div>
       <div style="background:#fff;border:1px solid var(--bd);border-radius:var(--rad);padding:4px;margin-bottom:20px">
-        ${[
-          ['투자실패','94%','#005945'],['무리한사업확장','92%','#005945'],
-          ['사업실패','71.5%','var(--a)'],['병원비','62.6%','var(--p)'],
-          ['생활비','60.3%','var(--p)'],['돌려막기','50.3%','var(--o)'],
-          ['주식','36.7%','var(--r)'],['대환대출','13%','var(--r)']
-        ].map(function(r){
-          return '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-bottom:1px solid var(--bd)">'
-            +'<span style="font-size:13px;font-weight:600">'+r[0]+'</span>'
-            +'<span style="font-size:14px;font-weight:900;color:'+r[2]+'">'+r[1]+'</span>'
-            +'</div>';
-        }).join('')}
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-bottom:1px solid var(--bd)"><span style="font-size:13px;font-weight:600">투자실패</span><span style="font-size:14px;font-weight:900;color:#005945">94%</span></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-bottom:1px solid var(--bd)"><span style="font-size:13px;font-weight:600">무리한사업확장</span><span style="font-size:14px;font-weight:900;color:#005945">92%</span></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-bottom:1px solid var(--bd)"><span style="font-size:13px;font-weight:600">사업실패</span><span style="font-size:14px;font-weight:900;color:var(--a)">71.5%</span></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-bottom:1px solid var(--bd)"><span style="font-size:13px;font-weight:600">병원비</span><span style="font-size:14px;font-weight:900;color:var(--p)">62.6%</span></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-bottom:1px solid var(--bd)"><span style="font-size:13px;font-weight:600">생활비</span><span style="font-size:14px;font-weight:900;color:var(--p)">60.3%</span></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-bottom:1px solid var(--bd)"><span style="font-size:13px;font-weight:600">돌려막기</span><span style="font-size:14px;font-weight:900;color:var(--o)">50.3%</span></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-bottom:1px solid var(--bd)"><span style="font-size:13px;font-weight:600">주식</span><span style="font-size:14px;font-weight:900;color:var(--r)">36.7%</span></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px"><span style="font-size:13px;font-weight:600">대환대출</span><span style="font-size:14px;font-weight:900;color:var(--r)">13%</span></div>
       </div>
 
       <!-- 실제 사례 카드 -->
@@ -2069,7 +2067,9 @@ function faq(el){el.nextElementSibling.classList.toggle('on');el.querySelector('
 // ═══════════════════════════════
 // DIAGNOSIS
 // ═══════════════════════════════
-var LIVING={0:133,1:220,2:282,3:344};
+// 2026년 최저생계비 (기준 중위소득 60%) - 만원 단위
+// 1인:153.9만 / 2인:251.9만 / 3인:321.5만 / 4인:389.7만
+var LIVING={0:154, 1:252, 2:322, 3:390, 4:453};
 var FB={'신용대출':.72,'카드채무':.68,'담보대출':.55,'복합채무':.70};
 var WORKER_URL = 'https://liferefix-api.urildlduri.workers.dev';
 // 실제 판결문 79건 기반 나이대별/법원별 평균 탕감률
@@ -2195,10 +2195,10 @@ function runDiag(){
 }
 function calcDiag(debt,inc,ast,dep,dtype,job,ovd,crd,guar,proc,age,minor,prev,reason){ job=job||'직장인'; ovd=ovd||'3개월 미만'; crd=crd||'1~2개'; guar=guar||'없음'; proc=proc||'개인회생'; age=age||'30대'; minor=minor||'없음'; prev=prev||'아니요'; reason=reason||'';
   if(debt<1000)return{ok:false,why:'under',debt:debt,inc:inc};
-  var minC=LIVING[Math.min(dep,3)];
+  var minC=LIVING[Math.min(dep,4)];
   var disp=inc-minC;
   if(disp<=0)return{ok:false,why:'nodisp',inc:inc,minC:minC};
-  var period=48,cap=disp*period,ratio=Math.min(cap/debt,1),base=1-ratio;
+  var period=36,cap=disp*period,ratio=Math.min(cap/debt,1),base=1-ratio;
   // 나이대+지역 필터링으로 유사 사례 탕감률 계산
   var similar = CASE_DB.filter(function(c){
     return c.age_group === age;
