@@ -1850,7 +1850,10 @@ window._doSignup = function() {
 
 // 로그아웃
 window._doLogout = function() {
-  signOut(fbAuth).then(function(){ window.toast&&window.toast('로그아웃 되었습니다.'); });
+  signOut(fbAuth).then(function(){
+    window.toast&&window.toast('로그아웃 되었습니다.');
+    if(window.go) window.go('s-home');
+  });
 };
 
 // 구글 로그인 (팝업 → 실패 시 리다이렉트 자동 전환)
@@ -3878,19 +3881,22 @@ function admRenderAtts(){
     // ── 파트너 변호사 (role:attorney인 users + approved applications) ──
     // approved된 att_applications 기준으로 파트너 변호사 목록 구성
     var approved = apps.filter(function(a){return a.status==='active'||a.status==='approved';});
-    // users에서 role:attorney인 것도 포함 (수동으로 role 바꾼 경우)
-    var attUsers = users.filter(function(u){
-      return u.role==='attorney' && !approved.find(function(a){return a.id===u.uid||a.email===u.email;});
-    });
+    // users(role=attorney) + approved apps 이메일 기준 중복제거 합산
+    var approvedEmails = approved.map(function(a){ return (a.email||"").toLowerCase(); });
+    var attUsers = users.filter(function(u){ return u.role==='attorney'; });
+    var extraAtts = attUsers
+      .filter(function(u){ return approvedEmails.indexOf((u.email||"").toLowerCase()) < 0; })
+      .map(function(u){
+        return {id:u.uid||u.id, name:u.displayName||u.nickname||u.email.split('@')[0],
+                email:u.email, firm:'-', career:'-', region:'-', status:'approved'};
+      });
+    var allAtts = approved.concat(extraAtts);
 
     if(attEl) {
-      if(!approved.length && !attUsers.length) {
+      if(!allAtts.length) {
         attEl.innerHTML='<div style="font-size:13px;color:var(--ts);padding:8px 0">파트너 변호사 없음</div>';
       } else {
-        var allAtts = approved.concat(attUsers.map(function(u){
-          return {id:u.uid, name:u.nickname||u.email.split('@')[0], email:u.email,
-                  firm:'-', career:0, region:'-', status:'approved'};
-        }));
+        // allAtts 사용
 
         attEl.innerHTML = allAtts.map(function(a){
           // 해당 변호사의 selections 건수 (수임 건수) - 간단히 표시
@@ -7484,7 +7490,10 @@ window._doSignup = function() {
 
 // 로그아웃
 window._doLogout = function() {
-  signOut(fbAuth).then(function(){ window.toast&&window.toast('로그아웃 되었습니다.'); });
+  signOut(fbAuth).then(function(){
+    window.toast&&window.toast('로그아웃 되었습니다.');
+    if(window.go) window.go('s-home');
+  });
 };
 
 // 구글 로그인 (팝업 → 실패 시 리다이렉트 자동 전환)
