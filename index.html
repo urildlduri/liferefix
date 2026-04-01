@@ -908,7 +908,19 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
       </div>
       <div class="my-row" onclick="openM('m-about')"><span class="my-row-l">🏢 Liferefix 소개</span><span class="my-row-r">›</span></div>
       <div class="my-row go-bid-btn"><span class="my-row-l">📂 사건 등록하기</span><span class="my-row-r">›</span></div>
-      <button class="btn o" onclick="doLogout()" style="margin-top:16px">로그아웃</button>
+
+      <!-- 비밀번호 변경 -->
+      <div style="margin-top:20px;margin-bottom:8px;font-size:13px;font-weight:800;color:var(--ts)">계정 보안</div>
+      <div class="card" style="margin-bottom:14px">
+        <div style="font-size:13px;font-weight:800;margin-bottom:12px">🔑 비밀번호 변경</div>
+        <input type="password" class="finput" id="pw-current" placeholder="현재 비밀번호">
+        <input type="password" class="finput" id="pw-new" placeholder="새 비밀번호 (6자 이상)">
+        <input type="password" class="finput" id="pw-new2" placeholder="새 비밀번호 확인">
+        <div id="pw-err" style="font-size:12px;color:var(--r);margin-bottom:10px;display:none"></div>
+        <button class="btn p" onclick="changePassword()" style="font-size:14px">비밀번호 변경</button>
+      </div>
+
+      <button class="btn o" onclick="doLogout()" style="margin-top:8px">로그아웃</button>
       <div style="height:20px"></div>
     </div>
   </div>
@@ -1420,10 +1432,32 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
     </div>
   </div>
   <div id="dtp-cfg" style="padding:14px;display:none">
-    <div class="card">
-      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--bd)"><span style="font-size:14px;font-weight:600">서비스 상태</span><span style="font-size:11px;font-weight:700;background:var(--al);color:#005945;padding:3px 9px;border-radius:20px">운영중</span></div>
-      <div style="display:flex;justify-content:space-between;padding:8px 0"><span style="font-size:14px;font-weight:600">기본 구독료</span><b>50만원/월</b></div>
+    <!-- 서비스 상태 -->
+    <div class="card" style="margin-bottom:14px">
+      <div style="font-size:13px;font-weight:800;margin-bottom:10px">⚙️ 서비스 상태</div>
+      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--bd)"><span style="font-size:13px;font-weight:600">서비스 상태</span><span style="font-size:11px;font-weight:700;background:var(--al);color:#005945;padding:3px 9px;border-radius:20px">운영중</span></div>
+      <div style="display:flex;justify-content:space-between;padding:8px 0"><span style="font-size:13px;font-weight:600">기본 구독료</span><b>50만원/월</b></div>
     </div>
+
+    <!-- 회원 비밀번호 변경 -->
+    <div class="card" style="margin-bottom:14px">
+      <div style="font-size:13px;font-weight:800;margin-bottom:10px">🔑 회원 비밀번호 변경</div>
+      <div style="font-size:12px;color:var(--ts);margin-bottom:12px">이메일로 회원의 비밀번호 초기화 링크를 발송합니다.</div>
+      <input type="email" class="finput" id="adm-reset-email" placeholder="회원 이메일 입력">
+      <div id="adm-reset-err" style="font-size:12px;color:var(--r);margin-bottom:10px;display:none"></div>
+      <button class="btn p" onclick="admResetPassword()" style="font-size:13px">📧 비밀번호 초기화 메일 발송</button>
+    </div>
+
+    <!-- 관리자 본인 비밀번호 변경 -->
+    <div class="card" style="margin-bottom:14px">
+      <div style="font-size:13px;font-weight:800;margin-bottom:10px">🔐 관리자 비밀번호 변경</div>
+      <input type="password" class="finput" id="adm-pw-current" placeholder="현재 비밀번호">
+      <input type="password" class="finput" id="adm-pw-new" placeholder="새 비밀번호 (6자 이상)">
+      <input type="password" class="finput" id="adm-pw-new2" placeholder="새 비밀번호 확인">
+      <div id="adm-pw-err" style="font-size:12px;color:var(--r);margin-bottom:10px;display:none"></div>
+      <button class="btn p" onclick="admChangePassword()" style="font-size:13px">비밀번호 변경</button>
+    </div>
+
     <button class="btn o" onclick="go('s-my')">← 나가기</button>
   </div>
 </div>
@@ -1648,7 +1682,8 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebas
 import { getMessaging, getToken, onMessage }
   from "https://www.gstatic.com/firebasejs/11.6.0/firebase-messaging.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,
-         signOut, onAuthStateChanged, GoogleAuthProvider, signInWithPopup }
+         signOut, onAuthStateChanged, GoogleAuthProvider, signInWithPopup,
+         sendPasswordResetEmail, EmailAuthProvider, reauthenticateWithCredential, updatePassword }
   from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
 import { getFirestore, collection, addDoc, getDocs, doc, updateDoc,
          deleteDoc, setDoc, getDoc, query, orderBy, onSnapshot, serverTimestamp, arrayUnion }
@@ -1668,7 +1703,13 @@ const fbDb   = getFirestore(fbApp);
 
 window.FB_AUTH  = fbAuth;
 window.FB_DB    = fbDb;
-window.FB_AUTH_FUNCS = { signInWithEmailAndPassword: signInWithEmailAndPassword };
+window.FB_AUTH_FUNCS = {
+  signInWithEmailAndPassword:   signInWithEmailAndPassword,
+  sendPasswordResetEmail:       sendPasswordResetEmail,
+  EmailAuthProvider:            EmailAuthProvider,
+  reauthenticateWithCredential: reauthenticateWithCredential,
+  updatePassword:               updatePassword
+};
 window.FB_READY = true;
 
 // Firebase 준비 완료 → 파트너 변호사 수 즉시 업데이트
@@ -4474,6 +4515,71 @@ function doSignup() {
   if(window._doSignup){ window._doSignup(); return; }
   toast('Firebase 로딩 중입니다. 잠시 후 다시 시도해주세요.');
 }
+// ── 비밀번호 관리 ──────────────────────────────────────────
+
+// 관리자: 특정 회원 비밀번호 초기화 메일 발송
+function admResetPassword() {
+  var email = (document.getElementById('adm-reset-email')||{}).value||'';
+  var errEl = document.getElementById('adm-reset-err');
+  if(!email) {
+    if(errEl){ errEl.style.display='block'; errEl.textContent='이메일을 입력해주세요.'; } return;
+  }
+  if(errEl) errEl.style.display='none';
+  var authFuncs = window.FB_AUTH_FUNCS;
+  var fbAuth = window.FB_AUTH;
+  if(!authFuncs || !fbAuth) { toast('Firebase 연결 오류'); return; }
+  authFuncs.sendPasswordResetEmail(fbAuth, email).then(function(){
+    toast('✅ '+email+' 로 비밀번호 초기화 메일을 발송했습니다.');
+    var el=document.getElementById('adm-reset-email'); if(el) el.value='';
+  }).catch(function(e){
+    var msg = e.code==='auth/user-not-found' ? '등록되지 않은 이메일입니다.' :
+              e.code==='auth/invalid-email'  ? '이메일 형식이 올바르지 않습니다.' : e.message;
+    if(errEl){ errEl.style.display='block'; errEl.textContent=msg; }
+  });
+}
+window.admResetPassword = admResetPassword;
+
+// 관리자 본인 비밀번호 변경
+function admChangePassword() {
+  var cur  = (document.getElementById('adm-pw-current')||{}).value||'';
+  var nw   = (document.getElementById('adm-pw-new')||{}).value||'';
+  var nw2  = (document.getElementById('adm-pw-new2')||{}).value||'';
+  var errEl = document.getElementById('adm-pw-err');
+
+  if(!cur||!nw||!nw2) {
+    if(errEl){ errEl.style.display='block'; errEl.textContent='모든 항목을 입력해주세요.'; } return;
+  }
+  if(nw.length < 6) {
+    if(errEl){ errEl.style.display='block'; errEl.textContent='새 비밀번호는 6자 이상이어야 합니다.'; } return;
+  }
+  if(nw !== nw2) {
+    if(errEl){ errEl.style.display='block'; errEl.textContent='새 비밀번호가 일치하지 않습니다.'; } return;
+  }
+  if(!window.FB_USER) { toast('로그인이 필요합니다.'); return; }
+  if(errEl) errEl.style.display='none';
+
+  var authFuncs = window.FB_AUTH_FUNCS;
+  var fbAuth = window.FB_AUTH;
+  if(!authFuncs || !fbAuth) { toast('인증 모듈 오류'); return; }
+
+  // 재인증 후 비밀번호 변경
+  var cred = authFuncs.EmailAuthProvider.credential(window.FB_USER.email, cur);
+  authFuncs.reauthenticateWithCredential(window.FB_USER, cred).then(function(){
+    return authFuncs.updatePassword(window.FB_USER, nw);
+  }).then(function(){
+    toast('✅ 비밀번호가 변경되었습니다!');
+    ['adm-pw-current','adm-pw-new','adm-pw-new2'].forEach(function(id){
+      var el=document.getElementById(id); if(el) el.value='';
+    });
+  }).catch(function(e){
+    var msg = e.code==='auth/wrong-password'      ? '현재 비밀번호가 올바르지 않습니다.' :
+              e.code==='auth/requires-recent-login'? '보안상 재로그인 후 다시 시도해주세요.' :
+              e.code==='auth/weak-password'        ? '비밀번호가 너무 짧습니다.' : e.message;
+    if(errEl){ errEl.style.display='block'; errEl.textContent=msg; }
+  });
+}
+window.admChangePassword = admChangePassword;
+
 function doLogout() {
   if(window._doLogout){ window._doLogout(); return; }
 }
