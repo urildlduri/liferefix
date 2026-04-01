@@ -731,7 +731,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
       <div style="font-size:11px;color:rgba(255,255,255,.4);line-height:1.9">
         본 서비스는 <b style="color:rgba(255,255,255,.6)">베타 서비스</b>로 운영 중이며,<br>
         법률 서비스를 직접 제공하지 않습니다.<br>
-        채무자와 변호사를 연결하는 <b style="color:rgba(255,255,255,.6)">정보 제공 플랫폼</b>입니다.<br>
+        채무자가 변호사를 <b style="color:rgba(255,255,255,.6)">직접 선택하는 정보 제공 플랫폼</b>입니다.<br>
         AI 진단 결과는 참고용이며 법적 효력이 없습니다.
       </div>
     </div>
@@ -6551,7 +6551,7 @@ function submitAttApply() {
         window.FB_FUNCS.doc(window.FB_DB, 'users', window.FB_USER.uid),
         { role: 'pending_attorney', attApplyData: applyData }
       ).catch(function(){});
-      closeM('m-att-apply');
+      go('s-my');
       toast('✅ 입점 신청 완료! 1~2 영업일 내 검토 후 연락드립니다.');
     }).catch(function(e) {
       if(errEl){ errEl.style.display='block'; errEl.textContent='신청 실패: '+e.message; }
@@ -6862,7 +6862,7 @@ function openAttApply() {
     toast('입점 신청을 위해 로그인이 필요합니다.');
     return;
   }
-  openM('m-att-apply');
+  go('s-att-apply');
 }
 
 window.renderPayPage=renderPayPage; window.changeBidQty=changeBidQty;
