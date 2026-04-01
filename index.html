@@ -760,10 +760,6 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
       <div><div style="font-size:16px;font-weight:700">로그인이 필요합니다</div><div style="font-size:13px;color:var(--ts);margin-top:3px">사건 관리 및 진단 결과 저장</div></div>
     </div>
     <button class="btn p" onclick="openM('m-login')">로그인 / 회원가입</button>
-    <div style="margin-top:20px">
-      <div class="my-row" style="border:2px solid var(--p);background:var(--pl)" onclick="enterAttorney()"><div><span class="my-row-l" style="color:var(--p)">⚖️ 변호사 포털</span><div style="font-size:12px;color:var(--ts)">파트너 변호사 전용</div></div><span class="my-row-r">›</span></div>
-      <div class="my-row" style="border:2px solid #0D1B2A;background:#F0F4FF" onclick="enterAdmin()"><div><span class="my-row-l" style="color:#0D1B2A">🔐 관리자 포털</span><div style="font-size:12px;color:var(--ts)">관리자 전용</div></div><span class="my-row-r">›</span></div>
-    </div>
   </div>
 
   <!-- 로그인 후 대시보드 -->
@@ -870,9 +866,16 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
           <div style="font-size:12px;color:var(--ts)" id="my-email2">-</div>
         </div>
       </div>
-      <div class="my-row" style="border:2px solid var(--p);background:var(--pl)" onclick="enterAttorney()"><div><span class="my-row-l" style="color:var(--p)">⚖️ 변호사 포털</span><div style="font-size:12px;color:var(--ts)">파트너 변호사 전용</div></div><span class="my-row-r">›</span></div>
-      <div class="my-row" style="border:2px solid #0D1B2A;background:#F0F4FF" onclick="enterAdmin()"><div><span class="my-row-l" style="color:#0D1B2A">🔐 관리자 포털</span></div><span class="my-row-r">›</span></div>
-      <div class="my-row" onclick="openAttApply()"><span class="my-row-l">⚖️ 변호사 입점 신청</span><span class="my-row-r">›</span></div>
+      <!-- role별 포털 버튼 (JS로 동적 표시) -->
+      <div id="my-att-portal" style="display:none">
+        <div class="my-row" style="border:2px solid var(--p);background:var(--pl)" onclick="enterAttorney()"><div><span class="my-row-l" style="color:var(--p)">⚖️ 변호사 포털</span><div style="font-size:12px;color:var(--ts)">파트너 변호사 전용</div></div><span class="my-row-r">›</span></div>
+      </div>
+      <div id="my-adm-portal" style="display:none">
+        <div class="my-row" style="border:2px solid #0D1B2A;background:#F0F4FF" onclick="enterAdmin()"><div><span class="my-row-l" style="color:#0D1B2A">🔐 관리자 포털</span></div><span class="my-row-r">›</span></div>
+      </div>
+      <div id="my-att-apply-btn">
+        <div class="my-row" onclick="openAttApply()"><span class="my-row-l">⚖️ 변호사 입점 신청</span><span class="my-row-r">›</span></div>
+      </div>
       <div class="my-row" onclick="openM('m-about')"><span class="my-row-l">🏢 Liferefix 소개</span><span class="my-row-r">›</span></div>
       <div class="my-row go-bid-btn"><span class="my-row-l">📂 사건 등록하기</span><span class="my-row-r">›</span></div>
       <button class="btn o" onclick="doLogout()" style="margin-top:16px">로그아웃</button>
@@ -4592,6 +4595,42 @@ function initMyDash() {
 
   switchMyTab('diag');
   setTimeout(function(){ if(window.checkMyDoneTab) checkMyDoneTab(); }, 500);
+
+  // role에 따라 포털 버튼 표시
+  if(window.FB_DB && window.FB_FUNCS) {
+    window.FB_FUNCS.getDoc(
+      window.FB_FUNCS.doc(window.FB_DB,'users',window.FB_USER.uid)
+    ).then(function(snap){
+      var role = snap.exists() ? (snap.data().role||'debtor') : 'debtor';
+      window._userRole = role;
+
+      var attPortal   = document.getElementById('my-att-portal');
+      var admPortal   = document.getElementById('my-adm-portal');
+      var attApplyBtn = document.getElementById('my-att-apply-btn');
+
+      if(role === 'attorney') {
+        // 변호사: 변호사 포털 버튼 표시, 입점신청 숨김
+        if(attPortal)   attPortal.style.display   = 'block';
+        if(admPortal)   admPortal.style.display   = 'none';
+        if(attApplyBtn) attApplyBtn.style.display = 'none';
+      } else if(role === 'admin') {
+        // 관리자: 관리자 포털 버튼 표시, 변호사포털도 표시, 입점신청 숨김
+        if(attPortal)   attPortal.style.display   = 'block';
+        if(admPortal)   admPortal.style.display   = 'block';
+        if(attApplyBtn) attApplyBtn.style.display = 'none';
+      } else if(role === 'pending_attorney') {
+        // 심사중: 모두 숨김
+        if(attPortal)   attPortal.style.display   = 'none';
+        if(admPortal)   admPortal.style.display   = 'none';
+        if(attApplyBtn) attApplyBtn.style.display = 'none';
+      } else {
+        // 일반 채무자: 입점신청만 표시
+        if(attPortal)   attPortal.style.display   = 'none';
+        if(admPortal)   admPortal.style.display   = 'none';
+        if(attApplyBtn) attApplyBtn.style.display = 'block';
+      }
+    }).catch(function(){});
+  }
 }
 
 function switchMyTab(t) {
