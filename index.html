@@ -2148,10 +2148,48 @@ var lastDiag=null, cmpList=[], curSort='rec', myCases=[], timerInt=null;
 // ═══════════════════════════════
 var NM={'s-home':'n-home','s-diag':'n-diag','s-bid':'n-bid','s-info':'n-info','s-my':'n-my'};
 function go(id){
+  // MY 탭 클릭 시 role에 따라 자동 포털 이동
+  if(id === 's-my' && window.FB_USER && window.FB_DB && window.FB_FUNCS) {
+    var cachedRole = window._userRole;
+    if(cachedRole === 'attorney') {
+      _goScreen('s-att-dash');
+      if(window.loadAttDash) loadAttDash();
+      return;
+    } else if(cachedRole === 'admin') {
+      _goScreen('s-adm-dash');
+      if(window.enterAdmin) enterAdmin();
+      return;
+    } else if(!cachedRole) {
+      // role 캐시 없으면 Firestore 조회
+      window.FB_FUNCS.getDoc(
+        window.FB_FUNCS.doc(window.FB_DB,'users',window.FB_USER.uid)
+      ).then(function(snap){
+        var role = snap.exists() ? (snap.data().role||'debtor') : 'debtor';
+        window._userRole = role;
+        if(role === 'attorney') {
+          _goScreen('s-att-dash');
+          if(window.loadAttDash) loadAttDash();
+        } else if(role === 'admin') {
+          _goScreen('s-adm-dash');
+          if(window.enterAdmin) enterAdmin();
+        } else {
+          _goScreen('s-my');
+          if(window.initMyDash) initMyDash();
+        }
+      }).catch(function(){ _goScreen('s-my'); if(window.initMyDash) initMyDash(); });
+      return;
+    }
+  }
+  _goScreen(id);
+  if(id==='s-my' && window.initMyDash) initMyDash();
+}
+
+function _goScreen(id){
   document.querySelectorAll('.scr').forEach(function(s){s.classList.remove('on');});
   document.querySelectorAll('.ni').forEach(function(n){n.classList.remove('on');});
   var el=document.getElementById(id);if(el)el.classList.add('on');
-  if(NM[id]){var nb=document.getElementById(NM[id]);if(nb)nb.classList.add('on');}
+  var nmId = NM[id] || (id==='s-att-dash'?'n-my':id==='s-adm-dash'?'n-my':null);
+  if(nmId){var nb=document.getElementById(nmId);if(nb)nb.classList.add('on');}
   window.scrollTo(0,0);
 }
 
@@ -2900,7 +2938,16 @@ function enterAttorney(){
     go('s-att-login');
   }
 }
-function enterAdmin(){ go('s-adm-login'); }
+function enterAdmin(){
+  // 이미 로그인된 관리자면 바로 대시보드로
+  if(window._userRole === 'admin' && window.FB_USER) {
+    _goScreen('s-adm-dash');
+    if(window.admRefresh) admRefresh();
+    if(window.switchAdmTab) switchAdmTab('overview');
+  } else {
+    _goScreen('s-adm-login');
+  }
+}
 
 // ═══════════════════════════════
 // 변호사 포털
@@ -2983,6 +3030,19 @@ function getAttCases(){
   ATT_SAMPLES.forEach(function(s){if(ids.indexOf(s.id)<0)shared.push(s);});
   return shared;
 }
+function loadAttDash(){
+  // 변호사 대시보드 진입 시 초기화
+  if(window.updateAttStats) updateAttStats();
+  if(window.renderAttCases) renderAttCases();
+  // 헤더 이름 업데이트
+  if(window.FB_USER) {
+    var nameEl = document.getElementById('att-header-name');
+    if(nameEl) nameEl.textContent = (window.FB_USER.displayName||window.FB_USER.email.split('@')[0])+'님';
+  }
+  switchAttTab('dash');
+}
+window.loadAttDash = loadAttDash;
+
 function updateAttStats(){
   if(!window.FB_DB || !window.FB_FUNCS) return;
 
@@ -4623,10 +4683,7 @@ function initMyDash() {
   ['my-email','my-email2'].forEach(function(id){var e=document.getElementById(id);if(e)e.textContent=email;});
   var av=document.getElementById('my-avatar');if(av)av.textContent=nick.charAt(0).toUpperCase();
 
-  switchMyTab('diag');
-  setTimeout(function(){ if(window.checkMyDoneTab) checkMyDoneTab(); }, 500);
-
-  // role에 따라 포털 버튼 표시
+  // role에 따라 포털 자동 이동 또는 버튼 표시
   if(window.FB_DB && window.FB_FUNCS) {
     window.FB_FUNCS.getDoc(
       window.FB_FUNCS.doc(window.FB_DB,'users',window.FB_USER.uid)
@@ -4639,15 +4696,15 @@ function initMyDash() {
       var attApplyBtn = document.getElementById('my-att-apply-btn');
 
       if(role === 'attorney') {
-        // 변호사: 변호사 포털 버튼 표시, 입점신청 숨김
-        if(attPortal)   attPortal.style.display   = 'block';
-        if(admPortal)   admPortal.style.display   = 'none';
-        if(attApplyBtn) attApplyBtn.style.display = 'none';
+        // 변호사: 바로 변호사 대시보드로
+        _goScreen('s-att-dash');
+        if(window.loadAttDash) loadAttDash();
+        return;
       } else if(role === 'admin') {
-        // 관리자: 관리자 포털 버튼 표시, 변호사포털도 표시, 입점신청 숨김
-        if(attPortal)   attPortal.style.display   = 'block';
-        if(admPortal)   admPortal.style.display   = 'block';
-        if(attApplyBtn) attApplyBtn.style.display = 'none';
+        // 관리자: 바로 관리자 대시보드로
+        _goScreen('s-adm-dash');
+        if(window.enterAdmin) enterAdmin();
+        return;
       } else if(role === 'pending_attorney') {
         // 심사중: 모두 숨김
         if(attPortal)   attPortal.style.display   = 'none';
@@ -6344,7 +6401,7 @@ window.renderBidPanel = renderBidPanel;
 window.loadRevenue=loadRevenue; window.filterRevenue=filterRevenue;
 window.admApprovePayment=admApprovePayment; window.admRejectPayment=admRejectPayment;
 
-window.go=go; window.sel=sel; window.slid=slid; window.gofs=gofs;
+window.go=go; window._goScreen=_goScreen; window.sel=sel; window.slid=slid; window.gofs=gofs;
   window.runDiag=runDiag; window.resetDiag=resetDiag; window.renderAtts=renderAtts;
   window.sortAtt=sortAtt; window.openAtt=openAtt; window.toggleCmp=toggleCmp;
   window.openCompare=openCompare; window.switchTab=switchTab; window.loadRegPrev=loadRegPrev;
