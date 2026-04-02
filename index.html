@@ -3328,11 +3328,11 @@ function renderAttCaseList(cases) {
 
     var btn;
     if(isClosed) {
-      btn = '<span style="font-size:11px;font-weight:700;background:#F0F0F0;color:var(--ts);padding:5px 12px;border-radius:20px;flex-shrink:0">🔒 마감</span>';
+      btn = '<div style="padding:10px 14px;background:#F5F5F5;border-top:1px solid var(--bd);text-align:center;font-size:12px;font-weight:700;color:var(--ts)">🔒 입찰 마감</div>';
     } else if(myBid) {
-      btn = '<span style="font-size:11px;font-weight:700;background:var(--al);color:#005945;padding:5px 12px;border-radius:20px;flex-shrink:0">✅ 내 제안 완료</span>';
+      btn = '<div style="padding:10px 14px;background:var(--al);border-top:1px solid var(--bd);text-align:center;font-size:12px;font-weight:700;color:#005945">✅ 제안 완료</div>';
     } else {
-      btn = '<button class="att-bid-btn" data-cid="'+c.id+'" style="font-size:12px;font-weight:700;color:#fff;background:var(--p);border:none;padding:7px 14px;border-radius:20px;cursor:pointer;font-family:inherit;flex-shrink:0;white-space:nowrap">제안 작성</button>';
+      btn = '<button class="att-bid-btn" data-cid="'+c.id+'" style="display:block;width:100%;padding:13px;background:var(--p);color:#fff;border:none;border-top:1px solid var(--bd);font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;text-align:center">✍️ 제안 작성하기</button>';
     }
 
     var maskedName  = maskName(c.userName || c.userEmail || '');
@@ -3375,8 +3375,9 @@ function renderAttCaseList(cases) {
         // 진단 상세
         +diagHtml
         +(c.memo?'<div style="font-size:12px;color:var(--ts);background:var(--bg);border-radius:8px;padding:8px 10px;margin-bottom:10px">📝 '+c.memo+'</div>':'')
-        +'<div>'+btn+'</div>'
       +'</div>'
+      // ── 제안 바 (항상 카드 하단) ──
+      +btn
     +'</div>';
   }).join('');
 }
@@ -3470,16 +3471,47 @@ function attOpenBidForm(caseId){
   form.id = 'inline-bid-form';
   form.setAttribute('data-case', caseId);
   form.style.cssText = 'margin-top:12px;background:var(--bg);border-radius:var(--rad);padding:14px;border:2px solid var(--p)';
-  form.innerHTML = '<div style="font-size:13px;font-weight:800;color:var(--p);margin-bottom:12px">✍️ 제안 작성</div>'
-    +'<div style="margin-bottom:10px"><div style="font-size:11px;color:var(--ts);margin-bottom:5px;font-weight:600">착수금</div>'
-    +'<div class="tg" id="il-ret"><button class="tb" data-v="100">100만</button><button class="tb on" data-v="120">120만</button><button class="tb" data-v="150">150만</button><button class="tb" data-v="180">180만</button></div></div>'
-    +'<div style="margin-bottom:10px"><div style="font-size:11px;color:var(--ts);margin-bottom:5px;font-weight:600">할부</div>'
-    +'<div class="tg" id="il-inst"><button class="tb on" data-v="none">일시불</button><button class="tb" data-v="3">3개월</button><button class="tb" data-v="6">6개월</button><button class="tb" data-v="12">12개월</button></div></div>'
-    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">'
-    +'<div><div style="font-size:11px;color:var(--ts);margin-bottom:5px;font-weight:600">성공보수</div>'
-    +'<div class="tg" id="il-suc"><button class="tb on" data-v="0">없음</button><button class="tb" data-v="30">30만</button><button class="tb" data-v="50">50만</button></div></div>'
-    +'<div><div style="font-size:11px;color:var(--ts);margin-bottom:5px;font-weight:600">승인율</div>'
-    +'<div class="tg" id="il-prob"><button class="tb" data-v="75">75%+</button><button class="tb on" data-v="85">85%+</button><button class="tb" data-v="90">90%+</button><button class="tb" data-v="95">95%+</button></div></div>'
+  form.innerHTML = '<div style="font-size:13px;font-weight:800;color:var(--p);margin-bottom:14px">✍️ 제안 작성</div>'
+    // 착수금 슬라이더 100~400만
+    +'<div style="margin-bottom:14px">'
+      +'<div style="display:flex;justify-content:space-between;font-size:11px;font-weight:600;color:var(--ts);margin-bottom:6px">'
+        +'<span>착수금</span><span id="il-ret-val" style="font-weight:800;color:var(--p)">150만원</span>'
+      +'</div>'
+      +'<input type="range" id="il-ret" min="100" max="400" step="10" value="150" '
+        +'style="width:100%;height:6px;border-radius:3px;outline:none;-webkit-appearance:none;cursor:pointer;background:linear-gradient(to right,var(--p) 25%,var(--bd) 25%);touch-action:pan-x" '
+        +'oninput="var v=this.value;document.getElementById(\'il-ret-val\').textContent=v+\'만원\';var p=(v-100)/300*100;this.style.background=\'linear-gradient(to right,var(--p) \'+p+\'%,var(--bd) \'+p+\'%)\';">'
+      +'<div style="display:flex;justify-content:space-between;font-size:10px;color:var(--ts);margin-top:3px"><span>100만</span><span>400만</span></div>'
+    +'</div>'
+    // 할부 슬라이더 일시불~24개월
+    +'<div style="margin-bottom:14px">'
+      +'<div style="display:flex;justify-content:space-between;font-size:11px;font-weight:600;color:var(--ts);margin-bottom:6px">'
+        +'<span>할부</span><span id="il-inst-val" style="font-weight:800;color:var(--p)">일시불</span>'
+      +'</div>'
+      +'<input type="range" id="il-inst" min="0" max="24" step="3" value="0" '
+        +'style="width:100%;height:6px;border-radius:3px;outline:none;-webkit-appearance:none;cursor:pointer;background:linear-gradient(to right,var(--p) 0%,var(--bd) 0%);touch-action:pan-x" '
+        +'oninput="var v=parseInt(this.value);document.getElementById(\'il-inst-val\').textContent=v===0?\'일시불\':v+\'개월\';var p=v/24*100;this.style.background=\'linear-gradient(to right,var(--p) \'+p+\'%,var(--bd) \'+p+\'%)\';">'
+      +'<div style="display:flex;justify-content:space-between;font-size:10px;color:var(--ts);margin-top:3px"><span>일시불</span><span>24개월</span></div>'
+    +'</div>'
+    // 성공보수 + 승인율 나란히
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">'
+      +'<div>'
+        +'<div style="display:flex;justify-content:space-between;font-size:11px;font-weight:600;color:var(--ts);margin-bottom:6px">'
+          +'<span>성공보수</span><span id="il-suc-val" style="font-weight:800;color:var(--p)">없음</span>'
+        +'</div>'
+        +'<input type="range" id="il-suc" min="0" max="100" step="10" value="0" '
+          +'style="width:100%;height:6px;border-radius:3px;outline:none;-webkit-appearance:none;cursor:pointer;background:linear-gradient(to right,var(--p) 0%,var(--bd) 0%);touch-action:pan-x" '
+          +'oninput="var v=parseInt(this.value);document.getElementById(\'il-suc-val\').textContent=v===0?\'없음\':v+\'만\';var p=v/100*100;this.style.background=\'linear-gradient(to right,var(--p) \'+p+\'%,var(--bd) \'+p+\'%)\';">'
+        +'<div style="display:flex;justify-content:space-between;font-size:10px;color:var(--ts);margin-top:3px"><span>없음</span><span>100만</span></div>'
+      +'</div>'
+      +'<div>'
+        +'<div style="display:flex;justify-content:space-between;font-size:11px;font-weight:600;color:var(--ts);margin-bottom:6px">'
+          +'<span>승인율</span><span id="il-prob-val" style="font-weight:800;color:var(--p)">85%+</span>'
+        +'</div>'
+        +'<input type="range" id="il-prob" min="70" max="99" step="5" value="85" '
+          +'style="width:100%;height:6px;border-radius:3px;outline:none;-webkit-appearance:none;cursor:pointer;background:linear-gradient(to right,var(--p) 50%,var(--bd) 50%);touch-action:pan-x" '
+          +'oninput="var v=this.value;document.getElementById(\'il-prob-val\').textContent=v+\'%+\';var p=(v-70)/29*100;this.style.background=\'linear-gradient(to right,var(--p) \'+p+\'%,var(--bd) \'+p+\'%)\';">'
+        +'<div style="display:flex;justify-content:space-between;font-size:10px;color:var(--ts);margin-top:3px"><span>70%</span><span>99%</span></div>'
+      +'</div>'
     +'</div>'
     +'<div style="font-size:11px;color:var(--ts);margin-bottom:5px;font-weight:600">제안 전략</div>'
     +'<textarea id="il-strategy" class="finput" rows="3" style="resize:none;margin-bottom:12px" placeholder="채무자에게 표시될 전략을 입력하세요."></textarea>'
@@ -3489,15 +3521,6 @@ function attOpenBidForm(caseId){
     +'</div>';
 
   cardEl.appendChild(form);
-
-  // 토글 바인딩
-  ['il-ret','il-inst','il-suc','il-prob'].forEach(function(gid){
-    var g=document.getElementById(gid); if(!g) return;
-    g.querySelectorAll('.tb').forEach(function(b){
-      b.onclick=function(){ g.querySelectorAll('.tb').forEach(function(x){x.classList.remove('on');}); b.classList.add('on'); };
-    });
-  });
-
   form.scrollIntoView({behavior:'smooth',block:'nearest'});
 }
 function attSubmitBid(){
@@ -6273,15 +6296,16 @@ function submitInlineBid() {
 }
 
 function _doInlineBid() {
-  var retEl    = document.querySelector('#il-ret .tb.on');
-  var instEl   = document.querySelector('#il-inst .tb.on');
-  var sucEl    = document.querySelector('#il-suc .tb.on');
-  var probEl   = document.querySelector('#il-prob .tb.on');
+  var retEl    = document.getElementById('il-ret');
+  var instEl   = document.getElementById('il-inst');
+  var sucEl    = document.getElementById('il-suc');
+  var probEl   = document.getElementById('il-prob');
   var strategy = (document.getElementById('il-strategy')||{}).value||'성실히 도와드리겠습니다.';
-  var retainer = retEl  ? parseInt(retEl.dataset.v||'120')  : 120;
-  var install  = instEl ? instEl.dataset.v                  : 'none';
-  var success  = sucEl  ? parseInt(sucEl.dataset.v||'0')    : 0;
-  var prob     = probEl ? parseInt(probEl.dataset.v||'85')  : 85;
+  var retainer = retEl  ? parseInt(retEl.value)  : 150;
+  var instVal  = instEl ? parseInt(instEl.value) : 0;
+  var install  = instVal === 0 ? 'none' : String(instVal);
+  var success  = sucEl  ? parseInt(sucEl.value)  : 0;
+  var prob     = probEl ? parseInt(probEl.value)  : 85;
   var attName  = window.FB_USER
     ? (window.FB_USER.displayName||window.FB_USER.email.split('@')[0])
     : '변호사';
