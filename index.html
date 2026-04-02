@@ -1227,6 +1227,28 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
   </div>
 </div>
 
+<!-- Liferefix 소개 모달 -->
+<div class="ov" id="m-about" onclick="ovClose(event,'m-about')">
+  <div class="modal" style="position:relative">
+    <button class="mclose" onclick="closeM('m-about')">✕</button>
+    <div class="mhandle"></div>
+    <div class="mtitle">🏢 Liferefix 소개</div>
+    <div style="font-size:13px;color:var(--ts);line-height:2">
+      <b style="color:var(--ink);font-size:15px">Liferefix</b>는 AI 기반 채무 분석 및 개인회생 정보 제공 플랫폼입니다.<br><br>
+      <b style="color:var(--ink)">서비스 특징</b><br>
+      • 실제 판결문 데이터 기반 AI 탕감률 분석<br>
+      • 2026년 최저생계비 기준 적용<br>
+      • 검증된 파트너 변호사 조건 열람<br>
+      • 채무자가 직접 변호사를 선택하는 구조<br><br>
+      <b style="color:var(--ink)">법적 안내</b><br>
+      본 서비스는 정보 제공 목적이며 법률 서비스가 아닙니다.<br>
+      AI 분석 결과는 참고용이며 법적 효력이 없습니다.<br><br>
+      <b style="color:var(--ink)">문의</b><br>
+      admin@liferefix.com
+    </div>
+  </div>
+</div>
+
 <!-- 이용약관 모달 -->
 <div class="ov" id="m-terms" onclick="ovClose(event,'m-terms')">
   <div class="modal" style="position:relative">
@@ -1462,6 +1484,38 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
   </div>
 </div>
 
+<!-- 예비 슬롯 구매 모달 -->
+<div class="ov" id="m-extra-slot" onclick="ovClose(event,'m-extra-slot')">
+  <div class="modal" style="position:relative">
+    <button class="mclose" onclick="closeM('m-extra-slot')">✕</button>
+    <div class="mhandle"></div>
+    <div style="text-align:center;margin-bottom:16px">
+      <div style="font-size:36px;margin-bottom:8px">⚡</div>
+      <div style="font-size:17px;font-weight:900;margin-bottom:6px">슬롯이 모두 소진됐어요</div>
+      <div style="font-size:13px;color:var(--ts);line-height:1.8">
+        현재 진행 중인 비딩이 <b id="slot-occupied-cnt" style="color:var(--p)">10</b>건으로<br>
+        모든 슬롯이 점유된 상태입니다.
+      </div>
+    </div>
+    <div style="background:var(--bg);border-radius:var(--rad);padding:16px;margin-bottom:16px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div style="font-size:13px;font-weight:800">예비 슬롯 1개</div>
+        <div style="font-size:16px;font-weight:900;color:var(--p)">20,000원</div>
+      </div>
+      <div style="font-size:12px;color:var(--ts);line-height:1.7">
+        ✅ 즉시 이 사건에 입찰 가능<br>
+        ✅ 입찰 실패 시 슬롯 자동 반환<br>
+        ✅ 1회성 사용 (월 쿼터와 별도)
+      </div>
+    </div>
+    <div style="background:#FFF3E0;border-radius:10px;padding:12px;margin-bottom:16px;font-size:12px;color:#7A3500">
+      💡 슬롯이 반환되는 경우: 의뢰인 미열람(24시간) · 의뢰인 거절 · 48시간 만료
+    </div>
+    <button class="btn p" onclick="purchaseExtraSlot()" style="margin-bottom:8px">⚡ 예비 슬롯 구매 (20,000원)</button>
+    <button class="btn o" onclick="closeM('m-extra-slot')">나중에 하기</button>
+  </div>
+</div>
+
 <!-- 변호사 입점 신청 화면 -->
 <div class="scr" id="s-att-apply">
   <div style="min-height:100vh;background:var(--bg);padding-bottom:80px">
@@ -1686,7 +1740,7 @@ import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,
          sendPasswordResetEmail, EmailAuthProvider, reauthenticateWithCredential, updatePassword }
   from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
 import { getFirestore, collection, addDoc, getDocs, doc, updateDoc,
-         deleteDoc, setDoc, getDoc, query, orderBy, onSnapshot, serverTimestamp, arrayUnion }
+         deleteDoc, setDoc, getDoc, query, orderBy, onSnapshot, serverTimestamp, arrayUnion, increment }
   from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -2110,6 +2164,7 @@ window.submitBidFirebase = async function(bidData) {
 
 // ── Firestore 사건별 비딩 조회 ───────────────────────────
 // Firestore 함수 window 노출 (관리자 포털용)
+window.FB_FUNCS_INCREMENT = increment;
 window.FB_FUNCS = {
   collection: collection,
   addDoc: addDoc,
@@ -3166,6 +3221,17 @@ function updateAttStats(){
     }).catch(function(){});
   }
 }
+// 이름 마스킹: 홍길동 → 홍**
+function maskName(name) {
+  if(!name||name.length<1) return '익명';
+  return name.charAt(0) + '*'.repeat(Math.max(1,name.length-1));
+}
+// 전화번호 마스킹: 010-1234-5678 → 010-****-5678
+function maskPhone(phone) {
+  if(!phone) return '번호 비공개';
+  return phone.replace(/(\d{3})-?(\d{3,4})-?(\d{4})/, '$1-****-$3');
+}
+
 function renderAttCaseList(cases) {
   console.log('[att] renderAttCaseList - 표시할 사건:', cases.length);
   var el = document.getElementById('att-case-list'); if(!el) return;
@@ -3269,39 +3335,49 @@ function renderAttCaseList(cases) {
       btn = '<button class="att-bid-btn" data-cid="'+c.id+'" style="font-size:12px;font-weight:700;color:#fff;background:var(--p);border:none;padding:7px 14px;border-radius:20px;cursor:pointer;font-family:inherit;flex-shrink:0;white-space:nowrap">제안 작성</button>';
     }
 
-    return '<div style="background:#fff;border-radius:var(--rad);padding:14px 16px;border:1px solid var(--bd);margin-bottom:12px;border-left:4px solid '+(isClosed?'#ccc':s.c)+';opacity:'+(isClosed?'0.75':'1')+'">'
-      // 헤더
-      +'<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">'
-      +'<div style="flex:1">'
-      +'<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:4px">'
-      +'<span style="font-size:11px;font-weight:800;color:var(--p)">'+c.id+'</span>'
-      +'<span style="font-size:11px;font-weight:700;background:'+(isClosed?'#F0F0F0':'var(--pl)')+';color:'+(isClosed?'var(--ts)':s.c)+';padding:2px 8px;border-radius:20px">'+(isClosed?'마감':s.l)+'</span>'
-      +(c.proc?'<span style="font-size:11px;font-weight:800;background:'+(c.proc==='개인파산'?'#FFF3E0':'var(--pl)')+';color:'+(c.proc==='개인파산'?'#7A3500':'var(--p)')+';padding:2px 8px;border-radius:20px;margin-left:4px">'+c.proc+'</span>':'')
-      +(c.dtype?'<span style="font-size:11px;background:#FFF3E0;color:#7A3500;padding:2px 8px;border-radius:20px">'+c.dtype+'</span>':'')
-      +(c.age?'<span style="font-size:11px;background:#F0F4FF;color:var(--p);padding:2px 8px;border-radius:20px;margin-left:3px">'+c.age+'</span>':'')
-      +(c.minor&&c.minor!=='없음'?'<span style="font-size:11px;background:#F0FFF4;color:#005945;padding:2px 8px;border-radius:20px;margin-left:3px">미성년 '+c.minor+'</span>':'')
-      +(c.prev==='네'?'<span style="font-size:11px;background:#FFF0F0;color:var(--r);padding:2px 8px;border-radius:20px;margin-left:3px">⚠️ 면책이력</span>':'')
+    var maskedName  = maskName(c.userName || c.userEmail || '');
+    var maskedPhone = maskPhone(c.userPhone || '');
+    var detailId = 'case-detail-'+c.id;
+
+    return '<div style="background:#fff;border-radius:var(--rad);border:1px solid var(--bd);margin-bottom:8px;border-left:4px solid '+(isClosed?'#ccc':s.c)+';opacity:'+(isClosed?'0.75':'1')+';overflow:hidden">'
+      // ── 한줄 요약 (클릭으로 펼침) ──
+      +'<div onclick="toggleCaseCard(\''+c.id+'\')" style="padding:11px 14px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:8px">'
+        +'<div style="flex:1;min-width:0;display:flex;align-items:center;gap:8px;flex-wrap:wrap">'
+          +(isClosed?'<span style="font-size:11px;font-weight:700;color:var(--ts)">마감</span>':'')
+          +'<span style="font-size:13px;font-weight:700">'+maskedName+'</span>'
+          +'<span style="font-size:12px;color:var(--ts)">'+maskedPhone+'</span>'
+          +(timerStr&&!isClosed?'<span style="font-size:11px;color:var(--o);font-weight:700">'+timerStr+'</span>':'')
+        +'</div>'
+        +'<div style="display:flex;align-items:center;gap:6px;flex-shrink:0">'
+          +'<span style="font-size:12px;font-weight:800;color:'+barColor+'">'+bidCnt+'/'+MAX_BIDS+'</span>'
+          +'<span style="font-size:18px;color:var(--ts);transition:transform .2s" id="arr-'+c.id+'">›</span>'
+        +'</div>'
       +'</div>'
-      +'<div style="font-size:15px;font-weight:700">'+(c.dtype||'')+'</div>'
-      +'<div style="font-size:12px;color:var(--ts);margin-top:1px">'+(c.region||'')+' · '+(c.userName||c.userEmail||'채무자')+'</div>'
-      +(c.memo?'<div style="font-size:12px;color:var(--ts);margin-top:3px">📝 '+c.memo+'</div>':'')
-      +(timerStr?'<div style="font-size:11px;color:var(--o);margin-top:3px;font-weight:600">'+timerStr+'</div>':'')
+      // ── 상세 (접힌 상태) ──
+      +'<div id="'+detailId+'" style="display:none;border-top:1px solid var(--bd);padding:12px 14px">'
+        // 뱃지
+        +'<div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-bottom:10px">'
+          +(c.proc?'<span style="font-size:11px;font-weight:800;background:'+(c.proc==='개인파산'?'#FFF3E0':'var(--pl)')+';color:'+(c.proc==='개인파산'?'#7A3500':'var(--p)')+';padding:2px 7px;border-radius:20px">'+c.proc+'</span>':'')
+          +(c.dtype?'<span style="font-size:11px;background:#FFF3E0;color:#7A3500;padding:2px 7px;border-radius:20px">'+c.dtype+'</span>':'')
+          +(c.age?'<span style="font-size:11px;background:#F0F4FF;color:var(--p);padding:2px 7px;border-radius:20px">'+c.age+'</span>':'')
+          +(c.region?'<span style="font-size:11px;background:#F5F5F5;color:var(--ts);padding:2px 7px;border-radius:20px">'+c.region+'</span>':'')
+          +(c.prev==='네'?'<span style="font-size:11px;background:#FFF0F0;color:var(--r);padding:2px 7px;border-radius:20px">⚠️면책이력</span>':'')
+        +'</div>'
+        // 입찰바
+        +'<div style="margin-bottom:12px">'
+          +'<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--ts);margin-bottom:4px">'
+            +'<span>입찰 현황</span><span style="font-weight:700;color:'+barColor+'">'+bidCnt+'/'+MAX_BIDS+'명'+(isFull?' 마감':'')+'</span>'
+          +'</div>'
+          +'<div style="height:6px;border-radius:3px;background:var(--bd);overflow:hidden">'
+            +'<div style="width:'+barPct+'%;height:100%;border-radius:3px;background:'+barColor+'"></div>'
+          +'</div>'
+        +'</div>'
+        // 진단 상세
+        +diagHtml
+        +(c.memo?'<div style="font-size:12px;color:var(--ts);background:var(--bg);border-radius:8px;padding:8px 10px;margin-bottom:10px">📝 '+c.memo+'</div>':'')
+        +'<div>'+btn+'</div>'
       +'</div>'
-      +btn
-      +'</div>'
-      // 진단 정보
-      +diagHtml
-      // 입찰 현황
-      +'<div style="margin-top:8px">'
-      +'<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--ts);margin-bottom:4px">'
-      +'<span>입찰 현황</span>'
-      +'<span style="font-weight:700;color:'+barColor+'">'+bidCnt+'/'+MAX_BIDS+'명'+(isFull?' 마감':'')+'</span>'
-      +'</div>'
-      +'<div style="height:6px;border-radius:3px;background:var(--bd);overflow:hidden">'
-      +'<div style="width:'+barPct+'%;height:100%;border-radius:3px;background:'+barColor+'"></div>'
-      +'</div>'
-      +'</div>'
-      +'</div>';
+    +'</div>';
   }).join('');
 }
 
@@ -3427,16 +3503,82 @@ function attOpenBidForm(caseId){
 function attSubmitBid(){
   if(!attBidId){toast('사건을 먼저 선택해주세요.');switchAttTab('cases');return;}
 
-  // 동시 진행 비딩 5건 제한 체크
-  if(window.FB_DB && window.FB_FUNCS && window.FB_USER) {
-    var MAX_CONCURRENT = 5;
-    var myIds = window._cachedMyBidCaseIds || [];
-    var activeCount = myIds.filter(function(id){ return id.indexOf('SMPL')<0; }).length;
-    if(activeCount >= MAX_CONCURRENT) {
-      toast('⚠️ 동시 진행 비딩은 최대 '+MAX_CONCURRENT+'건까지 가능합니다. 현재 '+activeCount+'건 진행 중.');
+  if(!window.FB_DB || !window.FB_FUNCS || !window.FB_USER) {
+    _doAttSubmitBid(); return;
+  }
+
+  // 슬롯 + 월 쿼터 통합 체크
+  window.FB_FUNCS.getDoc(
+    window.FB_FUNCS.doc(window.FB_DB,'users',window.FB_USER.uid)
+  ).then(function(uSnap){
+    var ud = uSnap.exists() ? uSnap.data() : {};
+    var plan       = ud.plan || 'standard';
+    var MAX_SLOTS  = plan === 'premium' ? 20 : 10;   // 기본 슬롯
+    var MAX_QUOTA  = plan === 'premium' ? 10 : 5;    // 월 수임 쿼터
+    var extraBids  = ud.extraBids  || 0;
+    var totalSlots = MAX_SLOTS + extraBids;
+
+    // 월별 수임 쿼터 체크 (이번 달 수임 건수)
+    var now = new Date();
+    var thisMonth = now.getFullYear()+'-'+(now.getMonth()+1);
+    var monthHired = ud.monthHired || {};
+    var hiredThisMonth = monthHired[thisMonth] || 0;
+
+    if(hiredThisMonth >= MAX_QUOTA) {
+      toast('⚠️ 이번 달 수임 쿼터('+MAX_QUOTA+'건)를 모두 소진했습니다. 추가 수임권을 구매해주세요.');
+      switchAttTab('pay');
       return;
     }
+
+    // 활성 슬롯 수 체크 (OCCUPIED 상태)
+    var myIds = window._cachedMyBidCaseIds || [];
+    var activeCount = myIds.filter(function(id){ return id.indexOf('SMPL')<0; }).length;
+
+    if(activeCount >= totalSlots) {
+      // 슬롯 소진 → 예비 슬롯 구매 팝업
+      var cntEl = document.getElementById('slot-occupied-cnt');
+      if(cntEl) cntEl.textContent = activeCount;
+      window._pendingBidCaseId = attBidId; // 구매 후 이어서 진행
+      openM('m-extra-slot');
+      return;
+    }
+
+    // 슬롯 여유 있음 → 일반 비딩 진행
+    _checkAndSubmitBid();
+  }).catch(function(){ _checkAndSubmitBid(); });
+}
+
+function _checkAndSubmitBid(){
+  if(!attBidId){toast('사건을 먼저 선택해주세요.');return;}
+  // 입찰 제한 체크 (Firestore에서 현재 사건 조회)
+  if(window.FB_DB && window.FB_FUNCS) {
+    window.FB_FUNCS.getDoc(
+      window.FB_FUNCS.doc(window.FB_DB,'cases',attBidId)
+    ).then(function(snap){
+      if(snap.exists()) {
+        var cData = snap.data();
+        var bidCnt = cData.bidCnt || 0;
+        if(bidCnt >= 7 || cData.status === 'closed') {
+          toast('❌ 이 사건은 입찰이 마감되었습니다.');
+          switchAttTab('cases'); return;
+        }
+        if(cData.createdAt && cData.createdAt.toDate) {
+          var elapsed = Date.now() - cData.createdAt.toDate().getTime();
+          if(elapsed > 48 * 60 * 60 * 1000) {
+            toast('❌ 비딩 시간(48시간)이 만료되었습니다.');
+            _recoverBidToken(attBidId);
+            switchAttTab('cases'); return;
+          }
+        }
+      }
+      _doAttSubmitBid();
+    }).catch(function(){ _doAttSubmitBid(); });
+  } else {
+    _doAttSubmitBid();
   }
+}
+
+function _UNUSED_old_check(){  // 기존 코드 보관용
 
   // 입찰 제한 체크 (Firestore에서 현재 사건 조회)
   if(window.FB_DB && window.FB_FUNCS) {
@@ -4521,9 +4663,91 @@ function doSignup() {
   if(window._doSignup){ window._doSignup(); return; }
   toast('Firebase 로딩 중입니다. 잠시 후 다시 시도해주세요.');
 }
+// ── 슬롯 시스템 ──────────────────────────────────────────
+
+// 예비 슬롯 구매
+function purchaseExtraSlot() {
+  if(!window.FB_USER || !window.FB_DB || !window.FB_FUNCS) {
+    toast('로그인이 필요합니다.'); return;
+  }
+  closeM('m-extra-slot');
+
+  // 결제 처리 (실제 결제 연동 전까지는 Firestore에 기록)
+  window.FB_FUNCS.addDoc(
+    window.FB_FUNCS.collection(window.FB_DB,'payments'),
+    {
+      uid:       window.FB_USER.uid,
+      type:      'extra_slot',
+      amount:    20000,
+      status:    'pending',
+      createdAt: window.FB_FUNCS.serverTimestamp()
+    }
+  ).then(function(){
+    // extraBids +1
+    return window.FB_FUNCS.updateDoc(
+      window.FB_FUNCS.doc(window.FB_DB,'users',window.FB_USER.uid),
+      { extraBids: (window.FB_FUNCS.increment || function(n){ return n; })(1) }
+    );
+  }).then(function(){
+    toast('✅ 예비 슬롯 1개가 추가됐습니다! 이제 입찰하세요.');
+    // 이어서 비딩 진행
+    if(window._pendingBidCaseId) {
+      attBidId = window._pendingBidCaseId;
+      window._pendingBidCaseId = null;
+      setTimeout(function(){ _checkAndSubmitBid(); }, 500);
+    }
+  }).catch(function(e){ toast('오류: '+e.message); });
+}
+window.purchaseExtraSlot = purchaseExtraSlot;
+
+// 수임 확정 시 월별 카운트 업데이트
+function updateMonthlyHired(uid) {
+  if(!uid || !window.FB_DB || !window.FB_FUNCS) return;
+  var now = new Date();
+  var key = 'monthHired.' + now.getFullYear()+'-'+(now.getMonth()+1);
+  var update = {};
+  update[key] = window.FB_FUNCS.increment ? window.FB_FUNCS.increment(1) : 1;
+  window.FB_FUNCS.updateDoc(
+    window.FB_FUNCS.doc(window.FB_DB,'users',uid), update
+  ).catch(function(){});
+}
+window.updateMonthlyHired = updateMonthlyHired;
+
 // ── 비밀번호 관리 ──────────────────────────────────────────
 
 // 관리자: 특정 회원 비밀번호 초기화 메일 발송
+function changePassword() {
+  var cur   = (document.getElementById('pw-current')||{}).value||'';
+  var nw    = (document.getElementById('pw-new')||{}).value||'';
+  var nw2   = (document.getElementById('pw-new2')||{}).value||'';
+  var errEl = document.getElementById('pw-err');
+  if(!cur||!nw||!nw2) {
+    if(errEl){errEl.style.display='block';errEl.textContent='모든 항목을 입력해주세요.';} return;
+  }
+  if(nw.length<6) {
+    if(errEl){errEl.style.display='block';errEl.textContent='새 비밀번호는 6자 이상이어야 합니다.';} return;
+  }
+  if(nw!==nw2) {
+    if(errEl){errEl.style.display='block';errEl.textContent='새 비밀번호가 일치하지 않습니다.';} return;
+  }
+  if(!window.FB_USER){toast('로그인이 필요합니다.');return;}
+  if(errEl) errEl.style.display='none';
+  var authFuncs=window.FB_AUTH_FUNCS; var fbAuth=window.FB_AUTH;
+  if(!authFuncs||!fbAuth){toast('인증 모듈 오류');return;}
+  var cred=authFuncs.EmailAuthProvider.credential(window.FB_USER.email,cur);
+  authFuncs.reauthenticateWithCredential(window.FB_USER,cred).then(function(){
+    return authFuncs.updatePassword(window.FB_USER,nw);
+  }).then(function(){
+    toast('✅ 비밀번호가 변경되었습니다!');
+    ['pw-current','pw-new','pw-new2'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});
+  }).catch(function(e){
+    var msg=e.code==='auth/wrong-password'?'현재 비밀번호가 올바르지 않습니다.':
+            e.code==='auth/requires-recent-login'?'보안상 재로그인 후 다시 시도해주세요.':e.message;
+    if(errEl){errEl.style.display='block';errEl.textContent=msg;}
+  });
+}
+window.changePassword=changePassword;
+
 function admResetPassword() {
   var email = (document.getElementById('adm-reset-email')||{}).value||'';
   var errEl = document.getElementById('adm-reset-err');
@@ -5747,6 +5971,7 @@ function confirmHire(selId) {
     var uname2 = sel.userName || '채무자';
     if(phone2) {
       setTimeout(function(){
+        if(window.updateMonthlyHired) updateMonthlyHired(window.FB_USER.uid);
         toast('✅ 수임 확정! ' + uname2 + '님 연락처: ' + phone2);
       }, 500);
     } else {
@@ -6774,6 +6999,16 @@ window.toast=toast; window.enterAttorney=enterAttorney; window.enterAdmin=enterA
 window.attDoLogin=attDoLogin; window.switchAttTab=switchAttTab;
 window.attOpenBidForm=attOpenBidForm; window.attSubmitBid=attSubmitBid;
 window.updateAttStats=updateAttStats; window.renderAttCases=renderAttCases;
+
+function toggleCaseCard(caseId) {
+  var detail = document.getElementById('case-detail-'+caseId);
+  var arrow  = document.getElementById('arr-'+caseId);
+  if(!detail) return;
+  var isOpen = detail.style.display !== 'none';
+  detail.style.display = isOpen ? 'none' : 'block';
+  if(arrow) arrow.style.transform = isOpen ? '' : 'rotate(90deg)';
+}
+window.toggleCaseCard = toggleCaseCard;
 
 // ── 결제 페이지 ──────────────────────────────────────────
 
