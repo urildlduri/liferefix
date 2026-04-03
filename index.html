@@ -3218,34 +3218,39 @@ function updateAttStats(){
     window.FB_FUNCS.getDocs(window.FB_FUNCS.collection(window.FB_DB,'cases')),
     window.FB_FUNCS.getDocs(window.FB_FUNCS.collection(window.FB_DB,'selections'))
   ]).then(function(res){
-    // 내가 제안한 사건 ID 캐시 업데이트
+    // 전체 bid 중 내 것 필터
     var myBids = res[0].docs
       .map(function(d){ return Object.assign({id:d.id},d.data()); })
       .filter(function(b){ return (b.attId===uid||b.attEmail===email) && b.caseId && b.caseId.indexOf('SMPL')<0; });
-    var myIds = myBids
+
+    // active 상태 bid만 (취소/거절 제외)
+    var myActiveBids = myBids.filter(function(b){
+      return b.status==='active' || !b.status;
+    });
+    var myActiveIds = myActiveBids
       .map(function(b){ return b.caseId; })
       .filter(function(id,i,a){ return a.indexOf(id)===i; });
-    window._cachedMyBidCaseIds = myIds;
-    // bid ID 맵 캐시 (caseId → bidId)
-    window._attBidMap = {};
-    myBids.forEach(function(b){ window._attBidMap[b.caseId] = b.id; });
 
-    // 사건 카운트
+    // 모든 bid caseId (취소 포함) - 캐시는 active만
+    window._cachedMyBidCaseIds = myActiveIds;
+    window._attBidMap = {};
+    myActiveBids.forEach(function(b){ window._attBidMap[b.caseId] = b.id; });
+
+    // 신규사건: status=new + 내가 active 비딩 안한 것 + 48시간 이내
     var all = res[1].docs.map(function(d){ return Object.assign({id:d.id},d.data()); });
     var nw  = all.filter(function(c){
       if(c.status!=='new') return false;
-      if(myIds.indexOf(c.id)>-1) return false;
+      if(myActiveIds.indexOf(c.id)>-1) return false; // 내가 active 비딩 중인 사건 제외
       if(c.id.indexOf('SMPL')>-1) return false;
-      // 48시간 체크
       if(c.createdAt && c.createdAt.toDate) {
         if(Date.now() - c.createdAt.toDate().getTime() > 48*60*60*1000) return false;
       }
       return true;
     }).length;
-    // 내가 비딩 중인 사건 수 (active bid가 있는 사건)
-    var bd  = myIds.length;
 
-    // 수임중 카운트 (selections에서 내 것 중 confirmed + ongoing)
+    // 비딩중: active 상태 bid 사건 수
+    var bd = myActiveIds.length;
+
     var mySelections = res[2].docs
       .map(function(d){ return d.data(); })
       .filter(function(s){ return s.attId===uid||s.attEmail===email; });
@@ -3833,37 +3838,58 @@ function switchAdmTab(t){
   window.scrollTo(0,0);
 }
 function admRefresh(){
-  // Firestore에서 사건 수 가져오기
   if(window.FB_DB && window.FB_FUNCS) {
-    window.FB_FUNCS.getDocs(window.FB_FUNCS.collection(window.FB_DB,'cases'))
-      .then(function(snap){
-        var cases = snap.docs.map(function(d){ return Object.assign({id:d.id},d.data()); });
-        var total = cases.length;
-        var bidC = cases.filter(function(c){ return c.status==='bid'; }).length;
-        var el = document.getElementById('adm-total');
-        if(el) el.textContent = total;
-        el = document.getElementById('adm-bid-cnt');
-        if(el) el.textContent = bidC;
-        // 최근 활동
-        var acts = cases.slice(0,3).map(function(c){
-          return '📋 사건 등록 '+c.id+' · '+(c.dtype||'-')+' · '+(c.region||'-');
-        });
-        var recEl = document.getElementById('adm-recent');
-        if(recEl) recEl.innerHTML = acts.length
-          ? acts.map(function(a){ return '<div class="card" style="font-size:13px;color:var(--ts);padding:11px 14px;margin-bottom:8px">'+a+'</div>'; }).join('')
-          : '<div class="card" style="font-size:13px;color:var(--ts)">활동 내역 없음</div>';
-        // 공지
-        var noticeEl = document.getElementById('adm-notice');
-        if(noticeEl) noticeEl.innerHTML = total>0 ? '📋 총 <b>'+total+'건</b> 사건' : '✅ 특이 사항 없음';
-      }).catch(function(){});
+    // cases + bids + selections 동시 조회
+    Promise.all([
+      window.FB_FUNCS.getDocs(window.FB_FUNCS.collection(window.FB_DB,'cases')),
+      window.FB_FUNCS.getDocs(window.FB_FUNCS.collection(window.FB_DB,'bids')),
+      window.FB_FUNCS.getDocs(window.FB_FUNCS.collection(window.FB_DB,'selections'))
+    ]).then(function(res){
+      var cases = res[0].docs.map(function(d){ return Object.assign({id:d.id},d.data()); });
+      var bids  = res[1].docs.map(function(d){ return d.data(); });
+      var sels  = res[2].docs.map(function(d){ return d.data(); });
+
+      var total    = cases.length;
+      // 비딩 진행중: active bid가 있는 사건 수
+      var activeBidCaseIds = [...new Set(bids.filter(function(b){ return b.status==='active'; }).map(function(b){ return b.caseId; }))];
+      var bidC     = activeBidCaseIds.length;
+      // 수임중: confirmed 상태 selections
+      var hiredC   = sels.filter(function(s){ return (s.status==='confirmed'||s.confirmed) && s.caseStatus!=='done'; }).length;
+
+      var el = document.getElementById('adm-total');
+      if(el) el.textContent = total;
+      el = document.getElementById('adm-bid-cnt');
+      if(el) el.textContent = bidC;
+      el = document.getElementById('adm-hired-cnt');
+      if(el) el.textContent = hiredC;
+
+      // 최근 활동 (최신순)
+      var sorted = cases.slice().sort(function(a,b){
+        var ta = a.createdAt&&a.createdAt.toDate?a.createdAt.toDate().getTime():0;
+        var tb = b.createdAt&&b.createdAt.toDate?b.createdAt.toDate().getTime():0;
+        return tb-ta;
+      });
+      var acts = sorted.slice(0,5).map(function(c){
+        return '📋 '+c.id+' · '+(c.dtype||'-')+' · '+(c.region||'-')+' · '+(c.status==='new'?'신규':c.status==='bid'?'비딩중':c.status==='hired'?'수임중':'완료');
+      });
+      var recEl = document.getElementById('adm-recent');
+      if(recEl) recEl.innerHTML = acts.length
+        ? acts.map(function(a){ return '<div class="card" style="font-size:13px;color:var(--ts);padding:11px 14px;margin-bottom:8px">'+a+'</div>'; }).join('')
+        : '<div class="card" style="font-size:13px;color:var(--ts)">활동 내역 없음</div>';
+
+      // 공지
+      var noticeEl = document.getElementById('adm-notice');
+      if(noticeEl) noticeEl.innerHTML = total>0 ? '📋 총 <b>'+total+'건</b> 사건 · 비딩중 <b>'+bidC+'건</b> · 수임중 <b>'+hiredC+'건</b>' : '✅ 특이 사항 없음';
+
+    }).catch(function(e){ console.error('admRefresh 오류:', e); });
 
     // 입점 신청 대기
     window.FB_FUNCS.getDocs(window.FB_FUNCS.collection(window.FB_DB,'att_applications'))
       .then(function(snap){
         var pendApps = snap.docs.filter(function(d){ return d.data().status==='pending'; });
-        var noticeEl = document.getElementById('adm-notice');
-        if(noticeEl && pendApps.length > 0) {
-          noticeEl.innerHTML = '🔔 변호사 입점 신청 <b>'+pendApps.length+'건</b> 승인 대기';
+        if(pendApps.length > 0) {
+          var noticeEl = document.getElementById('adm-notice');
+          if(noticeEl) noticeEl.innerHTML = '🔔 변호사 입점 신청 <b>'+pendApps.length+'건</b> 승인 대기';
         }
       }).catch(function(){});
   }
@@ -6584,27 +6610,50 @@ function loadAllActiveCases() {
   if(!el) return;
   el.innerHTML = '<div style="text-align:center;padding:16px;color:var(--ts);font-size:13px">불러오는 중...</div>';
 
+  if(!window.FB_USER) {
+    el.innerHTML = '<div style="text-align:center;padding:30px;color:var(--ts)">로그인 후 이용하세요.</div>';
+    return;
+  }
+
   if(!window.FB_DB || !window.FB_FUNCS) {
-    // localStorage fallback
     renderAllActiveCases(DB.getCases());
     return;
   }
 
-  window.FB_FUNCS.getDocs(
-    window.FB_FUNCS.collection(window.FB_DB, 'cases')
-  ).then(function(snap){
-    var cases = snap.docs
+  var uid   = window.FB_USER.uid;
+  var email = window.FB_USER.email;
+
+  // 내 사건 + bids 동시 조회
+  Promise.all([
+    window.FB_FUNCS.getDocs(window.FB_FUNCS.collection(window.FB_DB,'cases')),
+    window.FB_FUNCS.getDocs(window.FB_FUNCS.collection(window.FB_DB,'bids'))
+  ]).then(function(res){
+    var cases = res[0].docs
       .map(function(d){ return Object.assign({id:d.id}, d.data()); })
-      .filter(function(c){ return c.status !== 'closed' && c.id.indexOf('SMPL-')<0; })
+      .filter(function(c){
+        return (c.userId===uid || c.userEmail===email) &&
+               c.status !== 'closed' &&
+               c.id.indexOf('SMPL-') < 0;
+      })
       .sort(function(a,b){
         var ta=a.createdAt&&a.createdAt.toDate?a.createdAt.toDate().getTime():0;
         var tb=b.createdAt&&b.createdAt.toDate?b.createdAt.toDate().getTime():0;
         return tb-ta;
       });
-    // localStorage 사건도 병합
-    DB.getCases().forEach(function(c){
-      if(!cases.find(function(x){return x.id===c.id;})) cases.push(c);
+
+    // 각 사건별 실제 bid 수 반영
+    var bids = res[1].docs.map(function(d){ return d.data(); });
+    cases.forEach(function(c){
+      var activeBids = bids.filter(function(b){ return b.caseId===c.id && b.status==='active'; });
+      c.bidCnt = activeBids.length;
     });
+
+    // localStorage 사건도 병합
+    DB.getCases().filter(function(c){ return c.userId===uid||c.userEmail===email; })
+      .forEach(function(c){
+        if(!cases.find(function(x){return x.id===c.id;})) cases.push(c);
+      });
+
     _allActiveCases = cases;
     renderAllActiveCases(cases);
   }).catch(function(){
@@ -6676,12 +6725,15 @@ function renderAllActiveCases(cases) {
       +diagStr
       +timerStr
       +'</div>'
-      +'<span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;background:'+s.bg+';color:'+s.c+';flex-shrink:0;margin-left:8px">'+s.l+'</span>'
+      +'<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;margin-left:8px">'
+        +'<span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;background:'+s.bg+';color:'+s.c+'">'+s.l+'</span>'
+        +((c.bidCnt||0)>0?'<span style="font-size:13px;font-weight:900;color:var(--a)">📬 '+(c.bidCnt||0)+'건</span>':'')
+      +'</div>'
       +'</div>'
       +bidBar
-      +(c.status==='bid'
-        ? '<button class="my-go-bids-btn" style="width:100%;margin-top:10px;padding:9px;background:var(--a);color:#fff;border:none;border-radius:var(--rads);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">📬 받은 제안 보기</button>'
-        : '')
+      +((c.bidCnt||0)>0
+        ? '<button class="my-go-bids-btn" style="width:100%;margin-top:10px;padding:10px;background:var(--a);color:#fff;border:none;border-radius:var(--rads);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">📬 제안 '+(c.bidCnt||0)+'건 확인하기 →</button>'
+        : (c.status==='new'?'<div style="font-size:12px;color:var(--ts);margin-top:8px;text-align:center">변호사 제안 대기 중...</div>':''))
       +'</div>';
   }).join('');
 }
