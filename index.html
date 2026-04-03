@@ -1539,13 +1539,26 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
       </div>
 
       <!-- 신청 폼 -->
-      <div style="font-size:16px;font-weight:800;margin-bottom:16px">신청 정보 입력</div>
+      <div style="font-size:16px;font-weight:800;margin-bottom:16px">📋 이력서 작성</div>
+
+      <!-- 프로필 사진 -->
+      <div style="text-align:center;margin-bottom:20px">
+        <div id="att-photo-preview" style="width:90px;height:90px;border-radius:50%;background:var(--pl);border:3px solid var(--p);margin:0 auto 10px;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:32px">⚖️</div>
+        <label style="cursor:pointer;font-size:13px;font-weight:700;color:var(--p)">
+          📷 프로필 사진 업로드
+          <input type="file" id="att-apply-photo" accept="image/*" style="display:none" onchange="previewAttPhoto(this)">
+        </label>
+        <div style="font-size:11px;color:var(--ts);margin-top:4px">JPG/PNG, 1MB 이하 권장</div>
+      </div>
 
       <span class="flabel">이름 *</span>
       <input type="text" class="finput" id="att-apply-name" placeholder="홍길동">
 
       <span class="flabel">소속 법무법인/사무소 *</span>
       <input type="text" class="finput" id="att-apply-firm" placeholder="법무법인 OO">
+
+      <span class="flabel">변호사 등록번호 *</span>
+      <input type="text" class="finput" id="att-apply-regnum" placeholder="예: 제12345호">
 
       <span class="flabel">경력 연수 *</span>
       <div class="tg" id="g-att-career">
@@ -1575,9 +1588,6 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
         <button class="tb" onclick="sel(this,'g-att-region')">전국</button>
       </div>
 
-      <span class="flabel">변호사 등록번호 *</span>
-      <input type="text" class="finput" id="att-apply-regnum" placeholder="예: 제12345호">
-
       <span class="flabel">사무소 주소 *</span>
       <input type="text" class="finput" id="att-apply-addr" placeholder="예: 서울 서초구 서초대로 OO">
 
@@ -1603,14 +1613,20 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
         <button class="tb" onclick="sel(this,'g-att-capacity')">제한 없음</button>
       </div>
 
+      <span class="flabel">수임 성공 건수 (선택)</span>
+      <input type="number" class="finput" id="att-apply-successes" placeholder="개인회생 수임 완료 건수 (예: 150)">
+
       <span class="flabel">연락처 (이메일) *</span>
       <input type="email" class="finput" id="att-apply-email" placeholder="lawyer@example.com">
 
       <span class="flabel">홈페이지/블로그 URL (선택)</span>
       <input type="text" class="finput" id="att-apply-url" placeholder="예: https://blog.naver.com/...">
 
-      <span class="flabel">수임 성공 건수 (선택)</span>
-      <input type="number" class="finput" id="att-apply-successes" placeholder="개인회생 수임 완료 건수 (예: 150)">
+      <span class="flabel">학력 (선택)</span>
+      <input type="text" class="finput" id="att-apply-edu" placeholder="예: OO대학교 법학과 졸업">
+
+      <span class="flabel">주요 경력 (선택)</span>
+      <textarea class="finput" id="att-apply-career-detail" rows="3" placeholder="예: 법무법인 OO 2019~2022&#10;개인회생 전담팀 근무 등"></textarea>
 
       <span class="flabel">자기소개 *</span>
       <textarea class="finput" id="att-apply-intro" rows="4" placeholder="채무자에게 표시될 소개를 입력해주세요. (전문 분야, 처리 방식, 강점 등)"></textarea>
@@ -1631,7 +1647,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
       <button class="btn p" onclick="submitAttApply()">🎯 파트너 신청하기</button>
       <div style="font-size:12px;color:var(--ts);text-align:center;margin-top:12px;line-height:1.7">
         신청 후 관리자 검토(1~2 영업일) 완료 시 승인 이메일이 발송됩니다.<br>
-        문의: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="d2b3b6bfbbbc92bebbb4b7a0b7b4bbaafcb1bdbf">[email&#160;protected]</a>
+        문의: admin@liferefix.com
       </div>
     </div>
   </div>
@@ -2853,11 +2869,59 @@ function attCard(a,isTop){
 }
 function openAtt(id){
   var a=ATTS.find(function(x){return x.id===id;});if(!a)return;
-  var total=a.retainer+a.success_fee;
-  document.getElementById('m-att-body').innerHTML='<div style="display:flex;align-items:center;gap:13px;margin-bottom:15px"><div class="av" style="width:52px;height:52px;font-size:20px">'+a.name[0]+'</div><div><div style="font-size:17px;font-weight:800">'+a.name+' 변호사</div><div style="font-size:13px;color:var(--ts)">'+a.firm+' · '+a.region+' · 경력 '+a.career+'년</div></div></div><div class="alert ok" style="margin-bottom:13px">✅ 개인회생 승인율 <b>'+a.rate+'%</b></div><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:15px"><div style="background:var(--pl);border-radius:10px;padding:12px;text-align:center"><div style="font-size:11px;color:var(--ts);margin-bottom:3px">착수금</div><div style="font-size:18px;font-weight:800;color:var(--p)">'+a.retainer+'만</div></div><div style="background:var(--al);border-radius:10px;padding:12px;text-align:center"><div style="font-size:11px;color:var(--ts);margin-bottom:3px">성공보수</div><div style="font-size:18px;font-weight:800;color:var(--a)">'+(a.success_fee>0?a.success_fee+'만':'없음')+'</div></div><div style="background:#FFF3E0;border-radius:10px;padding:12px;text-align:center"><div style="font-size:11px;color:var(--ts);margin-bottom:3px">총 비용</div><div style="font-size:18px;font-weight:800;color:#E65100">'+total+'만</div></div></div><div style="font-size:14px;font-weight:700;margin-bottom:7px">💬 제안 전략</div><div style="font-size:13.5px;color:var(--ts);line-height:1.75;background:var(--bg);border-radius:10px;padding:13px;margin-bottom:13px">'+a.strategy+'</div><button class="btn p" onclick="closeM(\'m-att\');toast(\'📞 '+a.name+' 변호사에게 상담 신청했습니다!\')">📞 '+(a.free?'무료 ':'')+'상담 신청하기</button>'
-  +(a.phone?'<a href="tel:'+a.phone+'" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;margin-top:8px;background:#F0FAF7;border:1px solid #B2DFDB;border-radius:var(--rads);text-decoration:none;cursor:pointer"><span style="font-size:18px">📞</span><span style="font-size:15px;font-weight:800;color:var(--p)">'+a.phone+'</span><span style="font-size:12px;color:#005945;margin-left:2px">바로 전화하기</span></a>':'')
-  +'';
-  openM('m-att');
+
+  // Firestore에서 최신 이력서 데이터 로드
+  function renderAttResume(data) {
+    var total = (data.retainer||0) + (data.success_fee||0);
+    var photoHtml = data.photo
+      ? '<img src="'+data.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">'
+      : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:900;color:var(--p);background:var(--pl);border-radius:50%">'+(data.name||'?').charAt(0)+'</div>';
+
+    document.getElementById('m-att-body').innerHTML =
+      // 프로필 헤더
+      '<div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">'
+        +'<div style="width:64px;height:64px;flex-shrink:0;border-radius:50%;overflow:hidden;border:2px solid var(--p)">'+photoHtml+'</div>'
+        +'<div>'
+          +'<div style="font-size:17px;font-weight:900">'+(data.name||'')+' 변호사</div>'
+          +'<div style="font-size:12px;color:var(--ts);margin-top:2px">'+(data.firm||'')+' · '+(data.region||'')+' · 경력 '+(data.career||'-')+'</div>'
+          +(data.regnum?'<div style="font-size:11px;color:var(--ts);margin-top:2px">등록번호 '+data.regnum+'</div>':'')
+        +'</div>'
+      +'</div>'
+      // 승인율 배지
+      +'<div class="alert ok" style="margin-bottom:12px">✅ 개인회생 예상 승인율 <b>'+(data.rate||data.prob||85)+'%</b> · 수임 성공 <b>'+(data.successes||0)+'건</b></div>'
+      // 비용 카드
+      +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px">'
+        +'<div style="background:var(--pl);border-radius:10px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--ts);margin-bottom:3px">착수금</div><div style="font-size:16px;font-weight:800;color:var(--p)">'+(data.retainer||0)+'만</div></div>'
+        +'<div style="background:var(--al);border-radius:10px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--ts);margin-bottom:3px">성공보수</div><div style="font-size:16px;font-weight:800;color:var(--a)">'+(data.success_fee>0?data.success_fee+'만':'없음')+'</div></div>'
+        +'<div style="background:#FFF3E0;border-radius:10px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--ts);margin-bottom:3px">총 비용</div><div style="font-size:16px;font-weight:800;color:#E65100">'+total+'만</div></div>'
+      +'</div>'
+      // 학력/경력
+      +(data.edu?'<div style="font-size:12px;font-weight:700;margin-bottom:4px">🎓 학력</div><div style="font-size:12px;color:var(--ts);background:var(--bg);border-radius:8px;padding:10px;margin-bottom:12px">'+data.edu+'</div>':'')
+      +(data.careerDetail?'<div style="font-size:12px;font-weight:700;margin-bottom:4px">💼 주요 경력</div><div style="font-size:12px;color:var(--ts);background:var(--bg);border-radius:8px;padding:10px;margin-bottom:12px;white-space:pre-line">'+data.careerDetail+'</div>':'')
+      // 전문분야
+      +'<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">'
+        +(data.type?'<span style="font-size:11px;background:var(--pl);color:var(--p);padding:3px 9px;border-radius:20px;font-weight:700">'+data.type+'</span>':'')
+        +(data.addr?'<span style="font-size:11px;background:#F5F5F5;color:var(--ts);padding:3px 9px;border-radius:20px">📍 '+data.addr+'</span>':'')
+        +(data.url?'<a href="'+data.url+'" target="_blank" style="font-size:11px;background:#F0F4FF;color:var(--p);padding:3px 9px;border-radius:20px;text-decoration:none">🔗 홈페이지</a>':'')
+      +'</div>'
+      // 자기소개
+      +(data.bio||data.intro?'<div style="font-size:12px;font-weight:700;margin-bottom:4px">💬 자기소개</div><div style="font-size:13px;color:var(--ts);line-height:1.8;background:var(--bg);border-radius:10px;padding:13px;margin-bottom:14px">'+(data.bio||data.intro||'')+'</div>':'')
+      // 버튼
+      +'<button class="btn p" onclick="closeM(\'m-att\');document.querySelector(\'.go-bid-btn\')&&document.querySelector(\'.go-bid-btn\').click()">📋 이 변호사에게 제안 받기</button>'
+      +(data.phone?'<a href="tel:'+data.phone+'" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;margin-top:8px;background:#F0FAF7;border:1px solid #B2DFDB;border-radius:var(--rads);text-decoration:none"><span style="font-size:15px;font-weight:800;color:var(--p)">📞 '+data.phone+'</span><span style="font-size:12px;color:#005945">바로 전화하기</span></a>':'');
+    openM('m-att');
+  }
+
+  // Firestore에서 최신 이력서 시도, 실패 시 로컬 ATTS 데이터 사용
+  if(window.FB_DB && window.FB_FUNCS && a.uid) {
+    window.FB_FUNCS.getDoc(window.FB_FUNCS.doc(window.FB_DB,'users',a.uid))
+      .then(function(snap){
+        var data = snap.exists() ? Object.assign({},a,snap.data()) : a;
+        renderAttResume(data);
+      }).catch(function(){ renderAttResume(a); });
+  } else {
+    renderAttResume(a);
+  }
 }
 function toggleCmp(id){
   var idx=cmpList.indexOf(id);
@@ -3472,52 +3536,30 @@ function attOpenBidForm(caseId){
   form.setAttribute('data-case', caseId);
   form.style.cssText = 'margin-top:12px;background:var(--bg);border-radius:var(--rad);padding:14px;border:2px solid var(--p)';
   form.innerHTML = '<div style="font-size:13px;font-weight:800;color:var(--p);margin-bottom:14px">✍️ 제안 작성</div>'
-    // 착수금 슬라이더 100~400만
-    +'<div style="margin-bottom:14px">'
-      +'<div style="display:flex;justify-content:space-between;font-size:11px;font-weight:600;color:var(--ts);margin-bottom:6px">'
-        +'<span>착수금</span><span id="il-ret-val" style="font-weight:800;color:var(--p)">150만원</span>'
-      +'</div>'
-      +'<input type="range" id="il-ret" min="100" max="400" step="10" value="150" '
-        +'style="width:100%;height:6px;border-radius:3px;outline:none;-webkit-appearance:none;cursor:pointer;background:linear-gradient(to right,var(--p) 25%,var(--bd) 25%);touch-action:pan-x" '
-        +'oninput="var v=this.value;document.getElementById(\'il-ret-val\').textContent=v+\'만원\';var p=(v-100)/300*100;this.style.background=\'linear-gradient(to right,var(--p) \'+p+\'%,var(--bd) \'+p+\'%)\';">'
-      +'<div style="display:flex;justify-content:space-between;font-size:10px;color:var(--ts);margin-top:3px"><span>100만</span><span>400만</span></div>'
-    +'</div>'
-    // 할부 슬라이더 일시불~24개월
-    +'<div style="margin-bottom:14px">'
-      +'<div style="display:flex;justify-content:space-between;font-size:11px;font-weight:600;color:var(--ts);margin-bottom:6px">'
-        +'<span>할부</span><span id="il-inst-val" style="font-weight:800;color:var(--p)">일시불</span>'
-      +'</div>'
-      +'<input type="range" id="il-inst" min="0" max="24" step="3" value="0" '
-        +'style="width:100%;height:6px;border-radius:3px;outline:none;-webkit-appearance:none;cursor:pointer;background:linear-gradient(to right,var(--p) 0%,var(--bd) 0%);touch-action:pan-x" '
-        +'oninput="var v=parseInt(this.value);document.getElementById(\'il-inst-val\').textContent=v===0?\'일시불\':v+\'개월\';var p=v/24*100;this.style.background=\'linear-gradient(to right,var(--p) \'+p+\'%,var(--bd) \'+p+\'%)\';">'
-      +'<div style="display:flex;justify-content:space-between;font-size:10px;color:var(--ts);margin-top:3px"><span>일시불</span><span>24개월</span></div>'
-    +'</div>'
-    // 성공보수 + 승인율 나란히
-    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">'
+    // 착수금 직접 입력
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">'
       +'<div>'
-        +'<div style="display:flex;justify-content:space-between;font-size:11px;font-weight:600;color:var(--ts);margin-bottom:6px">'
-          +'<span>성공보수</span><span id="il-suc-val" style="font-weight:800;color:var(--p)">없음</span>'
-        +'</div>'
-        +'<input type="range" id="il-suc" min="0" max="100" step="10" value="0" '
-          +'style="width:100%;height:6px;border-radius:3px;outline:none;-webkit-appearance:none;cursor:pointer;background:linear-gradient(to right,var(--p) 0%,var(--bd) 0%);touch-action:pan-x" '
-          +'oninput="var v=parseInt(this.value);document.getElementById(\'il-suc-val\').textContent=v===0?\'없음\':v+\'만\';var p=v/100*100;this.style.background=\'linear-gradient(to right,var(--p) \'+p+\'%,var(--bd) \'+p+\'%)\';">'
-        +'<div style="display:flex;justify-content:space-between;font-size:10px;color:var(--ts);margin-top:3px"><span>없음</span><span>100만</span></div>'
+        +'<div style="font-size:11px;font-weight:700;color:var(--ts);margin-bottom:5px">착수금 (만원) *</div>'
+        +'<input type="number" id="il-ret" class="finput" style="margin-bottom:0" placeholder="예: 150" min="0" max="2000" value="150">'
       +'</div>'
       +'<div>'
-        +'<div style="display:flex;justify-content:space-between;font-size:11px;font-weight:600;color:var(--ts);margin-bottom:6px">'
-          +'<span>승인율</span><span id="il-prob-val" style="font-weight:800;color:var(--p)">85%+</span>'
-        +'</div>'
-        +'<input type="range" id="il-prob" min="70" max="99" step="5" value="85" '
-          +'style="width:100%;height:6px;border-radius:3px;outline:none;-webkit-appearance:none;cursor:pointer;background:linear-gradient(to right,var(--p) 50%,var(--bd) 50%);touch-action:pan-x" '
-          +'oninput="var v=this.value;document.getElementById(\'il-prob-val\').textContent=v+\'%+\';var p=(v-70)/29*100;this.style.background=\'linear-gradient(to right,var(--p) \'+p+\'%,var(--bd) \'+p+\'%)\';">'
-        +'<div style="display:flex;justify-content:space-between;font-size:10px;color:var(--ts);margin-top:3px"><span>70%</span><span>99%</span></div>'
+        +'<div style="font-size:11px;font-weight:700;color:var(--ts);margin-bottom:5px">할부 개월 (0=일시불)</div>'
+        +'<input type="number" id="il-inst" class="finput" style="margin-bottom:0" placeholder="예: 0" min="0" max="36" value="0">'
+      +'</div>'
+      +'<div>'
+        +'<div style="font-size:11px;font-weight:700;color:var(--ts);margin-bottom:5px">성공보수 (만원)</div>'
+        +'<input type="number" id="il-suc" class="finput" style="margin-bottom:0" placeholder="예: 0" min="0" max="500" value="0">'
+      +'</div>'
+      +'<div>'
+        +'<div style="font-size:11px;font-weight:700;color:var(--ts);margin-bottom:5px">예상 승인율 (%)</div>'
+        +'<input type="number" id="il-prob" class="finput" style="margin-bottom:0" placeholder="예: 85" min="50" max="99" value="85">'
       +'</div>'
     +'</div>'
-    +'<div style="font-size:11px;color:var(--ts);margin-bottom:5px;font-weight:600">제안 전략</div>'
-    +'<textarea id="il-strategy" class="finput" rows="3" style="resize:none;margin-bottom:12px" placeholder="채무자에게 표시될 전략을 입력하세요."></textarea>'
+    +'<div style="font-size:11px;font-weight:700;color:var(--ts);margin-bottom:5px">제안 전략 *</div>'
+    +'<textarea id="il-strategy" class="finput" rows="3" style="resize:none;margin-bottom:12px" placeholder="채무자에게 표시될 전략 및 처리 방식을 입력하세요."></textarea>'
     +'<div style="display:flex;gap:8px">'
-    +'<button class="il-submit-btn" style="flex:1;padding:12px;background:var(--p);color:#fff;border:none;border-radius:var(--rads);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">🎯 제안 제출</button>'
-    +'<button class="il-cancel-btn" style="padding:12px 16px;background:#fff;color:var(--ts);border:1px solid var(--bd);border-radius:var(--rads);font-size:13px;cursor:pointer;font-family:inherit">취소</button>'
+      +'<button class="il-submit-btn" style="flex:1;padding:12px;background:var(--p);color:#fff;border:none;border-radius:var(--rads);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">🎯 제안 제출</button>'
+      +'<button class="il-cancel-btn" style="padding:12px 16px;background:#fff;color:var(--ts);border:1px solid var(--bd);border-radius:var(--rads);font-size:13px;cursor:pointer;font-family:inherit">취소</button>'
     +'</div>';
 
   cardEl.appendChild(form);
@@ -6300,12 +6342,16 @@ function _doInlineBid() {
   var instEl   = document.getElementById('il-inst');
   var sucEl    = document.getElementById('il-suc');
   var probEl   = document.getElementById('il-prob');
-  var strategy = (document.getElementById('il-strategy')||{}).value||'성실히 도와드리겠습니다.';
-  var retainer = retEl  ? parseInt(retEl.value)  : 150;
-  var instVal  = instEl ? parseInt(instEl.value) : 0;
+  var strategy = (document.getElementById('il-strategy')||{}).value||'';
+  var retainer = retEl  ? (parseInt(retEl.value)||0)  : 150;
+  var instVal  = instEl ? (parseInt(instEl.value)||0)  : 0;
   var install  = instVal === 0 ? 'none' : String(instVal);
-  var success  = sucEl  ? parseInt(sucEl.value)  : 0;
-  var prob     = probEl ? parseInt(probEl.value)  : 85;
+  var success  = sucEl  ? (parseInt(sucEl.value)||0)   : 0;
+  var prob     = probEl ? (parseInt(probEl.value)||85)  : 85;
+
+  if(!retainer || retainer < 1) { toast('착수금을 입력해주세요.'); return; }
+  if(!strategy.trim()) { toast('제안 전략을 입력해주세요.'); return; }
+
   var attName  = window.FB_USER
     ? (window.FB_USER.displayName||window.FB_USER.email.split('@')[0])
     : '변호사';
@@ -6947,6 +6993,9 @@ function submitAttApply() {
   var email    = (document.getElementById('att-apply-email')||{}).value||'';
   var url      = (document.getElementById('att-apply-url')||{}).value||'';
   var successes= (document.getElementById('att-apply-successes')||{}).value||'';
+  var edu      = (document.getElementById('att-apply-edu')||{}).value||'';
+  var careerDetail = (document.getElementById('att-apply-career-detail')||{}).value||'';
+  var photo    = window._attPhotoBase64 || '';
   var bio      = (document.getElementById('att-apply-intro')||{}).value||'';
   var agree    = document.getElementById('att-apply-agree');
   var careerEl = document.querySelector('#g-att-career .tb.on');
@@ -6979,6 +7028,9 @@ function submitAttApply() {
     mobile:     mobile,
     url:        url,
     successes:  parseInt(successes)||0,
+    edu:        edu,
+    careerDetail: careerDetail,
+    photo:      photo,
     career:     careerEl ? careerEl.textContent.trim() : '',
     type:       typeEl   ? typeEl.textContent.trim()   : '',
     region:     regionEl ? regionEl.textContent.trim() : '',
@@ -7313,6 +7365,23 @@ window.loadMyBids=loadMyBids;
 window.renderMyBidList=renderMyBidList; window.loadMyProgressInfo=loadMyProgressInfo;
 window.openSelectAttModal=openSelectAttModal; window.confirmSelectAtt=confirmSelectAtt;
 // 수익/결제
+
+// 변호사 프로필 사진 미리보기
+function previewAttPhoto(input) {
+  if(!input.files || !input.files[0]) return;
+  var file = input.files[0];
+  if(file.size > 2 * 1024 * 1024) { toast('사진 용량이 너무 큽니다. 2MB 이하로 올려주세요.'); return; }
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var preview = document.getElementById('att-photo-preview');
+    if(preview) {
+      preview.innerHTML = '<img src="'+e.target.result+'" style="width:100%;height:100%;object-fit:cover">';
+      window._attPhotoBase64 = e.target.result;
+    }
+  };
+  reader.readAsDataURL(file);
+}
+window.previewAttPhoto = previewAttPhoto;
 
 function openAttApply() {
   if(!window.FB_USER) {
