@@ -3219,12 +3219,16 @@ function updateAttStats(){
     window.FB_FUNCS.getDocs(window.FB_FUNCS.collection(window.FB_DB,'selections'))
   ]).then(function(res){
     // 내가 제안한 사건 ID 캐시 업데이트
-    var myIds = res[0].docs
-      .map(function(d){ return d.data(); })
-      .filter(function(b){ return (b.attId===uid||b.attEmail===email) && b.caseId && b.caseId.indexOf('SMPL')<0; })
+    var myBids = res[0].docs
+      .map(function(d){ return Object.assign({id:d.id},d.data()); })
+      .filter(function(b){ return (b.attId===uid||b.attEmail===email) && b.caseId && b.caseId.indexOf('SMPL')<0; });
+    var myIds = myBids
       .map(function(b){ return b.caseId; })
       .filter(function(id,i,a){ return a.indexOf(id)===i; });
     window._cachedMyBidCaseIds = myIds;
+    // bid ID 맵 캐시 (caseId → bidId)
+    window._attBidMap = {};
+    myBids.forEach(function(b){ window._attBidMap[b.caseId] = b.id; });
 
     // 사건 카운트
     var all = res[1].docs.map(function(d){ return Object.assign({id:d.id},d.data()); });
@@ -3382,19 +3386,29 @@ function renderAttCaseList(cases) {
     }
 
     // 버튼
-    // 내가 이미 제안한 사건인지 확인 (localStorage bids)
+    // 내가 이미 제안한 사건인지 확인 (localStorage + Firestore 캐시)
+    var myBidIds = window._cachedMyBidCaseIds || [];
     var myBid = DB.getBids().find(function(b){
       return b.caseId===c.id && (
         b.attId===( window.FB_USER?window.FB_USER.uid:'' ) ||
         b.attEmail===( window.FB_USER?window.FB_USER.email:'' )
       );
     });
+    var myBidFromCache = myBidIds.indexOf(c.id) > -1;
+    var hasBid = myBid || myBidFromCache;
+
+    // Firestore bid ID 찾기 (제안 취소용)
+    var myBidId = myBid ? myBid.id : '';
+    if(!myBidId && window._attBidMap) myBidId = window._attBidMap[c.id] || '';
 
     var btn;
     if(isClosed) {
       btn = '<div style="padding:10px 14px;background:#F5F5F5;border-top:1px solid var(--bd);text-align:center;font-size:12px;font-weight:700;color:var(--ts)">🔒 입찰 마감</div>';
-    } else if(myBid) {
-      btn = '<div style="padding:10px 14px;background:var(--al);border-top:1px solid var(--bd);text-align:center;font-size:12px;font-weight:700;color:#005945">✅ 제안 완료</div>';
+    } else if(hasBid) {
+      btn = '<div style="display:flex;border-top:1px solid var(--bd)">'
+        +'<div style="flex:1;padding:10px 14px;background:var(--al);text-align:center;font-size:12px;font-weight:700;color:#005945">✅ 제안 완료</div>'
+        +'<button class="att-cancel-bid-btn" data-cid="'+c.id+'" data-bid="'+myBidId+'" style="padding:10px 16px;background:#fff;color:var(--r);border:none;border-left:1px solid var(--bd);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">취소</button>'
+        +'</div>';
     } else {
       btn = '<button class="att-bid-btn" data-cid="'+c.id+'" style="display:block;width:100%;padding:13px;background:var(--p);color:#fff;border:none;border-top:1px solid var(--bd);font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;text-align:center">✍️ 제안 작성하기</button>';
     }
@@ -4562,6 +4576,7 @@ document.addEventListener('click',function(e){
 
   // 변호사 포털
   if(t.classList.contains('att-bid-btn'))      { attOpenBidForm(t.dataset.cid); }
+  if(t.classList.contains('att-cancel-bid-btn')){ attCancelBid(t.dataset.bid, t.dataset.cid); }
   if(t.classList.contains('il-submit-btn'))    { submitInlineBid(); }
   if(t.classList.contains('il-cancel-btn'))    { var f=document.getElementById('inline-bid-form'); if(f) f.remove(); }
   if(t.classList.contains('att-confirm-btn'))  { confirmHire(t.dataset.sid); }
@@ -5407,49 +5422,11 @@ function renderMyBidList(bids) {
   listEl.innerHTML = activeBids.map(function(b){
     var installStr = !b.install||b.install==='none' ? '일시불' : b.install+'개월 할부';
     var probStr = b.prob ? b.prob+'% 이상' : '-';
-    return '<div style="background:#fff;border-radius:var(--rad);padding:16px;border:1px solid var(--bd);margin-bottom:12px;box-shadow:var(--shs)">'
-      // 변호사 정보
-      +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">'
-      +'<div style="width:42px;height:42px;border-radius:50%;background:var(--pl);color:var(--p);font-size:16px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0">'+(b.attName?b.attName.charAt(0):'변')+'</div>'
-      +'<div>'
-      +'<div style="font-size:14px;font-weight:700">'+(b.attName||'변호사')+'</div>'
-      +'<div style="font-size:12px;color:var(--ts)">사건: '+b.caseId+'</div>'
-      +'<div style="font-size:11px;color:var(--ts)">'+(b.at||'-')+'</div>'
-      +'</div>'
-      +'</div>'
-      // 제안 내용
-      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">'
-      +'<div style="background:var(--pl);border-radius:8px;padding:10px;text-align:center">'
-        +'<div style="font-size:10px;color:var(--ts)">착수금</div>'
-        +'<div style="font-size:16px;font-weight:800;color:var(--p)">'+(b.retainer||'-')+'만원</div>'
-        +'<div style="font-size:11px;color:var(--ts)">'+installStr+'</div>'
-      +'</div>'
-      +'<div style="background:var(--al);border-radius:8px;padding:10px;text-align:center">'
-        +'<div style="font-size:10px;color:var(--ts)">성공보수</div>'
-        +'<div style="font-size:16px;font-weight:800;color:var(--a)">'+(b.success>0?b.success+'만원':'없음')+'</div>'
-        +'<div style="font-size:11px;color:var(--ts)">승인율 '+probStr+'</div>'
-      +'</div>'
-      +'</div>'
-      // 전략
-      +(b.strategy?'<div style="font-size:13px;color:var(--ts);line-height:1.65;background:var(--bg);border-radius:8px;padding:10px;margin-bottom:12px">'+b.strategy+'</div>':'')
-      // 선택 버튼
-      +'<button class="my-select-bid-btn" '
-      +'data-bid="'+b.id+'" '
-      +'data-email="'+(b.attEmail||'')+'" '
-      +'data-name="'+(b.attName||'')+'" '
-      +'data-cid="'+(b.caseId||'')+'" '
-      +'data-attid="'+(b.attId||'')+'" '
-      +'data-retainer="'+(b.retainer||0)+'" '
-      +'data-install="'+(b.install||'none')+'" '
-      +'data-success="'+(b.success||0)+'" '
-      +'data-prob="'+(b.prob||0)+'" '
-      +'data-strategy="'+(b.strategy||'').replace(/"/g,'&quot;')+'" '
-      +' style="width:100%;padding:12px;background:var(--p);color:#fff;border:none;border-radius:var(--rads);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">✅ 이 변호사 선택하기</button>'
+    return '<div style="background:#fff;border-radius:var(--rad);padding:16px;border:1px solid var(--bd);margin-bottom:12px;box-shadow:var(--shs)">'      // 변호사 정보 - 이름 클릭시 이력서      +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">'      +'<div style="width:42px;height:42px;border-radius:50%;background:var(--pl);color:var(--p);font-size:16px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0">'+(b.attName?b.attName.charAt(0):'변')+'</div>'      +'<div style="flex:1">'      +'<div onclick="openAttResume(\''+b.attId+'\',\''+b.attName+'\',\''+b.attEmail+'\')" style="font-size:14px;font-weight:700;color:var(--p);cursor:pointer;text-decoration:underline">'+(b.attName||'변호사')+' 변호사 ›</div>'      +'<div style="font-size:12px;color:var(--ts)">사건: '+b.caseId+'</div>'      +'<div style="font-size:11px;color:var(--ts)">'+(b.at||'-')+'</div>'      +'</div>'      +'</div>'      // 제안 내용      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">'      +'<div style="background:var(--pl);border-radius:8px;padding:10px;text-align:center">'        +'<div style="font-size:10px;color:var(--ts)">착수금</div>'        +'<div style="font-size:16px;font-weight:800;color:var(--p)">'+(b.retainer||'-')+'만원</div>'        +'<div style="font-size:11px;color:var(--ts)">'+installStr+'</div>'      +'</div>'      +'<div style="background:var(--al);border-radius:8px;padding:10px;text-align:center">'        +'<div style="font-size:10px;color:var(--ts)">성공보수</div>'        +'<div style="font-size:16px;font-weight:800;color:var(--a)">'+(b.success>0?b.success+'만원':'없음')+'</div>'        +'<div style="font-size:11px;color:var(--ts)">승인율 '+probStr+'</div>'      +'</div>'      +'</div>'      // 전략      +(b.strategy?'<div style="font-size:13px;color:var(--ts);line-height:1.65;background:var(--bg);border-radius:8px;padding:10px;margin-bottom:12px">'+b.strategy+'</div>':'')      // 선택+거절 버튼      +'<div style="display:flex;gap:8px">'      +'<button class="my-select-bid-btn" '      +'data-bid="'+b.id+'" '      +'data-email="'+(b.attEmail||'')+'" '      +'data-name="'+(b.attName||'')+'" '      +'data-cid="'+(b.caseId||'')+'" '      +'data-attid="'+(b.attId||'')+'" '      +'data-retainer="'+(b.retainer||0)+'" '      +'data-install="'+(b.install||'none')+'" '      +'data-success="'+(b.success||0)+'" '      +'data-prob="'+(b.prob||0)+'" '      +'data-strategy="'+(b.strategy||'').replace(/"/g,'&quot;')+'" '      +' style="flex:1;padding:12px;background:var(--p);color:#fff;border:none;border-radius:var(--rads);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">✅ 선택하기</button>'      +'<button onclick="cancelBid(\''+b.id+'\',\''+b.caseId+'\')" style="padding:12px 14px;background:#fff;color:var(--r);border:1.5px solid var(--r);border-radius:var(--rads);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">거절</button>'      +'</div>'
       +'</div>';
   }).join('');
 }
 
-window.initMyDash   = initMyDash;
 window.switchMyTab  = switchMyTab;
 
 // 면책완료 정보 로드
@@ -7085,6 +7062,109 @@ function toggleCaseCard(caseId) {
   if(arrow) arrow.style.transform = isOpen ? '' : 'rotate(90deg)';
 }
 window.toggleCaseCard = toggleCaseCard;
+
+// 채무자가 변호사 이름 클릭 시 이력서 모달
+function openAttResume(attId, attName, attEmail) {
+  var bodyEl = document.getElementById('m-att-body');
+  if(!bodyEl) return;
+  bodyEl.innerHTML = '<div style="text-align:center;padding:30px;color:var(--ts)">🔄 불러오는 중...</div>';
+  openM('m-att');
+
+  function renderResume(data) {
+    var photoHtml = data.photo
+      ? '<img src="'+data.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">'
+      : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:900;color:var(--p);background:var(--pl);border-radius:50%">'+(data.name||attName||'?').charAt(0)+'</div>';
+    bodyEl.innerHTML =
+      '<div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">'
+        +'<div style="width:64px;height:64px;flex-shrink:0;border-radius:50%;overflow:hidden;border:2px solid var(--p)">'+photoHtml+'</div>'
+        +'<div>'
+          +'<div style="font-size:17px;font-weight:900">'+(data.name||attName||'')+' 변호사</div>'
+          +'<div style="font-size:12px;color:var(--ts);margin-top:2px">'+(data.firm||'')+' · '+(data.region||'')+' · 경력 '+(data.career||'-')+'</div>'
+          +(data.regnum?'<div style="font-size:11px;color:var(--ts);margin-top:2px">등록번호 '+data.regnum+'</div>':'')
+        +'</div>'
+      +'</div>'
+      +'<div class="alert ok" style="margin-bottom:12px">✅ 예상 승인율 <b>'+(data.rate||data.prob||85)+'%</b> · 수임 성공 <b>'+(data.successes||0)+'건</b></div>'
+      +(data.edu?'<div style="font-size:12px;font-weight:700;margin-bottom:4px">🎓 학력</div><div style="font-size:12px;color:var(--ts);background:var(--bg);border-radius:8px;padding:10px;margin-bottom:12px">'+data.edu+'</div>':'')
+      +(data.careerDetail?'<div style="font-size:12px;font-weight:700;margin-bottom:4px">💼 주요 경력</div><div style="font-size:12px;color:var(--ts);background:var(--bg);border-radius:8px;padding:10px;margin-bottom:12px;white-space:pre-line">'+data.careerDetail+'</div>':'')
+      +'<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">'
+        +(data.type?'<span style="font-size:11px;background:var(--pl);color:var(--p);padding:3px 9px;border-radius:20px;font-weight:700">'+data.type+'</span>':'')
+        +(data.addr?'<span style="font-size:11px;background:#F5F5F5;color:var(--ts);padding:3px 9px;border-radius:20px">📍 '+data.addr+'</span>':'')
+        +(data.url?'<a href="'+data.url+'" target="_blank" style="font-size:11px;background:#F0F4FF;color:var(--p);padding:3px 9px;border-radius:20px;text-decoration:none">🔗 홈페이지</a>':'')
+      +'</div>'
+      +(data.bio||data.intro?'<div style="font-size:12px;font-weight:700;margin-bottom:4px">💬 자기소개</div><div style="font-size:13px;color:var(--ts);line-height:1.8;background:var(--bg);border-radius:10px;padding:13px;margin-bottom:14px">'+(data.bio||data.intro||'')+'</div>':'');
+  }
+
+  if(attId && window.FB_DB && window.FB_FUNCS) {
+    window.FB_FUNCS.getDoc(window.FB_FUNCS.doc(window.FB_DB,'users',attId))
+      .then(function(snap){
+        renderResume(snap.exists() ? snap.data() : {name:attName,email:attEmail});
+      }).catch(function(){ renderResume({name:attName,email:attEmail}); });
+  } else {
+    renderResume({name:attName,email:attEmail});
+  }
+}
+window.openAttResume = openAttResume;
+
+// 변호사 제안 취소
+function attCancelBid(bidId, caseId) {
+  if(!confirm('이 사건의 제안을 취소하시겠습니까?')) return;
+
+  function doCancel(bId) {
+    if(!bId) { toast('제안 ID를 찾을 수 없습니다.'); return; }
+    window.FB_FUNCS.updateDoc(
+      window.FB_FUNCS.doc(window.FB_DB,'bids',bId),
+      { status:'cancelled', cancelledAt: window.FB_FUNCS.serverTimestamp() }
+    ).then(function(){
+      // 캐시에서 제거
+      if(window._cachedMyBidCaseIds) {
+        var idx = window._cachedMyBidCaseIds.indexOf(caseId);
+        if(idx > -1) window._cachedMyBidCaseIds.splice(idx,1);
+      }
+      if(window._attBidMap) delete window._attBidMap[caseId];
+      // 인라인 폼 제거
+      var form = document.getElementById('inline-bid-form');
+      if(form) form.remove();
+      toast('✅ 제안이 취소되었습니다.');
+      if(window.renderAttCases) renderAttCases();
+    }).catch(function(e){ toast('오류: '+e.message); });
+  }
+
+  if(bidId) {
+    doCancel(bidId);
+  } else if(caseId && window.FB_DB && window.FB_FUNCS && window.FB_USER) {
+    // bid ID 없으면 Firestore에서 찾기
+    window.FB_FUNCS.getDocs(window.FB_FUNCS.collection(window.FB_DB,'bids'))
+      .then(function(snap){
+        var myBid = snap.docs.find(function(d){
+          var b = d.data();
+          return b.caseId===caseId && b.attId===window.FB_USER.uid && b.status==='active';
+        });
+        if(myBid) doCancel(myBid.id);
+        else toast('취소할 제안을 찾을 수 없습니다.');
+      }).catch(function(e){ toast('오류: '+e.message); });
+  } else {
+    toast('취소할 제안을 찾을 수 없습니다.');
+  }
+}
+window.attCancelBid = attCancelBid;
+
+// 제안 거절 (채무자)
+function cancelBid(bidId, caseId) {
+  if(!confirm('이 제안을 거절하시겠습니까?')) return;
+  if(window.FB_DB && window.FB_FUNCS && bidId) {
+    window.FB_FUNCS.updateDoc(
+      window.FB_FUNCS.doc(window.FB_DB,'bids',bidId),
+      { status:'rejected', rejectedByUser:true, rejectedAt:window.FB_FUNCS.serverTimestamp() }
+    ).then(function(){
+      toast('제안을 거절했습니다.');
+      loadMyBids();
+    }).catch(function(e){ toast('오류: '+e.message); });
+  } else {
+    toast('제안을 거절했습니다.');
+    loadMyBids();
+  }
+}
+window.cancelBid = cancelBid;
 
 // ── 결제 페이지 ──────────────────────────────────────────
 
