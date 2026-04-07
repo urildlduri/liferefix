@@ -57,11 +57,11 @@
 :root{--p:#6A3DE8;--pd:#5229C4;--pl:#EDE9FF;--a:#00C6A2;--al:#E0FAF5;--r:#FF4B4B;--o:#FF8C00;--t:#0D1B2A;--ts:#5A6E85;--bd:#E2DAFF;--bg:#F5F3FF;--wh:#fff;--rad:18px;--rads:10px;--sh:0 4px 20px rgba(106,61,232,.10);--shs:0 2px 8px rgba(106,61,232,.07)}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 html{font-size:16px;scroll-behavior:smooth}
-body{font-family:'Pretendard',-apple-system,sans-serif;background:var(--bg);color:var(--t);min-height:100vh;min-height:-webkit-fill-available;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+body{font-family:'Pretendard',-apple-system,sans-serif;background:var(--bg);color:var(--t);min-height:100vh;min-height:-webkit-fill-available;overflow-x:hidden;-webkit-font-smoothing:antialiased;-webkit-overflow-scrolling:touch;overscroll-behavior:none}
 .hdr{position:sticky;top:0;z-index:200;height:56px;background:rgba(255,255,255,.96);backdrop-filter:blur(14px);border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;padding:0 20px}
 .logo{font-size:22px;font-weight:900;background:linear-gradient(135deg,var(--p),var(--a));-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:-.5px}
 .hdr-badge{font-size:11px;font-weight:700;background:var(--pl);color:var(--p);padding:4px 10px;border-radius:20px}
-.bnav{position:fixed;bottom:0;left:0;right:0;z-index:200;background:var(--wh);border-top:1px solid var(--bd);display:flex;padding-bottom:env(safe-area-inset-bottom);box-shadow:0 -4px 16px rgba(0,0,0,.06);-webkit-transform:translateZ(0);transform:translateZ(0)}
+.bnav{position:fixed;bottom:0;left:0;right:0;z-index:9999;background:var(--wh);border-top:1px solid var(--bd);display:flex;padding-bottom:env(safe-area-inset-bottom,0px);box-shadow:0 -4px 16px rgba(0,0,0,.06);-webkit-transform:translate3d(0,0,0);transform:translate3d(0,0,0);will-change:transform;-webkit-backface-visibility:hidden;backface-visibility:hidden}
 .ni{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:9px 0 7px;border:none;background:none;color:var(--ts);font-size:10px;font-weight:600;gap:3px;cursor:pointer;font-family:inherit;transition:color .15s}
 .ni svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2}
 .ni.on{color:var(--p)}
@@ -263,7 +263,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
         <div style="font-size:11px;color:rgba(255,255,255,.5)">일부 기능이 제한될 수 있습니다</div>
       </div>
     </div>
-    <div style="font-size:10px;font-weight:700;background:#E91E8C;color:#fff;padding:3px 10px;border-radius:20px">Beta v1.3</div>
+    <div style="font-size:10px;font-weight:700;background:#E91E8C;color:#fff;padding:3px 10px;border-radius:20px">Beta v1.4</div>
   </div>
   <div class="hero">
     <div class="hero-tag">✦ AI 기반 채무 진단</div>
@@ -340,7 +340,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
     </div>
     <div style="font-size:10px;color:rgba(255,255,255,.25);line-height:1.9">
       LIFEREFIX는 법률 자문 또는 중개 서비스를 제공하지 않습니다. 본 서비스는 일반적인 정보 제공을 목적으로 하며, 특정 전문가를 추천하거나 알선하지 않습니다. 모든 의사결정은 이용자 본인의 판단과 책임 하에 이루어집니다.<br><br>
-      © 2026 Liferefix. All rights reserved. Beta v1.3
+      © 2026 Liferefix. All rights reserved. Beta v1.4
     </div>
   </footer>
 </div>
@@ -773,7 +773,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
     </div>
 
     <div style="margin-top:14px;font-size:10px;color:rgba(255,255,255,.3)">
-      © 2026 Liferefix. All rights reserved. Beta v1.3
+      © 2026 Liferefix. All rights reserved. Beta v1.4
     </div>
   </footer>
 
@@ -7745,13 +7745,6 @@ window.go=function(id){
 
 </main>
 
-<nav class="bnav">
-  <button class="ni on" id="n-home" onclick="go('s-home')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>홈</button>
-  <button class="ni" id="n-diag" onclick="go('s-diag')"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>진단</button>
-  <button class="ni" id="n-bid" onclick="go('s-bid')"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>비딩</button>
-  <button class="ni" id="n-info" onclick="go('s-info')"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>안내</button>
-  <button class="ni" id="n-my" onclick="go('s-my')"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>MY</button>
-</nav>
 
 <!-- MODALS -->
 <div class="ov" id="m-att" onclick="ovClose(event,'m-att')"><div class="modal" style="position:relative"><button class="mclose" onclick="closeM('m-att')">✕</button><div class="mhandle"></div><div id="m-att-body"></div></div></div>
