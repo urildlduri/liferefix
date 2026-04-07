@@ -77,7 +77,7 @@ main{padding-bottom:76px}
 .hero-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:14px 28px;background:#fff;color:var(--p);border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;box-shadow:0 8px 24px rgba(0,0,0,.18);transition:transform .15s;font-family:inherit}
 .hero-btn:active{transform:scale(.97)}
 .stats{display:flex;background:var(--wh);border-bottom:1px solid var(--bd)}
-.stat{flex:1;text-align:center;padding:16px 10px;border-right:1px solid var(--bd)}
+.stat{flex:1;text-align:center;padding:12px 6px;border-right:1px solid var(--bd);min-width:0}
 .stat:last-child{border-right:none}
 .stat-n{font-size:19px;font-weight:900;color:var(--p);display:block;line-height:1;margin-bottom:3px}
 .stat-l{font-size:11px;color:var(--ts);font-weight:500}
@@ -263,7 +263,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
         <div style="font-size:11px;color:rgba(255,255,255,.5)">일부 기능이 제한될 수 있습니다</div>
       </div>
     </div>
-    <div style="font-size:10px;font-weight:700;background:#E91E8C;color:#fff;padding:3px 10px;border-radius:20px">Beta v1.1</div>
+    <div style="font-size:10px;font-weight:700;background:#E91E8C;color:#fff;padding:3px 10px;border-radius:20px">Beta v1.3</div>
   </div>
   <div class="hero">
     <div class="hero-tag">✦ AI 기반 채무 진단</div>
@@ -272,9 +272,10 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
     <button class="hero-btn" onclick="go('s-diag')">⚡ 무료 채무 진단 시작하기</button>
   </div>
   <div class="stats">
-    <div class="stat"><span class="stat-n" id="stat-db">97건</span><span class="stat-l">판결문 DB</span></div>
-    <div class="stat"><span class="stat-n">92%</span><span class="stat-l">진단 정확도</span></div>
-    <div class="stat"><span class="stat-n" id="stat-att">모집중</span><span class="stat-l">파트너 변호사</span></div>
+    <div class="stat"><span class="stat-n" id="stat-consult">0건</span><span class="stat-l">누적 상담</span></div>
+    <div class="stat"><span class="stat-n">72%</span><span class="stat-l">평균 채무 감면율</span></div>
+    <div class="stat"><span class="stat-n" id="stat-att">모집중</span><span class="stat-l">전문 변호사</span></div>
+    <div class="stat" style="border-right:none"><span class="stat-n">4.8★</span><span class="stat-l">고객 만족도</span></div>
   </div>
   <div class="notice">⚠️ 진단 결과는 참고용이며 실제 법원 판결을 보장하지 않습니다.</div>
   <div class="sec" style="margin-top:18px">
@@ -339,7 +340,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
     </div>
     <div style="font-size:10px;color:rgba(255,255,255,.25);line-height:1.9">
       LIFEREFIX는 법률 자문 또는 중개 서비스를 제공하지 않습니다. 본 서비스는 일반적인 정보 제공을 목적으로 하며, 특정 전문가를 추천하거나 알선하지 않습니다. 모든 의사결정은 이용자 본인의 판단과 책임 하에 이루어집니다.<br><br>
-      © 2026 Liferefix. All rights reserved. Beta v1.1
+      © 2026 Liferefix. All rights reserved. Beta v1.3
     </div>
   </footer>
 </div>
@@ -541,13 +542,8 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
   <div id="tp-mine" class="bid-content">
     <div style="padding:0">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-        <div style="font-size:15px;font-weight:800">⚖️ 진행중인 사건</div>
-        <div class="tg" id="g-all-cases-filter" style="margin-bottom:0">
-          <button class="tb on" data-f="all" onclick="filterAllCases(this)">전체</button>
-          <button class="tb" data-f="new" onclick="filterAllCases(this)">신규</button>
-          <button class="tb" data-f="bid" onclick="filterAllCases(this)">비딩중</button>
-          <button class="tb" data-f="hired" onclick="filterAllCases(this)">수임</button>
-        </div>
+        <div style="font-size:15px;font-weight:800">📋 신규 사건</div>
+        <div style="font-size:11px;color:var(--ts)" id="bid-case-count"></div>
       </div>
       <div id="tp-mine-case">
         <div style="text-align:center;padding:20px;color:var(--ts);font-size:13px">불러오는 중...</div>
@@ -777,7 +773,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
     </div>
 
     <div style="margin-top:14px;font-size:10px;color:rgba(255,255,255,.3)">
-      © 2026 Liferefix. All rights reserved. Beta v1.1
+      © 2026 Liferefix. All rights reserved. Beta v1.3
     </div>
   </footer>
 
@@ -1788,6 +1784,7 @@ window.FB_READY = true;
 
 // Firebase 준비 완료 → 파트너 변호사 수 즉시 업데이트
 setTimeout(function(){
+  if(window.updateStatConsult) window.updateStatConsult();
   if(window.updateStatAtt) {
     window.updateStatAtt();
   } else {
@@ -2773,6 +2770,18 @@ function sortAtt(s,el){
   if(el)el.classList.add('on');
   renderAtts();
 }
+function updateStatConsult(){
+  if(!window.FB_DB || !window.FB_FUNCS) return;
+  // 누적 상담 = cases 전체 건수
+  window.FB_FUNCS.getDocs(window.FB_FUNCS.collection(window.FB_DB,'cases'))
+    .then(function(snap){
+      var cnt = snap.docs.filter(function(d){ return d.id.indexOf('SMPL-')<0; }).length;
+      var el = document.getElementById('stat-consult');
+      if(el) el.textContent = cnt>0 ? cnt+'건' : '0건';
+    }).catch(function(){});
+}
+window.updateStatConsult = updateStatConsult;
+
 function updateStatAtt(){
   // 파트너 변호사 수만 업데이트 (att-list 없어도 동작)
   if(!window.FB_DB || !window.FB_FUNCS) return;
@@ -6646,55 +6655,60 @@ function loadAllActiveCases() {
   if(!el) return;
   el.innerHTML = '<div style="text-align:center;padding:16px;color:var(--ts);font-size:13px">불러오는 중...</div>';
 
-  if(!window.FB_USER) {
-    el.innerHTML = '<div style="text-align:center;padding:30px;color:var(--ts)">로그인 후 이용하세요.</div>';
-    return;
-  }
-
   if(!window.FB_DB || !window.FB_FUNCS) {
-    renderAllActiveCases(DB.getCases());
+    renderAllActiveCases([]);
     return;
   }
 
-  var uid   = window.FB_USER.uid;
-  var email = window.FB_USER.email;
+  var uid   = window.FB_USER ? window.FB_USER.uid   : null;
+  var email = window.FB_USER ? window.FB_USER.email : null;
 
-  // 내 사건 + bids 동시 조회
+  // cases + bids 동시 조회 (비로그인도 신규사건 목록 표시)
   Promise.all([
     window.FB_FUNCS.getDocs(window.FB_FUNCS.collection(window.FB_DB,'cases')),
     window.FB_FUNCS.getDocs(window.FB_FUNCS.collection(window.FB_DB,'bids'))
   ]).then(function(res){
-    var cases = res[0].docs
-      .map(function(d){ return Object.assign({id:d.id}, d.data()); })
-      .filter(function(c){
+    var allCases = res[0].docs.map(function(d){ return Object.assign({id:d.id}, d.data()); });
+    var bids     = res[1].docs.map(function(d){ return d.data(); });
+
+    var cases;
+    if(uid) {
+      // 로그인: 내 사건만
+      cases = allCases.filter(function(c){
         return (c.userId===uid || c.userEmail===email) &&
                c.status !== 'closed' &&
                c.id.indexOf('SMPL-') < 0;
-      })
-      .sort(function(a,b){
-        var ta=a.createdAt&&a.createdAt.toDate?a.createdAt.toDate().getTime():0;
-        var tb=b.createdAt&&b.createdAt.toDate?b.createdAt.toDate().getTime():0;
-        return tb-ta;
       });
+      // localStorage 병합
+      DB.getCases().filter(function(c){ return c.userId===uid||c.userEmail===email; })
+        .forEach(function(c){ if(!cases.find(function(x){return x.id===c.id;})) cases.push(c); });
+    } else {
+      // 비로그인: 신규(new) 사건 전체 표시 (마스킹)
+      cases = allCases.filter(function(c){
+        return c.status === 'new' && c.id.indexOf('SMPL-') < 0;
+      });
+    }
 
-    // 각 사건별 실제 bid 수 반영
-    var bids = res[1].docs.map(function(d){ return d.data(); });
-    cases.forEach(function(c){
-      var activeBids = bids.filter(function(b){ return b.caseId===c.id && b.status==='active'; });
-      c.bidCnt = activeBids.length;
+    cases = cases.sort(function(a,b){
+      var ta=a.createdAt&&a.createdAt.toDate?a.createdAt.toDate().getTime():0;
+      var tb=b.createdAt&&b.createdAt.toDate?b.createdAt.toDate().getTime():0;
+      return tb-ta;
     });
 
-    // localStorage 사건도 병합
-    DB.getCases().filter(function(c){ return c.userId===uid||c.userEmail===email; })
-      .forEach(function(c){
-        if(!cases.find(function(x){return x.id===c.id;})) cases.push(c);
-      });
+    // 각 사건별 실제 bid 수 반영
+    cases.forEach(function(c){
+      c.bidCnt = bids.filter(function(b){ return b.caseId===c.id && b.status==='active'; }).length;
+    });
+
+    // 건수 표시
+    var cntEl = document.getElementById('bid-case-count');
+    if(cntEl) cntEl.textContent = '총 '+cases.length+'건';
 
     _allActiveCases = cases;
     renderAllActiveCases(cases);
   }).catch(function(){
-    _allActiveCases = DB.getCases();
-    renderAllActiveCases(_allActiveCases);
+    _allActiveCases = [];
+    renderAllActiveCases([]);
   });
 }
 
@@ -6767,9 +6781,11 @@ function renderAllActiveCases(cases) {
       +'</div>'
       +'</div>'
       +bidBar
-      +((c.bidCnt||0)>0
-        ? '<button class="my-go-bids-btn" style="width:100%;margin-top:10px;padding:10px;background:var(--a);color:#fff;border:none;border-radius:var(--rads);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">📬 제안 '+(c.bidCnt||0)+'건 확인하기 →</button>'
-        : (c.status==='new'?'<div style="font-size:12px;color:var(--ts);margin-top:8px;text-align:center">변호사 제안 대기 중...</div>':''))
+      +(window.FB_USER
+        ? ((c.bidCnt||0)>0
+            ? '<button class="my-go-bids-btn" style="width:100%;margin-top:10px;padding:10px;background:var(--a);color:#fff;border:none;border-radius:var(--rads);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">📬 제안 '+(c.bidCnt||0)+'건 확인하기 →</button>'
+            : '<div style="font-size:12px;color:var(--ts);margin-top:8px;text-align:center">변호사 제안 대기 중...</div>')
+        : '<button onclick="openM(&quot;m-login&quot;)" style="width:100%;margin-top:10px;padding:10px;background:var(--p);color:#fff;border:none;border-radius:var(--rads);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">🔑 로그인하고 이 사건에 변호사 제안받기</button>')
       +'</div>';
   }).join('');
 }
@@ -7581,6 +7597,7 @@ window.go=function(id){
   if(id==='s-my'){ loadMyList(); bindStarGroup(); bindReviewSubmit(); }
   if(id==='s-bid'){
     switchTab('mine');
+    if(window.loadAllActiveCases) loadAllActiveCases();
   }
 };
 </script>
