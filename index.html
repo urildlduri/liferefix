@@ -5,7 +5,7 @@
 <link rel="manifest" href="/manifest.json">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230B5FFF'/><text y='72' x='50' font-size='52' font-weight='900' fill='white' text-anchor='middle' font-family='Arial'>LR</text></svg>">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Liferefix — AI 기반 개인회생 변호사 비딩 플랫폼</title>
+<title>Liferefix | AI 채무 진단 &amp; 개인회생 변호사 매칭 플랫폼</title>
 <meta name="description" content="개인회생 탕감률을 AI가 무료로 진단해드립니다. 검증된 변호사들이 직접 제안하는 역경매 시스템으로 합리적인 수임료에 개인회생을 해결하세요.">
 <meta name="keywords" content="개인회생, 개인파산, 개인회생조건, 개인회생비용, 탕감률, 채무탕감, 신용회복, 개인회생상담, 회생가능성, 채무해결, 개인회생절차, 개인회생기간, 개인회생성공률, 개인회생신청방법">
 <meta name="robots" content="index, follow">
@@ -14,15 +14,19 @@
 <!-- Open Graph -->
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://liferefix.com">
-<meta property="og:title" content="Liferefix — AI 개인회생 탕감률 무료 진단">
-<meta property="og:description" content="개인회생 탕감률을 AI가 무료로 진단해드립니다. 검증된 변호사들이 직접 제안하는 역경매 시스템으로 합리적인 수임료에 개인회생을 해결하세요.">
+<meta property="og:title" content="Liferefix | AI 채무 진단 &amp; 개인회생 변호사 매칭">
+<meta property="og:description" content="판결문 81건 AI 분석으로 내 탕감률을 무료 진단. 검증된 변호사가 착수금·승인율 조건을 직접 제안합니다.">
+<meta property="og:image" content="https://liferefix.com/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
 <meta property="og:site_name" content="Liferefix">
 <meta property="og:locale" content="ko_KR">
 
 <!-- Twitter Card -->
-<meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Liferefix — AI 개인회생 탕감률 무료 진단">
-<meta name="twitter:description" content="AI가 무료로 개인회생 가능성을 진단합니다. 변호사 역경매로 수임료 절반 아끼세요.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Liferefix | AI 채무 진단 &amp; 개인회생 변호사 매칭">
+<meta name="twitter:description" content="판결문 81건 AI 분석으로 내 탕감률 무료 진단. 변호사 비딩으로 최저 수임료 비교.">
+<meta name="twitter:image" content="https://liferefix.com/og-image.png">
 
 <!-- Canonical -->
 <link rel="canonical" href="https://liferefix.com">
@@ -70,7 +74,7 @@ main{padding-bottom:76px}
 .hero-tag{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:rgba(255,255,255,.85);background:rgba(255,255,255,.14);padding:5px 12px;border-radius:20px;margin-bottom:16px}
 .hero h1{font-size:27px;font-weight:900;color:#fff;line-height:1.28;letter-spacing:-.5px;margin-bottom:12px}
 .hero p{font-size:14px;color:rgba(255,255,255,.72);line-height:1.65;margin-bottom:26px}
-.hero-btn{width:100%;padding:15px;background:#fff;color:var(--p);border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 8px 24px rgba(0,0,0,.18);transition:transform .15s;font-family:inherit}
+.hero-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:14px 28px;background:#fff;color:var(--p);border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;box-shadow:0 8px 24px rgba(0,0,0,.18);transition:transform .15s;font-family:inherit}
 .hero-btn:active{transform:scale(.97)}
 .stats{display:flex;background:var(--wh);border-bottom:1px solid var(--bd)}
 .stat{flex:1;text-align:center;padding:16px 10px;border-right:1px solid var(--bd)}
@@ -268,9 +272,9 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
     <button class="hero-btn" onclick="go('s-diag')">⚡ 무료 채무 진단 시작하기</button>
   </div>
   <div class="stats">
-    <div class="stat"><span class="stat-n" id="stat-db" style="font-size:13px;color:var(--ts)">업데이트 중</span><span class="stat-l">판결문 DB</span></div>
+    <div class="stat"><span class="stat-n" id="stat-db">81건</span><span class="stat-l">판결문 DB</span></div>
     <div class="stat"><span class="stat-n">92%</span><span class="stat-l">진단 정확도</span></div>
-    <div class="stat"><span class="stat-n" id="stat-att" style="font-size:13px;color:var(--ts)">업데이트 중</span><span class="stat-l">파트너 변호사</span></div>
+    <div class="stat"><span class="stat-n" id="stat-att">모집중</span><span class="stat-l">파트너 변호사</span></div>
   </div>
   <div class="notice">⚠️ 진단 결과는 참고용이며 실제 법원 판결을 보장하지 않습니다.</div>
   <div class="sec" style="margin-top:18px">
@@ -318,7 +322,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
       <div>상호명: LIFEREFIX (준비중)</div>
       <div>대표: 준비중 | 사업자등록번호: 준비중</div>
       <div>주소: 준비중</div>
-      <div>이메일: admin@liferefix.com</div>
+      <div>이메일: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="7617121b1f18361a1f10130413101f0e5815191b">[email&#160;protected]</a></div>
     </div>
     <div style="border-top:1px solid rgba(255,255,255,.1);padding-top:14px;margin-bottom:14px">
       <div style="font-size:11px;color:rgba(255,255,255,.4);line-height:1.9">
@@ -331,7 +335,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
     <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:16px">
       <span onclick="openM('m-terms')" style="font-size:11px;color:rgba(255,255,255,.5);cursor:pointer;text-decoration:underline">이용약관</span>
       <span onclick="openM('m-privacy')" style="font-size:11px;color:rgba(255,255,255,.5);cursor:pointer;text-decoration:underline">개인정보처리방침</span>
-      <a href="mailto:admin@liferefix.com" style="font-size:11px;color:rgba(255,255,255,.5);text-decoration:none">문의하기</a>
+      <a href="/cdn-cgi/l/email-protection#dbbabfb6b2b59bb7b2bdbea9bebdb2a3f5b8b4b6" style="font-size:11px;color:rgba(255,255,255,.5);text-decoration:none">문의하기</a>
     </div>
     <div style="font-size:10px;color:rgba(255,255,255,.25);line-height:1.9">
       LIFEREFIX는 법률 자문 또는 중개 서비스를 제공하지 않습니다. 본 서비스는 일반적인 정보 제공을 목적으로 하며, 특정 전문가를 추천하거나 알선하지 않습니다. 모든 의사결정은 이용자 본인의 판단과 책임 하에 이루어집니다.<br><br>
@@ -927,7 +931,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
 </div>
 
 <!-- 변호사 로그인 -->
-<div class="scr" id="s-att-login">
+<div class="scr" id="s-att-login" data-protected="true">
   <div style="min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:30px 24px;background:linear-gradient(160deg,#0B5FFF,#0035BB 60%,#002080)">
     <div style="text-align:center;margin-bottom:28px">
       <div style="font-size:26px;font-weight:900;color:#fff">Liferefix</div>
@@ -947,7 +951,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
 </div>
 
 <!-- 변호사 대시보드 -->
-<div class="scr" id="s-att-dash">
+<div class="scr" id="s-att-dash" data-protected="true">
   <div style="position:sticky;top:0;z-index:200;height:52px;background:#fff;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;padding:0 18px">
     <div style="font-size:15px;font-weight:900;background:linear-gradient(135deg,var(--p),var(--a));-webkit-background-clip:text;-webkit-text-fill-color:transparent">⚖️ 변호사 포털</div>
     <div style="display:flex;gap:8px;align-items:center">
@@ -1244,7 +1248,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
       본 서비스는 정보 제공 목적이며 법률 서비스가 아닙니다.<br>
       AI 분석 결과는 참고용이며 법적 효력이 없습니다.<br><br>
       <b style="color:var(--ink)">문의</b><br>
-      admin@liferefix.com
+      <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="e687828b8f88a68a8f80839483808f9ec885898b">[email&#160;protected]</a>
     </div>
   </div>
 </div>
@@ -1294,7 +1298,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
 </div>
 
 <!-- 관리자 로그인 -->
-<div class="scr" id="s-adm-login">
+<div class="scr" id="s-adm-login" data-protected="true">
   <div style="min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:30px 24px;background:linear-gradient(160deg,#0D1B2A,#1A2F4A)">
     <div style="margin-bottom:28px;text-align:center">
       <div style="font-size:24px;font-weight:900;color:#fff">Liferefix</div>
@@ -1312,7 +1316,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
 </div>
 
 <!-- 관리자 대시보드 -->
-<div class="scr" id="s-adm-dash">
+<div class="scr" id="s-adm-dash" data-protected="true">
   <div style="position:sticky;top:0;z-index:200;height:52px;background:#0D1B2A;display:flex;align-items:center;justify-content:space-between;padding:0 16px">
     <div style="font-size:15px;font-weight:900;color:#fff">Liferefix <span style="color:var(--a);font-size:12px">Admin</span></div>
     <button onclick="go('s-my')" style="font-size:11px;font-weight:700;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:20px;padding:5px 12px;cursor:pointer;font-family:inherit;color:#fff">나가기</button>
@@ -1647,7 +1651,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
       <button class="btn p" onclick="submitAttApply()">🎯 파트너 신청하기</button>
       <div style="font-size:12px;color:var(--ts);text-align:center;margin-top:12px;line-height:1.7">
         신청 후 관리자 검토(1~2 영업일) 완료 시 승인 이메일이 발송됩니다.<br>
-        문의: admin@liferefix.com
+        문의: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="6203060f0b0c220e0b04071007040b1a4c010d0f">[email&#160;protected]</a>
       </div>
     </div>
   </div>
@@ -1747,7 +1751,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
 
 
 <!-- Firebase SDK (module) -->
-<script type="module">
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
 import { getMessaging, getToken, onMessage }
   from "https://www.gstatic.com/firebasejs/11.6.0/firebase-messaging.js";
@@ -1810,6 +1814,12 @@ setTimeout(function(){
 onAuthStateChanged(fbAuth, function(user) {
   window.FB_USER = user || null;
   window._userRole = null; // 로그인/로그아웃 시 초기화
+
+  // 보안: 포털 화면 기본 숨김 — role 확인 후에만 표시
+  ['s-att-login','s-att-dash','s-adm-login','s-adm-dash'].forEach(function(id){
+    var el = document.getElementById(id);
+    if(el) el.style.visibility = 'hidden';
+  });
 
   // 헤더 버튼 업데이트
   var hdrBtn    = document.getElementById('hdr-login-btn');
@@ -2302,7 +2312,11 @@ function go(id){
 function _goScreen(id){
   document.querySelectorAll('.scr').forEach(function(s){s.classList.remove('on');});
   document.querySelectorAll('.ni').forEach(function(n){n.classList.remove('on');});
-  var el=document.getElementById(id);if(el)el.classList.add('on');
+  var el=document.getElementById(id);
+  if(el){
+    el.classList.add('on');
+    el.style.visibility='visible'; // 포털 화면 표시 시 visibility 복구
+  }
   var nmId = NM[id] || (id==='s-att-dash'?'n-my':id==='s-adm-dash'?'n-my':null);
   if(nmId){var nb=document.getElementById(nmId);if(nb)nb.classList.add('on');}
   window.scrollTo(0,0);
@@ -8359,16 +8373,4 @@ window.listenBidsForCase = function(caseId, callback) {
 
 <!-- 알림 드롭다운 -->
 <div id="m-notifications" style="display:none;position:fixed;top:56px;right:10px;width:300px;max-height:400px;background:#fff;border-radius:var(--rad);box-shadow:0 8px 30px rgba(0,0,0,.15);z-index:1000;overflow:hidden">
-  <div style="padding:14px 16px;border-bottom:1px solid var(--bd);display:flex;justify-content:space-between;align-items:center">
-    <div style="font-size:14px;font-weight:800">🔔 알림</div>
-    <button onclick="markAllNotiRead()" style="font-size:11px;color:var(--p);font-weight:600;background:none;border:none;cursor:pointer;font-family:inherit">모두 읽음</button>
-  </div>
-  <div id="noti-list" style="overflow-y:auto;max-height:340px;padding:8px"></div>
-</div>
-
-<div id="att-list" style="display:none"></div>
-<div class="toast" id="toast"></div>
-
-</body>
-
-</html>
+  <div style="padding:14px 16px;border-bottom:1px solid var(
