@@ -263,7 +263,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
         <div style="font-size:11px;color:rgba(255,255,255,.5)">일부 기능이 제한될 수 있습니다</div>
       </div>
     </div>
-    <div style="font-size:10px;font-weight:700;background:#E91E8C;color:#fff;padding:3px 10px;border-radius:20px">Beta v1.6</div>
+    <div style="font-size:10px;font-weight:700;background:#E91E8C;color:#fff;padding:3px 10px;border-radius:20px">Beta v1.8</div>
   </div>
   <div class="hero">
     <div class="hero-tag">✦ AI 기반 채무 진단</div>
@@ -369,7 +369,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
     </div>
     <div style="font-size:10px;color:rgba(255,255,255,.25);line-height:1.9">
       LIFEREFIX는 법률 자문 또는 중개 서비스를 제공하지 않습니다. 본 서비스는 일반적인 정보 제공을 목적으로 하며, 특정 전문가를 추천하거나 알선하지 않습니다. 모든 의사결정은 이용자 본인의 판단과 책임 하에 이루어집니다.<br><br>
-      © 2026 Liferefix. All rights reserved. Beta v1.6
+      © 2026 Liferefix. All rights reserved. Beta v1.8
     </div>
   </footer>
 </div>
@@ -802,7 +802,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
     </div>
 
     <div style="margin-top:14px;font-size:10px;color:rgba(255,255,255,.3)">
-      © 2026 Liferefix. All rights reserved. Beta v1.6
+      © 2026 Liferefix. All rights reserved. Beta v1.8
     </div>
   </footer>
 
@@ -889,6 +889,17 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
         </div>
 
         <button class="btn o" onclick="go('s-diag')" style="margin-top:12px">🔄 다시 진단하기</button>
+      </div>
+    </div>
+
+    <!-- 변호사 입점 신청 배너 (채무자에게만 표시) -->
+    <div id="my-att-apply-banner" style="display:none;margin:0 16px 16px">
+      <div onclick="openAttApply()" style="background:linear-gradient(135deg,var(--p),var(--pd));border-radius:16px;padding:16px 18px;cursor:pointer;display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-size:14px;font-weight:800;color:#fff;margin-bottom:4px">⚖️ 변호사이신가요?</div>
+          <div style="font-size:12px;color:rgba(255,255,255,.8)">파트너 변호사 입점 신청하기</div>
+        </div>
+        <span style="font-size:22px;color:#fff">›</span>
       </div>
     </div>
 
@@ -1873,13 +1884,27 @@ onAuthStateChanged(fbAuth, function(user) {
     window._mySelectionsUnsub();
     window._mySelectionsUnsub = null;
   }
-  // 로그인 후 사건등록 이동 처리
+  // 로그인 후 사건등록 이어서 처리
   if(user && window._afterLoginGoReg) {
     window._afterLoginGoReg = false;
+    var action = window._afterLoginAction || 'submitCase';
+    window._afterLoginAction = null;
     setTimeout(function(){
-      window.go&&window.go('s-my');
-      if(window.initMyDash) window.initMyDash();
-    }, 300);
+      if(action === 'submitCase') {
+        // 비딩 탭으로 이동 후 연락처 모달 오픈
+        window.go&&window.go('s-bid');
+        setTimeout(function(){
+          var nameEl = document.getElementById('contact-name');
+          var phoneEl = document.getElementById('contact-phone');
+          if(nameEl) nameEl.value = user.displayName||'';
+          if(phoneEl) phoneEl.value = '';
+          openM('m-contact');
+        }, 300);
+      } else {
+        window.go&&window.go('s-my');
+        if(window.initMyDash) window.initMyDash();
+      }
+    }, 400);
   }
   // 로그인 시 FCM 알림 권한 요청
   if(user) {
@@ -1955,6 +1980,24 @@ window._doSignup = function() {
       });
       window.closeM&&window.closeM('m-login');
       window.toast&&window.toast('🎉 회원가입 완료! 환영합니다.');
+      // 회원가입 후 사건등록 이어서
+      if(window._afterLoginGoReg) {
+        window._afterLoginGoReg = false;
+        var action = window._afterLoginAction||'';
+        window._afterLoginAction = null;
+        if(action === 'submitCase') {
+          setTimeout(function(){
+            window.go&&window.go('s-bid');
+            setTimeout(function(){
+              var nameEl=document.getElementById('contact-name');
+              var phoneEl=document.getElementById('contact-phone');
+              if(nameEl) nameEl.value = uc.user.displayName||'';
+              if(phoneEl) phoneEl.value = '';
+              openM('m-contact');
+            }, 300);
+          }, 400);
+        }
+      }
     })
     .catch(function(e){
       console.error('회원가입 오류 코드:', e.code);
@@ -3049,6 +3092,8 @@ function loadRegPrev(){
 function submitCase(){
   // 로그인 체크
   if(!window.FB_USER) {
+    window._afterLoginGoReg = true; // 로그인 후 사건등록 이어서
+    window._afterLoginAction = 'submitCase'; // 어떤 액션인지 기록
     openM('m-login');
     toast('사건 등록을 위해 로그인이 필요합니다.');
     return;
@@ -5247,6 +5292,9 @@ function initMyDash() {
         if(attPortal)   attPortal.style.display   = 'none';
         if(admPortal)   admPortal.style.display   = 'none';
         if(attApplyBtn) attApplyBtn.style.display = 'block';
+        // 내 진단 탭에도 배너 표시
+        var banner = document.getElementById('my-att-apply-banner');
+        if(banner) banner.style.display = 'block';
       }
     }).catch(function(){});
   }
