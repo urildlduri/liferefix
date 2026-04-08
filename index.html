@@ -263,7 +263,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
         <div style="font-size:11px;color:rgba(255,255,255,.5)">일부 기능이 제한될 수 있습니다</div>
       </div>
     </div>
-    <div style="font-size:10px;font-weight:700;background:#E91E8C;color:#fff;padding:3px 10px;border-radius:20px">Beta v2.2</div>
+    <div style="font-size:10px;font-weight:700;background:#E91E8C;color:#fff;padding:3px 10px;border-radius:20px">Beta v2.3</div>
   </div>
   <div class="hero">
     <div class="hero-tag">✦ AI 기반 채무 진단</div>
@@ -369,7 +369,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
     </div>
     <div style="font-size:10px;color:rgba(255,255,255,.25);line-height:1.9">
       LIFEREFIX는 법률 자문 또는 중개 서비스를 제공하지 않습니다. 본 서비스는 일반적인 정보 제공을 목적으로 하며, 특정 전문가를 추천하거나 알선하지 않습니다. 모든 의사결정은 이용자 본인의 판단과 책임 하에 이루어집니다.<br><br>
-      © 2026 Liferefix. All rights reserved. Beta v2.2
+      © 2026 Liferefix. All rights reserved. Beta v2.3
     </div>
   </footer>
 </div>
@@ -802,7 +802,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
     </div>
 
     <div style="margin-top:14px;font-size:10px;color:rgba(255,255,255,.3)">
-      © 2026 Liferefix. All rights reserved. Beta v2.2
+      © 2026 Liferefix. All rights reserved. Beta v2.3
     </div>
   </footer>
 
@@ -2995,7 +2995,7 @@ function attCard(a,isTop){
   var inC=cmpList.indexOf(a.id)>-1;
   var rec=isTop?'<div class="ac-rec">🏆 추천</div>':'';
   var bh=a.badge==='best'?'<span class="a-badge best">최저가</span>':a.badge==='new'?'<span class="a-badge new">신규</span>':'';
-  var th=a.tags.map(function(t){return '<span class="tag">'+t+'</span>';}).join('');
+  var th=(a.tags||[]).map(function(t){return '<span class="tag">'+t+'</span>';}).join('');
   var ih=a.install?'<span class="tag g">분할납부</span>':'';
   var fh=a.free?'<span class="tag g">무료상담</span>':'';
   var sfh=a.success_fee>0?'<span style="font-size:13px;color:var(--ts);margin-left:5px">+ 성공보수 '+a.success_fee+'만</span>':'<span style="font-size:12px;color:var(--a);margin-left:5px;font-weight:700">성공보수 없음</span>';
@@ -5598,6 +5598,7 @@ function renderMyBidList(bids) {
 }
 
 window.switchMyTab  = switchMyTab;
+window.initMyDash   = initMyDash;
 
 // 면책완료 정보 로드
 function loadMyDoneInfo() {
