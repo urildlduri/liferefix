@@ -263,7 +263,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
         <div style="font-size:11px;color:rgba(255,255,255,.5)">일부 기능이 제한될 수 있습니다</div>
       </div>
     </div>
-    <div style="font-size:10px;font-weight:700;background:#E91E8C;color:#fff;padding:3px 10px;border-radius:20px">Beta v1.9</div>
+    <div style="font-size:10px;font-weight:700;background:#E91E8C;color:#fff;padding:3px 10px;border-radius:20px">Beta v2.0</div>
   </div>
   <div class="hero">
     <div class="hero-tag">✦ AI 기반 채무 진단</div>
@@ -369,7 +369,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
     </div>
     <div style="font-size:10px;color:rgba(255,255,255,.25);line-height:1.9">
       LIFEREFIX는 법률 자문 또는 중개 서비스를 제공하지 않습니다. 본 서비스는 일반적인 정보 제공을 목적으로 하며, 특정 전문가를 추천하거나 알선하지 않습니다. 모든 의사결정은 이용자 본인의 판단과 책임 하에 이루어집니다.<br><br>
-      © 2026 Liferefix. All rights reserved. Beta v1.9
+      © 2026 Liferefix. All rights reserved. Beta v2.0
     </div>
   </footer>
 </div>
@@ -802,7 +802,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
     </div>
 
     <div style="margin-top:14px;font-size:10px;color:rgba(255,255,255,.3)">
-      © 2026 Liferefix. All rights reserved. Beta v1.9
+      © 2026 Liferefix. All rights reserved. Beta v2.0
     </div>
   </footer>
 
@@ -6982,7 +6982,7 @@ window.renderBidPanel = renderBidPanel;
 window.loadRevenue=loadRevenue; window.filterRevenue=filterRevenue;
 window.admApprovePayment=admApprovePayment; window.admRejectPayment=admRejectPayment;
 
-window.go=go; window._goScreen=_goScreen; window.sel=sel; window.slid=slid; window.gofs=gofs;
+window._goScreen=_goScreen; window.sel=sel; window.slid=slid; window.gofs=gofs;
   window.runDiag=runDiag; window.resetDiag=resetDiag; window.renderAtts=renderAtts;
   window.sortAtt=sortAtt; window.openAtt=openAtt; window.toggleCmp=toggleCmp;
   window.openCompare=openCompare; window.switchTab=switchTab; window.loadRegPrev=loadRegPrev;
@@ -7079,72 +7079,6 @@ window.admRejectAttApp  = admRejectAttApp;
 
   window.admBlockAtt=admBlockAtt; window.admRestoreAtt=admRestoreAtt;
   // go() 후킹 — 화면 전환 시 후기 갱신
-  var _go=go;
-  window.go=function(id){_go(id);if(id==='s-home'){
-    loadUserReviews();
-    updateStatAtt();
-    renderAtts();
-  }
-  if(id==='s-att-dash'){
-    updateAttStats();
-    // 백그라운드에서 실시간 사건 감지 시작
-    if(!_attCasesUnsubscribe && window.listenCases) {
-      _attCasesUnsubscribe = window.listenCases(function(cases){
-        window._attAllCases = cases;
-        _attAllCases = cases;
-        // 대시보드 숫자 업데이트
-        var myIds = window._cachedMyBidCaseIds || [];
-        var nw = cases.filter(function(c){
-          return c.status==='new' && myIds.indexOf(c.id)<0 && c.id.indexOf('SMPL')<0;
-        }).length;
-        var el = document.getElementById('att-stat-new');
-        if(el) el.textContent = nw;
-        var notEl = document.getElementById('att-notice');
-        if(notEl) notEl.innerHTML = '📬 신규 사건 <b>'+nw+'건</b>이 등록되어 있습니다.';
-        // cases 탭 열려있으면 자동 업데이트
-        var casesPanel = document.getElementById('atp-cases');
-        if(casesPanel && casesPanel.style.display!=='none') {
-          var myIds2 = window._cachedMyBidCaseIds || [];
-          var curFilter = window._attCaseFilter || 'new';
-          var filtered = cases.filter(function(c){
-            if(c.id.indexOf('SMPL')>-1) return false;
-            var iMine = myIds2.indexOf(c.id)>-1;
-            if(curFilter==='new')  return c.status==='new' && !iMine;
-            if(curFilter==='bid')  return c.status==='bid' || iMine;
-            if(curFilter==='mine') return iMine;
-            return true;
-          });
-          renderAttCaseList(filtered);
-        }
-      }, function(e){ console.error('백그라운드 listenCases 오류:', e.code); });
-    }
-    // Firebase 준비 후 대시보드 초기화
-    function initAttDash() {
-      if(window.FB_USER && window.FB_DB && window.FB_FUNCS) {
-        switchAttTab('dash');
-      } else {
-        setTimeout(initAttDash, 300);
-      }
-    }
-    initAttDash();
-  }if(id==='s-my'){
-    // 변호사는 변호사 포털로 즉시 리다이렉트
-    if(window._userRole === 'attorney') {
-      go('s-att-dash'); return;
-    }
-    // role 미캐싱 시 Firestore 확인
-    if(window.FB_USER && window.FB_DB && window.FB_FUNCS && !window._userRole) {
-      window.FB_FUNCS.getDoc(window.FB_FUNCS.doc(window.FB_DB,'users',window.FB_USER.uid))
-        .then(function(snap){
-          if(snap.exists()) {
-            window._userRole = snap.data().role;
-            if(window._userRole === 'attorney') go('s-att-dash');
-          }
-        }).catch(function(){});
-    }
-    loadMyList();bindStarGroup();bindReviewSubmit();
-  }};
-})();
 
 // ── 변호사 입점 신청 ──────────────────────────────────────
 function goAttApply() {
@@ -7238,7 +7172,7 @@ function submitAttApply() {
 }
 
 // ── window 전역 노출 (전체) ──
-window.go=go; window.sel=sel; window.slid=slid; window.gofs=gofs;
+window.sel=sel; window.slid=slid; window.gofs=gofs;
 window.runDiag=runDiag; window.resetDiag=resetDiag; window.renderAtts=renderAtts;
 window.sortAtt=sortAtt; window.openAtt=openAtt; window.toggleCmp=toggleCmp;
 window.openCompare=openCompare; window.switchTab=switchTab;
@@ -7678,6 +7612,7 @@ window.doLogout=doLogout; window.doGoogleLogin=doGoogleLogin;
 window.switchLoginTab=switchLoginTab;
 
 // go
+})(); // IIFE 종료
 
 // go() 후킹 — 화면 전환 시 추가 액션
 var _go=go;
