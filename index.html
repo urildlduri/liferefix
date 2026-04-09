@@ -263,7 +263,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
         <div style="font-size:11px;color:rgba(255,255,255,.5)">일부 기능이 제한될 수 있습니다</div>
       </div>
     </div>
-    <div style="font-size:10px;font-weight:700;background:#E91E8C;color:#fff;padding:3px 10px;border-radius:20px">Beta v2.7</div>
+    <div style="font-size:10px;font-weight:700;background:#E91E8C;color:#fff;padding:3px 10px;border-radius:20px">Beta v2.8</div>
   </div>
   <div class="hero">
     <div class="hero-tag">✦ AI 기반 채무 진단</div>
@@ -369,7 +369,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
     </div>
     <div style="font-size:10px;color:rgba(255,255,255,.25);line-height:1.9">
       LIFEREFIX는 법률 자문 또는 중개 서비스를 제공하지 않습니다. 본 서비스는 일반적인 정보 제공을 목적으로 하며, 특정 전문가를 추천하거나 알선하지 않습니다. 모든 의사결정은 이용자 본인의 판단과 책임 하에 이루어집니다.<br><br>
-      © 2026 Liferefix. All rights reserved. Beta v2.7
+      © 2026 Liferefix. All rights reserved. Beta v2.8
     </div>
   </footer>
 </div>
@@ -802,7 +802,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
     </div>
 
     <div style="margin-top:14px;font-size:10px;color:rgba(255,255,255,.3)">
-      © 2026 Liferefix. All rights reserved. Beta v2.7
+      © 2026 Liferefix. All rights reserved. Beta v2.8
     </div>
   </footer>
 
@@ -819,6 +819,14 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
       <div><div style="font-size:16px;font-weight:700">로그인이 필요합니다</div><div style="font-size:13px;color:var(--ts);margin-top:3px">사건 관리 및 진단 결과 저장</div></div>
     </div>
     <button class="btn p" onclick="openM('m-login')">로그인 / 회원가입</button>
+    <!-- 변호사 입점 신청 (비로그인도 표시) -->
+    <div onclick="window.openAttApply&&window.openAttApply()" style="margin-top:16px;background:linear-gradient(135deg,var(--p),var(--pd));border-radius:14px;padding:15px 18px;cursor:pointer;display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div style="font-size:14px;font-weight:800;color:#fff;margin-bottom:3px">⚖️ 변호사이신가요?</div>
+        <div style="font-size:12px;color:rgba(255,255,255,.8)">파트너 변호사 입점 신청하기</div>
+      </div>
+      <span style="font-size:22px;color:#fff">›</span>
+    </div>
   </div>
 
   <!-- 로그인 후 대시보드 -->
@@ -6755,8 +6763,19 @@ function loadAllActiveCases() {
   if(!el) return;
   el.innerHTML = '<div style="text-align:center;padding:16px;color:var(--ts);font-size:13px">불러오는 중...</div>';
 
+  // Firebase module이 아직 로드 안된 경우 최대 3초 재시도
   if(!window.FB_DB || !window.FB_FUNCS) {
-    renderAllActiveCases([]);
+    var retries = 0;
+    var waitFB = setInterval(function(){
+      retries++;
+      if(window.FB_DB && window.FB_FUNCS) {
+        clearInterval(waitFB);
+        loadAllActiveCases();
+      } else if(retries >= 15) {
+        clearInterval(waitFB);
+        renderAllActiveCases([]);
+      }
+    }, 200);
     return;
   }
 
@@ -7116,7 +7135,7 @@ function submitAttApply() {
     if(errEl){ errEl.style.display='block'; errEl.textContent='개인정보 수집 동의가 필요합니다.'; }
     return;
   }
-  if(!window.FB_USER){ toast('로그인이 필요합니다.'); return; }
+  if(!window.FB_USER){ if(window.openM) window.openM('m-login'); if(window.toast) window.toast('로그인 후 신청할 수 있습니다.'); return; }
   if(errEl) errEl.style.display='none';
 
   var applyData = {
@@ -7589,11 +7608,6 @@ function previewAttPhoto(input) {
 window.previewAttPhoto = previewAttPhoto;
 
 function openAttApply() {
-  if(!window.FB_USER) {
-    if(window.openM) window.openM('m-login');
-    if(window.toast) window.toast('입점 신청을 위해 로그인이 필요합니다.');
-    return;
-  }
   if(window.go) window.go('s-att-apply');
 }
 
