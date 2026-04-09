@@ -263,7 +263,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
         <div style="font-size:11px;color:rgba(255,255,255,.5)">일부 기능이 제한될 수 있습니다</div>
       </div>
     </div>
-    <div style="font-size:10px;font-weight:700;background:#E91E8C;color:#fff;padding:3px 10px;border-radius:20px">Beta v2.5</div>
+    <div style="font-size:10px;font-weight:700;background:#E91E8C;color:#fff;padding:3px 10px;border-radius:20px">Beta v2.6</div>
   </div>
   <div class="hero">
     <div class="hero-tag">✦ AI 기반 채무 진단</div>
@@ -369,7 +369,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
     </div>
     <div style="font-size:10px;color:rgba(255,255,255,.25);line-height:1.9">
       LIFEREFIX는 법률 자문 또는 중개 서비스를 제공하지 않습니다. 본 서비스는 일반적인 정보 제공을 목적으로 하며, 특정 전문가를 추천하거나 알선하지 않습니다. 모든 의사결정은 이용자 본인의 판단과 책임 하에 이루어집니다.<br><br>
-      © 2026 Liferefix. All rights reserved. Beta v2.5
+      © 2026 Liferefix. All rights reserved. Beta v2.6
     </div>
   </footer>
 </div>
@@ -802,7 +802,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
     </div>
 
     <div style="margin-top:14px;font-size:10px;color:rgba(255,255,255,.3)">
-      © 2026 Liferefix. All rights reserved. Beta v2.5
+      © 2026 Liferefix. All rights reserved. Beta v2.6
     </div>
   </footer>
 
@@ -6765,10 +6765,7 @@ function loadAllActiveCases() {
     return;
   }
 
-  var uid   = window.FB_USER ? window.FB_USER.uid   : null;
-  var email = window.FB_USER ? window.FB_USER.email : null;
-
-  // cases + bids 동시 조회 (비로그인도 신규사건 목록 표시)
+  // 비딩탭 = 항상 신규 사건 전체 표시 (로그인 여부 무관)
   Promise.all([
     window.FB_FUNCS.getDocs(window.FB_FUNCS.collection(window.FB_DB,'cases')),
     window.FB_FUNCS.getDocs(window.FB_FUNCS.collection(window.FB_DB,'bids'))
@@ -6776,23 +6773,12 @@ function loadAllActiveCases() {
     var allCases = res[0].docs.map(function(d){ return Object.assign({id:d.id}, d.data()); });
     var bids     = res[1].docs.map(function(d){ return d.data(); });
 
-    var cases;
-    if(uid) {
-      // 로그인: 내 사건만
-      cases = allCases.filter(function(c){
-        return (c.userId===uid || c.userEmail===email) &&
-               c.status !== 'closed' &&
-               c.id.indexOf('SMPL-') < 0;
-      });
-      // localStorage 병합
-      DB.getCases().filter(function(c){ return c.userId===uid||c.userEmail===email; })
-        .forEach(function(c){ if(!cases.find(function(x){return x.id===c.id;})) cases.push(c); });
-    } else {
-      // 비로그인: 신규(new) 사건 전체 표시 (마스킹)
-      cases = allCases.filter(function(c){
-        return c.status === 'new' && c.id.indexOf('SMPL-') < 0;
-      });
-    }
+    // 신규(new) + 비딩중(bid) 사건 전체 표시
+    var cases = allCases.filter(function(c){
+      return c.status !== 'closed' &&
+             c.status !== 'hired' &&
+             c.id.indexOf('SMPL-') < 0;
+    });
 
     cases = cases.sort(function(a,b){
       var ta=a.createdAt&&a.createdAt.toDate?a.createdAt.toDate().getTime():0;
@@ -6811,7 +6797,8 @@ function loadAllActiveCases() {
 
     _allActiveCases = cases;
     renderAllActiveCases(cases);
-  }).catch(function(){
+  }).catch(function(e){
+    console.error('loadAllActiveCases 오류:', e);
     _allActiveCases = [];
     renderAllActiveCases([]);
   });
