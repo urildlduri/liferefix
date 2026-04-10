@@ -263,7 +263,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
         <div style="font-size:11px;color:rgba(255,255,255,.5)">일부 기능이 제한될 수 있습니다</div>
       </div>
     </div>
-    <div style="font-size:10px;font-weight:700;background:#E91E8C;color:#fff;padding:3px 10px;border-radius:20px">Beta v2.9</div>
+    <div style="font-size:10px;font-weight:700;background:#E91E8C;color:#fff;padding:3px 10px;border-radius:20px">Beta v3.0</div>
   </div>
   <div class="hero">
     <div class="hero-tag">✦ AI 기반 채무 진단</div>
@@ -369,7 +369,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
     </div>
     <div style="font-size:10px;color:rgba(255,255,255,.25);line-height:1.9">
       LIFEREFIX는 법률 자문 또는 중개 서비스를 제공하지 않습니다. 본 서비스는 일반적인 정보 제공을 목적으로 하며, 특정 전문가를 추천하거나 알선하지 않습니다. 모든 의사결정은 이용자 본인의 판단과 책임 하에 이루어집니다.<br><br>
-      © 2026 Liferefix. All rights reserved. Beta v2.9
+      © 2026 Liferefix. All rights reserved. Beta v3.0
     </div>
   </footer>
 </div>
@@ -562,7 +562,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
     <textarea class="finput" id="r-memo" rows="3" placeholder="예: 사채 포함, 주택담보 있음, 빠른 처리 원함 등"></textarea>
     <span class="flabel">연락처 (선택)</span>
     <div style="position:relative;margin-bottom:18px">
-      <input type="tel" id="r-phone" class="finput" style="margin-bottom:0;padding-right:76px" placeholder="010-0000-0000">
+      <input type="tel" id="r-phone" class="finput" oninput="formatPhone(this)" style="margin-bottom:0;padding-right:76px" placeholder="010-0000-0000">
       <span style="position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--a);font-weight:700">🔒 암호화</span>
     </div>
     <div style="background:var(--bg);border-radius:var(--rads);padding:13px;font-size:12px;color:var(--ts);line-height:1.7;margin-bottom:18px">※ 사건 정보는 익명으로 처리되며 파트너 변호사에게만 공개됩니다.</div>
@@ -802,7 +802,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
     </div>
 
     <div style="margin-top:14px;font-size:10px;color:rgba(255,255,255,.3)">
-      © 2026 Liferefix. All rights reserved. Beta v2.9
+      © 2026 Liferefix. All rights reserved. Beta v3.0
     </div>
   </footer>
 
@@ -1640,10 +1640,10 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
       <input type="text" class="finput" id="att-apply-addr" placeholder="예: 서울 서초구 서초대로 OO">
 
       <span class="flabel">전화번호 *</span>
-      <input type="tel" class="finput" id="att-apply-tel" placeholder="예: 02-1234-5678">
+      <input type="tel" class="finput" id="att-apply-tel" oninput="formatPhone(this)" placeholder="예: 02-1234-5678">
 
       <span class="flabel">휴대폰 번호 *</span>
-      <input type="tel" class="finput" id="att-apply-mobile" placeholder="예: 010-1234-5678">
+      <input type="tel" class="finput" id="att-apply-mobile" oninput="formatPhone(this)" placeholder="예: 010-1234-5678">
 
       <span class="flabel">착수금 가격대</span>
       <div class="tg" id="g-att-price">
@@ -1742,7 +1742,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
     <span class="flabel">이름 *</span>
     <input type="text" class="finput" id="contact-name" placeholder="홍길동">
     <span class="flabel">휴대폰 번호 *</span>
-    <input type="tel" class="finput" id="contact-phone" placeholder="010-1234-5678">
+    <input type="tel" class="finput" id="contact-phone" oninput="formatPhone(this)" placeholder="010-1234-5678">
     <div style="font-size:11px;color:var(--ts);margin-bottom:14px;line-height:1.7">
       ※ 연락처는 담당 변호사에게만 공개됩니다.<br>
       ※ 광고성 연락에 사용되지 않습니다.
@@ -2436,6 +2436,15 @@ function gofs(n){
   window.scrollTo(0,0);
 }
 function fw(v){return v>=10000?(v/10000).toFixed(1)+'억 원':Math.round(v).toLocaleString()+'만 원';}
+function formatPhone(el){
+  var v = el.value.replace(/\D/g,'');
+  if(v.length<=3) el.value=v;
+  else if(v.length<=7) el.value=v.slice(0,3)+'-'+v.slice(3);
+  else if(v.length<=11) el.value=v.slice(0,3)+'-'+v.slice(3,v.length-4)+'-'+v.slice(-4);
+  else el.value=v.slice(0,3)+'-'+v.slice(3,7)+'-'+v.slice(7,11);
+}
+window.formatPhone=formatPhone;
+
 function toast(msg){
   var el=document.getElementById('toast');
   el.textContent=msg;el.style.display='block';el.style.opacity='1';
