@@ -255,6 +255,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
 <!-- HOME -->
 <div class="scr on" id="s-home">
   <!-- 베타 배너 -->
+  <!-- 베타 배너 -->
   <div style="background:#0D1B2A;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid #E91E8C">
     <div style="display:flex;align-items:center;gap:8px">
       <div style="width:8px;height:8px;background:#E91E8C;border-radius:50%;animation:pulse 2s infinite"></div>
@@ -263,44 +264,89 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
         <div style="font-size:11px;color:rgba(255,255,255,.5)">일부 기능이 제한될 수 있습니다</div>
       </div>
     </div>
-    <div style="font-size:10px;font-weight:700;background:#E91E8C;color:#fff;padding:3px 10px;border-radius:20px">Beta v3.0</div>
+    <div style="font-size:10px;font-weight:700;background:#E91E8C;color:#fff;padding:3px 10px;border-radius:20px">Beta v3.1</div>
   </div>
-  <div class="hero">
+
+  <!-- 메인 배너 -->
+  <div class="hero" style="cursor:pointer" onclick="go('s-diag')">
     <div class="hero-tag">✦ AI 기반 채무 진단</div>
     <h1>채무 해결,<br>이제 데이터로<br>정확하게</h1>
     <p>개인회생 가능성·변제금·탕감률을 무료 진단하고, 검증된 변호사의 경쟁 제안을 받아보세요.</p>
-    <button class="hero-btn" onclick="go('s-diag')">⚡ 무료 채무 진단 시작하기</button>
+    <button class="hero-btn" onclick="event.stopPropagation();go('s-diag')">⚡ 무료 채무 진단 시작하기</button>
+    <!-- 배너 인디케이터 -->
+    <div style="position:absolute;bottom:14px;right:18px;display:flex;gap:4px;z-index:1">
+      <div style="width:16px;height:5px;background:#fff;border-radius:3px"></div>
+      <div style="width:5px;height:5px;background:rgba(255,255,255,.4);border-radius:50%"></div>
+      <div style="width:5px;height:5px;background:rgba(255,255,255,.4);border-radius:50%"></div>
+    </div>
   </div>
+
+  <!-- 통계 바 -->
   <div class="stats">
     <div class="stat"><span class="stat-n" id="stat-consult">0건</span><span class="stat-l">누적 상담</span></div>
-    <div class="stat"><span class="stat-n">72%</span><span class="stat-l">평균 채무 감면율</span></div>
+    <div class="stat"><span class="stat-n">72%</span><span class="stat-l">평균 탕감률</span></div>
     <div class="stat"><span class="stat-n" id="stat-att">모집중</span><span class="stat-l">전문 변호사</span></div>
-    <div class="stat" style="border-right:none"><span class="stat-n">4.8★</span><span class="stat-l">고객 만족도</span></div>
+    <div class="stat" style="border-right:none"><span class="stat-n">93%</span><span class="stat-l">인가율</span></div>
   </div>
-  <div class="notice">⚠️ 진단 결과는 참고용이며 실제 법원 판결을 보장하지 않습니다.</div>
+
+  <!-- 아이콘 그리드 -->
+  <div style="background:#fff;margin:12px 16px;border-radius:18px;padding:16px 8px 10px;box-shadow:var(--shs)">
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:2px">
+      <div onclick="go('s-diag')" style="display:flex;flex-direction:column;align-items:center;gap:7px;padding:10px 4px;cursor:pointer">
+        <div style="width:52px;height:52px;border-radius:15px;background:#EEF3FF;display:flex;align-items:center;justify-content:center;font-size:24px">📊</div>
+        <span style="font-size:11px;font-weight:600;color:#222;text-align:center;line-height:1.3">AI 진단</span>
+      </div>
+      <div onclick="go('s-bid')" style="display:flex;flex-direction:column;align-items:center;gap:7px;padding:10px 4px;cursor:pointer">
+        <div style="width:52px;height:52px;border-radius:15px;background:#E0FAF5;display:flex;align-items:center;justify-content:center;font-size:24px">⚖️</div>
+        <span style="font-size:11px;font-weight:600;color:#222;text-align:center;line-height:1.3">변호사<br>비딩</span>
+      </div>
+      <div onclick="go('s-info')" style="display:flex;flex-direction:column;align-items:center;gap:7px;padding:10px 4px;cursor:pointer">
+        <div style="width:52px;height:52px;border-radius:15px;background:#FFF3E0;display:flex;align-items:center;justify-content:center;font-size:24px">📋</div>
+        <span style="font-size:11px;font-weight:600;color:#222;text-align:center;line-height:1.3">회생<br>안내</span>
+      </div>
+      <div onclick="openM('m-finance')" style="display:flex;flex-direction:column;align-items:center;gap:7px;padding:10px 4px;cursor:pointer">
+        <div style="width:52px;height:52px;border-radius:15px;background:#F3E5F5;display:flex;align-items:center;justify-content:center;font-size:24px">💳</div>
+        <span style="font-size:11px;font-weight:600;color:#222;text-align:center;line-height:1.3">금융<br>연계</span>
+      </div>
+      <div onclick="go('s-bid');setTimeout(function(){switchTab('reg')},100)" style="display:flex;flex-direction:column;align-items:center;gap:7px;padding:10px 4px;cursor:pointer">
+        <div style="width:52px;height:52px;border-radius:15px;background:#E8F5E9;display:flex;align-items:center;justify-content:center;font-size:24px">📝</div>
+        <span style="font-size:11px;font-weight:600;color:#222;text-align:center;line-height:1.3">사건<br>등록</span>
+      </div>
+      <div onclick="window.openAttApply&&window.openAttApply()" style="display:flex;flex-direction:column;align-items:center;gap:7px;padding:10px 4px;cursor:pointer">
+        <div style="width:52px;height:52px;border-radius:15px;background:#FCE4EC;display:flex;align-items:center;justify-content:center;font-size:24px">🏆</div>
+        <span style="font-size:11px;font-weight:600;color:#222;text-align:center;line-height:1.3">변호사<br>입점</span>
+      </div>
+      <div onclick="go('s-info')" style="display:flex;flex-direction:column;align-items:center;gap:7px;padding:10px 4px;cursor:pointer">
+        <div style="width:52px;height:52px;border-radius:15px;background:#E3F2FD;display:flex;align-items:center;justify-content:center;font-size:24px">❓</div>
+        <span style="font-size:11px;font-weight:600;color:#222;text-align:center;line-height:1.3">FAQ</span>
+      </div>
+      <div onclick="go('s-my')" style="display:flex;flex-direction:column;align-items:center;gap:7px;padding:10px 4px;cursor:pointer">
+        <div style="width:52px;height:52px;border-radius:15px;background:#F5F5F5;display:flex;align-items:center;justify-content:center;font-size:24px">👤</div>
+        <span style="font-size:11px;font-weight:600;color:#222;text-align:center;line-height:1.3">마이<br>페이지</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 이벤트 배너 (변호사 입점) -->
+  <div onclick="window.openAttApply&&window.openAttApply()" style="margin:0 16px;border-radius:16px;background:linear-gradient(135deg,#0D1B2A,#1A3A5C);padding:16px 18px;display:flex;justify-content:space-between;align-items:center;cursor:pointer">
+    <div>
+      <span style="font-size:10px;font-weight:700;background:#6A3DE8;color:#fff;padding:3px 8px;border-radius:10px;display:inline-block;margin-bottom:6px">이벤트</span>
+      <div style="font-size:13px;font-weight:800;color:#fff;line-height:1.5">변호사 입점 신청하고<br>3개월 무료 체험</div>
+    </div>
+    <div style="font-size:36px">⚖️</div>
+  </div>
+
+  <!-- 공지 -->
+  <div class="notice" style="margin-top:12px">⚠️ 진단 결과는 참고용이며 실제 법원 판결을 보장하지 않습니다.</div>
+
+  <!-- 후기 -->
   <div class="sec" style="margin-top:18px">
-    <div class="sec-t">핵심 서비스</div>
-    <div class="sec-s">단계별 채무 해결을 지원합니다</div>
-    <div class="fg">
-      <div class="fc" onclick="go('s-diag')"><div class="fi" style="background:#EEF3FF">📊</div><h3>AI 채무 진단</h3><p>개인회생 가능성과 예상 변제금을 즉시 확인</p></div>
-      <div class="fc" onclick="go('s-bid')"><div class="fi" style="background:#E0FAF5">⚖️</div><h3>변호사 비딩</h3><p>검증된 변호사의 경쟁 제안 비교</p></div>
-      <div class="fc" onclick="go('s-info')"><div class="fi" style="background:#FFF3E0">📋</div><h3>개인회생 안내</h3><p>절차와 조건을 쉽게 이해하기</p></div>
-      <div class="fc" onclick="openM('m-finance')"><div class="fi" style="background:#F3E5F5">💳</div><h3>금융 상품 연계</h3><p>해결 후 재무 회복 지원</p></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div>
+        <div class="sec-t">💬 실제 이용자 후기</div>
+        <div class="sec-s" style="margin-bottom:0">Liferefix로 채무를 해결한 분들의 경험담</div>
+      </div>
     </div>
-  </div>
-  <div class="sec">
-    <div class="sec-t">이용 방법</div>
-    <div class="sec-s">4단계로 채무 문제를 해결하세요</div>
-    <div class="proc">
-      <div class="pi"><div class="pn">1</div><div class="pc"><div class="pt">채무 정보 입력</div><div class="pd">채무액, 소득, 부양가족 수를 입력하세요. 개인정보는 익명 처리됩니다.</div></div></div>
-      <div class="pi"><div class="pn">2</div><div class="pc"><div class="pt">AI 진단 결과 확인</div><div class="pd">판결문 DB 기반으로 개인회생 가능성과 예상 변제금을 분석합니다.</div></div></div>
-      <div class="pi"><div class="pn">3</div><div class="pc"><div class="pt">사건 등록 & 변호사 비딩</div><div class="pd">사건을 등록하면 검증된 변호사들이 비용과 전략을 포함한 제안을 보냅니다.</div></div></div>
-      <div class="pi"><div class="pn">4</div><div class="pc"><div class="pt">변호사 선택 & 재무 재기</div><div class="pd">가장 합리적인 조건의 변호사를 선택하고, 해결 후 금융 상품 연계까지 지원받으세요.</div></div></div>
-    </div>
-  </div>
-  <div class="sec">
-    <div class="sec-t">💬 실제 이용자 후기</div>
-    <div class="sec-s">Liferefix로 채무를 해결한 분들의 경험담</div>
     <div style="display:flex;flex-direction:column;gap:12px">
       <div style="background:#fff;border-radius:16px;padding:16px;border:1px solid var(--bd)">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
@@ -333,6 +379,8 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
     </div>
     <div id="rv-user-list"></div>
   </div>
+
+  <!-- 시장 현황 -->
   <div class="sec">
     <div class="sec-t">시장 현황</div>
     <div class="sec-s">2026년 개인회생 시장 동향</div>
@@ -369,7 +417,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
     </div>
     <div style="font-size:10px;color:rgba(255,255,255,.25);line-height:1.9">
       LIFEREFIX는 법률 자문 또는 중개 서비스를 제공하지 않습니다. 본 서비스는 일반적인 정보 제공을 목적으로 하며, 특정 전문가를 추천하거나 알선하지 않습니다. 모든 의사결정은 이용자 본인의 판단과 책임 하에 이루어집니다.<br><br>
-      © 2026 Liferefix. All rights reserved. Beta v3.0
+      © 2026 Liferefix. All rights reserved. Beta v3.1
     </div>
   </footer>
 </div>
@@ -802,7 +850,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
     </div>
 
     <div style="margin-top:14px;font-size:10px;color:rgba(255,255,255,.3)">
-      © 2026 Liferefix. All rights reserved. Beta v3.0
+      © 2026 Liferefix. All rights reserved. Beta v3.1
     </div>
   </footer>
 
