@@ -267,17 +267,44 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
     <div style="font-size:10px;font-weight:700;background:#E91E8C;color:#fff;padding:3px 10px;border-radius:20px">Beta v3.2</div>
   </div>
 
-  <!-- 메인 배너 -->
-  <div class="hero" style="cursor:pointer" onclick="go('s-diag')">
-    <div class="hero-tag">✦ AI 기반 채무 진단</div>
-    <h1>채무 해결,<br>이제 데이터로<br>정확하게</h1>
-    <p>개인회생 가능성·변제금·탕감률을 무료 진단하고, 검증된 변호사의 경쟁 제안을 받아보세요.</p>
-    <button class="hero-btn" onclick="event.stopPropagation();go('s-diag')">⚡ 무료 채무 진단 시작하기</button>
-    <!-- 배너 인디케이터 -->
-    <div style="position:absolute;bottom:14px;right:18px;display:flex;gap:4px;z-index:1">
-      <div style="width:16px;height:5px;background:#fff;border-radius:3px"></div>
-      <div style="width:5px;height:5px;background:rgba(255,255,255,.4);border-radius:50%"></div>
-      <div style="width:5px;height:5px;background:rgba(255,255,255,.4);border-radius:50%"></div>
+  <!-- 메인 히어로 슬라이드 -->
+  <div id="hero-wrap" style="position:relative;overflow:hidden;touch-action:pan-y">
+    <div id="hero-track" style="display:flex;transition:transform .45s cubic-bezier(.4,0,.2,1);will-change:transform">
+
+      <!-- 슬라이드 1: AI 채무 진단 -->
+      <div class="hero" style="min-width:100%;cursor:pointer;flex-shrink:0" onclick="go('s-diag')">
+        <div class="hero-tag">✦ AI 기반 채무 진단</div>
+        <h1>채무 해결,<br>이제 데이터로<br>정확하게</h1>
+        <p>개인회생 가능성·변제금·탕감률을 무료 진단하고, 검증된 변호사의 경쟁 제안을 받아보세요.</p>
+        <button class="hero-btn" onclick="event.stopPropagation();go('s-diag')">⚡ 무료 채무 진단 시작하기</button>
+      </div>
+
+      <!-- 슬라이드 2: 변호사 비딩 -->
+      <div style="min-width:100%;flex-shrink:0;background:linear-gradient(145deg,#0D4E6B,#0A2E45);padding:36px 22px 44px;position:relative;overflow:hidden;cursor:pointer" onclick="go('s-bid')">
+        <div style="position:absolute;width:280px;height:280px;background:rgba(0,198,162,.1);border-radius:50%;top:-90px;right:-80px"></div>
+        <div style="position:absolute;width:160px;height:160px;background:rgba(255,255,255,.05);border-radius:50%;bottom:-50px;left:-30px"></div>
+        <div class="hero-tag" style="background:rgba(0,198,162,.2);color:rgba(255,255,255,.9)">⚖️ 변호사 역경매 시스템</div>
+        <h1 style="font-size:27px;font-weight:900;color:#fff;line-height:1.28;letter-spacing:-.5px;margin-bottom:12px">변호사가<br>직접 제안하는<br>역경매 비딩</h1>
+        <p style="font-size:14px;color:rgba(255,255,255,.72);line-height:1.65;margin-bottom:26px">수임료 비교 후 선택. 평균 35% 절감 효과.<br>검증된 변호사만 참여합니다.</p>
+        <button class="hero-btn" style="background:#00C6A2;color:#fff" onclick="event.stopPropagation();go('s-bid')">⚖️ 변호사 비딩 보기</button>
+      </div>
+
+      <!-- 슬라이드 3: 금융 상품 연계 -->
+      <div style="min-width:100%;flex-shrink:0;background:linear-gradient(145deg,#0d0a1e,#1a103a);padding:36px 22px 44px;position:relative;overflow:hidden;cursor:pointer" onclick="openM('m-finance')">
+        <div style="position:absolute;width:280px;height:280px;background:rgba(106,61,232,.18);border-radius:50%;top:-90px;right:-80px"></div>
+        <div style="position:absolute;width:160px;height:160px;background:rgba(138,92,246,.12);border-radius:50%;bottom:-50px;left:-30px"></div>
+        <div class="hero-tag" style="background:rgba(106,61,232,.25);color:#c4b5fd">💳 회생 완료 후 신용회복</div>
+        <h1 style="font-size:27px;font-weight:900;color:#fff;line-height:1.28;letter-spacing:-.5px;margin-bottom:12px">회생 완료 후<br>내 조건에 맞는<br>대출 상품 찾기</h1>
+        <p style="font-size:14px;color:rgba(255,255,255,.72);line-height:1.65;margin-bottom:26px">AI가 탕감률·변제율 기반으로<br>맞춤 금융 상품을 추천해드립니다.</p>
+        <button class="hero-btn" style="background:linear-gradient(135deg,#6A3DE8,#8b5cf6);color:#fff;box-shadow:0 8px 24px rgba(106,61,232,.4)" onclick="event.stopPropagation();openM('m-finance')">💳 금융 상품 보기</button>
+      </div>
+    </div>
+
+    <!-- 인디케이터 -->
+    <div id="hero-dots" style="position:absolute;bottom:14px;left:50%;transform:translateX(-50%);display:flex;gap:6px;z-index:10">
+      <div onclick="heroGo(0)" style="width:20px;height:5px;border-radius:3px;background:#fff;cursor:pointer;transition:all .3s" id="hdot0"></div>
+      <div onclick="heroGo(1)" style="width:6px;height:5px;border-radius:3px;background:rgba(255,255,255,.4);cursor:pointer;transition:all .3s" id="hdot1"></div>
+      <div onclick="heroGo(2)" style="width:6px;height:5px;border-radius:3px;background:rgba(255,255,255,.4);cursor:pointer;transition:all .3s" id="hdot2"></div>
     </div>
   </div>
 
@@ -7955,6 +7982,60 @@ window.switchLoginTab=switchLoginTab;
 
 // go
 })(); // IIFE 종료
+
+// ── 히어로 슬라이드 ───────────────────────────────────────────────
+(function(){
+  var cur = 0, total = 3, timer, startX, startY, dragging = false;
+  var track = document.getElementById('hero-track');
+  var wrap  = document.getElementById('hero-wrap');
+  if(!track || !wrap) return;
+
+  function goto(n) {
+    cur = (n + total) % total;
+    track.style.transform = 'translateX(-' + (cur * 100) + '%)';
+    for(var i=0;i<total;i++){
+      var d = document.getElementById('hdot'+i);
+      if(!d) continue;
+      d.style.width   = i===cur ? '20px' : '6px';
+      d.style.background = i===cur ? '#fff' : 'rgba(255,255,255,.4)';
+    }
+  }
+
+  window.heroGo = goto;
+
+  function next(){ goto(cur+1); }
+  function resetTimer(){ clearInterval(timer); timer = setInterval(next, 4000); }
+
+  resetTimer();
+
+  // 스와이프
+  wrap.addEventListener('touchstart', function(e){
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    dragging = true;
+    clearInterval(timer);
+  }, {passive:true});
+
+  wrap.addEventListener('touchend', function(e){
+    if(!dragging) return;
+    dragging = false;
+    var dx = e.changedTouches[0].clientX - startX;
+    var dy = e.changedTouches[0].clientY - startY;
+    if(Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 40){
+      goto(dx < 0 ? cur+1 : cur-1);
+    }
+    resetTimer();
+  }, {passive:true});
+
+  // 마우스 드래그 (PC)
+  wrap.addEventListener('mousedown', function(e){ startX = e.clientX; dragging = true; clearInterval(timer); });
+  wrap.addEventListener('mouseup', function(e){
+    if(!dragging) return; dragging = false;
+    var dx = e.clientX - startX;
+    if(Math.abs(dx) > 40) goto(dx < 0 ? cur+1 : cur-1);
+    resetTimer();
+  });
+})();
 
 // ── 금융상품 연계 로직 ────────────────────────────────────────────
 (function(){
