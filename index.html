@@ -264,7 +264,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
         <div style="font-size:11px;color:rgba(255,255,255,.5)">일부 기능이 제한될 수 있습니다</div>
       </div>
     </div>
-    <div style="font-size:10px;font-weight:700;background:#E91E8C;color:#fff;padding:3px 10px;border-radius:20px">Beta v3.3</div>
+    <div style="font-size:10px;font-weight:700;background:#E91E8C;color:#fff;padding:3px 10px;border-radius:20px">Beta v3.5</div>
   </div>
 
   <!-- 메인 배너 -->
@@ -417,7 +417,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
     </div>
     <div style="font-size:10px;color:rgba(255,255,255,.25);line-height:1.9">
       LIFEREFIX는 법률 자문 또는 중개 서비스를 제공하지 않습니다. 본 서비스는 일반적인 정보 제공을 목적으로 하며, 특정 전문가를 추천하거나 알선하지 않습니다. 모든 의사결정은 이용자 본인의 판단과 책임 하에 이루어집니다.<br><br>
-      © 2026 Liferefix. All rights reserved. Beta v3.3
+      © 2026 Liferefix. All rights reserved. Beta v3.5
     </div>
   </footer>
 </div>
@@ -881,7 +881,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
     </div>
 
     <div style="margin-top:14px;font-size:10px;color:rgba(255,255,255,.3)">
-      © 2026 Liferefix. All rights reserved. Beta v3.3
+      © 2026 Liferefix. All rights reserved. Beta v3.5
     </div>
   </footer>
 
@@ -1097,7 +1097,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
       <div style="background:#fff;border-radius:var(--rad);padding:14px;border:1px solid var(--bd);box-shadow:var(--shs);cursor:pointer" onclick="switchAttTab('cases')"><div style="font-size:22px;font-weight:900;color:var(--p)" id="att-stat-new">0</div><div style="font-size:11px;color:var(--ts)">신규 사건</div></div>
       <div style="background:#fff;border-radius:var(--rad);padding:14px;border:1px solid var(--bd);box-shadow:var(--shs);cursor:pointer" onclick="switchAttTab('cases');setTimeout(function(){filterAttCases(document.querySelector('#g-case-filter .tb[data-f=bid]'));},200)"><div style="font-size:22px;font-weight:900;color:var(--a)" id="att-stat-bid">0</div><div style="font-size:11px;color:var(--ts)">비딩 중 ›</div></div>
       <div style="background:#fff;border-radius:var(--rad);padding:14px;border:1px solid var(--bd);box-shadow:var(--shs);cursor:pointer" onclick="switchAttTab('hired')"><div style="font-size:22px;font-weight:900;color:#005945" id="att-stat-hired">0</div><div style="font-size:11px;color:var(--ts)">수임중 ›</div></div>
-      <div style="background:linear-gradient(135deg,var(--p),var(--pd));border-radius:var(--rad);padding:14px;cursor:pointer" onclick="switchAttTab('pay')"><div style="font-size:22px;font-weight:900;color:#fff" id="att-stat-quota">10건</div><div style="font-size:11px;color:rgba(255,255,255,.8)">잔여 비딩권 ›</div></div>
+      <div style="background:#fff;border-radius:var(--rad);padding:14px;border:1px solid var(--bd);box-shadow:var(--shs);cursor:pointer" onclick="switchAttTab('pay')"><div style="font-size:22px;font-weight:900;color:#fff;background:linear-gradient(135deg,var(--p),var(--pd));border-radius:8px;padding:2px 8px;display:inline-block" id="att-stat-quota">...</div><div style="font-size:11px;color:var(--ts);margin-top:4px">잔여 비딩권 ›</div></div>
     </div>
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
@@ -2850,9 +2850,13 @@ function renderDiag(r){
     extraInfo += '<div style="background:#FFF0F0;border-radius:8px;padding:10px 12px;font-size:12px;color:var(--r);margin-top:6px">'
       +'⛔ <b>면책 이력</b>이 있어 재신청 제한이 적용될 수 있습니다. 전문 변호사 상담을 권장합니다.</div>';
   }
-  if(extraInfo) {
-    var extraEl = document.getElementById('d-extra');
-    if(extraEl) extraEl.innerHTML = extraInfo;
+  var extraEl = document.getElementById('d-extra');
+  if(extraEl) {
+    if(extraInfo) {
+      extraEl.innerHTML = extraInfo;
+    } else {
+      extraEl.innerHTML = '';
+    }
   }
   document.getElementById('d-breakdown').innerHTML=bd;
   document.getElementById('d-ok').style.display='block';
@@ -3300,10 +3304,6 @@ function submitCaseWithContact(){
 
 function _doSubmitCase(contactName, contactPhone){
   if(!window.FB_USER) return;
-  var dtype  = document.querySelector('#g-rtype .tb.on');
-  var drange = document.querySelector('#g-rdrange .tb.on');
-  var budget = document.querySelector('#g-rbudget .tb.on');
-  var region = document.querySelector('#g-rreg .tb.on');
   var dtype  = document.querySelector('#g-rtype .tb.on');
   var drange = document.querySelector('#g-rdrange .tb.on');
   var budget = document.querySelector('#g-rbudget .tb.on');
@@ -4531,26 +4531,27 @@ function admShowAttDetail(jsonStr) {
 
   document.getElementById('m-adm-detail-body').innerHTML =
     '<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">'
-    +'<div style="width:52px;height:52px;border-radius:50%;background:var(--pl);display:flex;align-items:center;justify-content:center;font-size:24px">⚖️</div>'
-    +'<div>'
-    +'<div style="font-size:18px;font-weight:800">'+(a.name||'-')+' 변호사</div>'
-    +'<span style="font-size:12px;font-weight:700;background:'+s.bg+';color:'+s.c+';padding:3px 10px;border-radius:20px">'+s.l+'</span>'
+    +'<div style="width:48px;height:48px;border-radius:50%;background:var(--pl);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">⚖️</div>'
+    +'<div style="min-width:0">'
+    +'<div style="font-size:17px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(a.name||'-')+' 변호사</div>'
+    +'<span style="font-size:11px;font-weight:700;background:'+s.bg+';color:'+s.c+';padding:3px 10px;border-radius:20px;display:inline-block;margin-top:4px">'+s.l+'</span>'
     +'</div></div>'
-    +'<table style="width:100%;border-collapse:collapse;font-size:13px">'
+    +'<table style="width:100%;border-collapse:collapse;font-size:13px;table-layout:fixed">'
     +[
       ['법무법인', a.firm||'-'],
       ['이메일',   a.email||'-'],
       ['지역',     a.region||'-'],
-      ['경력',     a.career||'-'],
+      ['경력',     (a.career||'-')+(a.career&&a.career!=='-'?'년':'')],
       ['전문분야', a.type||(a.types&&a.types.join(', '))||'-'],
       ['착수금',   a.price||'-'],
       ['등록번호', a.regnum||'-'],
-      ['소개',     a.intro||a.bio||'-'],
       ['신청일',   a.appliedAt||'-'],
+      ['소개',     a.intro||a.bio||'-'],
     ].map(function(row){
+      var isLong = row[0]==='소개';
       return '<tr style="border-bottom:1px solid var(--bd)">'
-        +'<td style="padding:9px 8px;font-weight:700;color:var(--ts);width:80px;white-space:nowrap">'+row[0]+'</td>'
-        +'<td style="padding:9px 8px;color:var(--dark)">'+row[1]+'</td>'
+        +'<td style="padding:9px 8px;font-weight:700;color:var(--ts);width:72px;white-space:nowrap;vertical-align:top">'+row[0]+'</td>'
+        +'<td style="padding:9px 8px;color:var(--t);word-break:break-all;'+(isLong?'line-height:1.6':'')+'">'+row[1]+'</td>'
         +'</tr>';
     }).join('')
     +'</table>'
@@ -4942,7 +4943,7 @@ function bindStarGroup(){
 // ═══════════════════════════════
 document.addEventListener('click',function(e){
   // closest로 버튼 텍스트 클릭도 처리
-  var _sel = '.att-bid-btn,.il-submit-btn,.il-cancel-btn,.att-confirm-btn,.att-reject-hire-btn,.att-progress-btn,.att-done-btn,.open-progress-btn,.prog-stage-btn,.case-user-btn,.adm-modal-approve-btn,.adm-modal-reject-btn,.adm-modal-block-btn,.adm-app-att-btn,.adm-rej-att-btn,.adm-blk-att-btn,.my-go-bids-btn,.my-reg-case-btn,.go-bid-btn,.tp-go-list-btn,.tp-go-reg-btn,.save-progress-btn,.adm-del-btn,.adm-app-btn,.adm-blk-btn,.adm-rst-btn';
+  var _sel = '.att-bid-btn,.il-submit-btn,.il-cancel-btn,.att-confirm-btn,.att-reject-hire-btn,.att-progress-btn,.att-done-btn,.open-progress-btn,.prog-stage-btn,.case-user-btn,.adm-modal-approve-btn,.adm-modal-reject-btn,.adm-modal-block-btn,.adm-app-att-btn,.adm-rej-att-btn,.my-go-bids-btn,.my-reg-case-btn,.go-bid-btn,.tp-go-list-btn,.tp-go-reg-btn,.save-progress-btn,.adm-del-btn,.adm-app-btn,.adm-blk-btn,.adm-rst-btn';
   var t = (e.target.closest && e.target.closest(_sel)) || e.target;
 
   // 변호사 포털
@@ -5004,18 +5005,26 @@ document.addEventListener('click',function(e){
     var aid=t.dataset.aid; admRejectAtt(aid); closeM('m-adm-detail'); return;
   }
   if(t.classList.contains('adm-modal-block-btn')){
-    var aid=t.dataset.aid; admRejectAtt(aid); closeM('m-adm-detail'); return;
-  }
-  if(e.target.classList.contains('adm-blk-att-btn')){
-    if(confirm((e.target.dataset.email||'이 변호사')+' 파트너 자격을 정지하시겠습니까?')){
-      admBlockAtt(e.target.dataset.aid);
+    var aid=t.dataset.aid;
+    if(confirm('파트너 자격을 정지하시겠습니까?')){
+      admBlockAtt(aid); closeM('m-adm-detail');
     }
+    return;
   }
-  if(e.target.classList.contains('adm-restore-att-btn')){
-    if(confirm((e.target.dataset.email||'이 변호사')+' 파트너 자격을 재승인하시겠습니까?')){
-      admRestoreAtt(e.target.dataset.aid);
+  var blkBtn = e.target.closest('.adm-blk-att-btn');
+  if(blkBtn){
+    if(confirm((blkBtn.dataset.email||'이 변호사')+' 파트너 자격을 정지하시겠습니까?')){
+      admBlockAtt(blkBtn.dataset.aid);
+    }
+    return;
+  }
+  var restoreBtn = e.target.closest('.adm-restore-att-btn');
+  if(restoreBtn){
+    if(confirm((restoreBtn.dataset.email||'이 변호사')+' 파트너 자격을 재승인하시겠습니까?')){
+      admRestoreAtt(restoreBtn.dataset.aid);
       closeM('m-adm-detail');
     }
+    return;
   }
   if(e.target.classList.contains('rev-approve-btn'))  { admApprovePayment(e.target.dataset.pid, e.target.dataset.uid, e.target.dataset.plan); }
   if(e.target.classList.contains('rev-reject-btn'))   { admRejectPayment(e.target.dataset.pid); }
@@ -5994,11 +6003,9 @@ function confirmSelectAtt() {
       _selectedBid = null;
       toast('✅ ' + selAttName + ' 변호사에게 연락처가 전달되었습니다! 내 사건 탭에서 진행상황을 확인하세요.');
 
-      // 받은제안 → 내진단 탭으로 이동 (사건 현황에서 확인)
-      closeM('m-select-att');
       setTimeout(function(){
-        switchMyTab('diag');   // 내진단 탭으로
-        loadMyCaseInline();    // 사건 상태 즉시 갱신
+        switchMyTab('diag');
+        loadMyCaseInline();
       }, 500);
       // 변호사에게 수임 요청 알림
       if(attId2 && window.sendPushNotification) {
