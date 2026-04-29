@@ -254,139 +254,185 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
 
 <!-- HOME -->
 <div class="scr on" id="s-home">
-  <!-- 베타 배너 -->
-  <!-- 베타 배너 -->
-  <div style="background:#0D1B2A;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid #E91E8C">
-    <div style="display:flex;align-items:center;gap:8px">
-      <div style="width:8px;height:8px;background:#E91E8C;border-radius:50%;animation:pulse 2s infinite"></div>
-      <div>
-        <div style="font-size:12px;font-weight:800;color:#fff">베타 서비스 운영중</div>
-        <div style="font-size:11px;color:rgba(255,255,255,.5)">일부 기능이 제한될 수 있습니다</div>
-      </div>
-    </div>
-    <div style="font-size:10px;font-weight:700;background:#E91E8C;color:#fff;padding:3px 10px;border-radius:20px">Beta v4.3</div>
-  </div>
 
-  <!-- 메인 배너 -->
-  <div class="hero" style="cursor:pointer" onclick="go('s-diag')">
-    <div class="hero-tag">✦ AI 기반 채무 진단</div>
-    <h1>채무 해결,<br>이제 데이터로<br>정확하게</h1>
-    <p>개인회생 가능성·변제금·탕감률을 무료 진단하고, 검증된 변호사의 독립 제안을 받아보세요.</p>
-    <button class="hero-btn" onclick="event.stopPropagation();go('s-diag')">⚡ 무료 채무 진단 시작하기</button>
-    <!-- 배너 인디케이터 -->
-    <div style="position:absolute;bottom:14px;right:18px;display:flex;gap:4px;z-index:1">
-      <div style="width:16px;height:5px;background:#fff;border-radius:3px"></div>
-      <div style="width:5px;height:5px;background:rgba(255,255,255,.4);border-radius:50%"></div>
-      <div style="width:5px;height:5px;background:rgba(255,255,255,.4);border-radius:50%"></div>
+  <!-- 상단바 -->
+  <div style="background:#fff;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #F0F0F0">
+    <div onclick="openM('m-menu')" style="cursor:pointer;width:30px;height:30px;display:flex;flex-direction:column;justify-content:center;gap:4px">
+      <span style="width:20px;height:2px;background:#1A1A1A;border-radius:1px"></span>
+      <span style="width:20px;height:2px;background:#1A1A1A;border-radius:1px"></span>
+      <span style="width:20px;height:2px;background:#1A1A1A;border-radius:1px"></span>
+    </div>
+    <div style="font-weight:900;font-size:22px;color:#6A3DE8;letter-spacing:-0.5px">Liferefix</div>
+    <div style="position:relative;cursor:pointer;font-size:20px" onclick="checkLoginGoMy()">
+      🔔
+      <span id="home-noti-dot" style="display:none;position:absolute;top:0;right:0;width:8px;height:8px;border-radius:50%;background:#FF4757"></span>
     </div>
   </div>
 
-  <!-- 통계 바 -->
-  <div class="stats">
-    <div class="stat"><span class="stat-n" id="stat-consult">0건</span><span class="stat-l">누적 상담</span></div>
-    <div class="stat"><span class="stat-n">72%</span><span class="stat-l">평균 탕감률</span></div>
-    <div class="stat"><span class="stat-n" id="stat-att">모집중</span><span class="stat-l">전문 변호사</span></div>
-    <div class="stat" style="border-right:none"><span class="stat-n">93%</span><span class="stat-l">인가율</span></div>
+  <!-- 베타 안내 (작게) -->
+  <div style="background:#0D1B2A;padding:8px 16px;display:flex;align-items:center;justify-content:space-between">
+    <div style="display:flex;align-items:center;gap:6px">
+      <div style="width:6px;height:6px;background:#E91E8C;border-radius:50%;animation:pulse 2s infinite"></div>
+      <div style="font-size:11px;color:rgba(255,255,255,.7)">베타 서비스 운영중</div>
+    </div>
+    <div style="font-size:9px;font-weight:700;background:#E91E8C;color:#fff;padding:2px 8px;border-radius:20px">v4.3</div>
   </div>
 
-  <!-- 아이콘 그리드 -->
-  <div style="background:#fff;margin:12px 16px;border-radius:18px;padding:16px 8px 10px;box-shadow:var(--shs)">
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:2px">
-      <div onclick="go('s-diag')" style="display:flex;flex-direction:column;align-items:center;gap:7px;padding:10px 4px;cursor:pointer">
-        <div style="width:52px;height:52px;border-radius:15px;background:#EEF3FF;display:flex;align-items:center;justify-content:center;font-size:24px">📊</div>
-        <span style="font-size:11px;font-weight:600;color:#222;text-align:center;line-height:1.3">AI 진단</span>
-      </div>
-      <div onclick="go('s-bid')" style="display:flex;flex-direction:column;align-items:center;gap:7px;padding:10px 4px;cursor:pointer">
-        <div style="width:52px;height:52px;border-radius:15px;background:#E0FAF5;display:flex;align-items:center;justify-content:center;font-size:24px">⚖️</div>
-        <span style="font-size:11px;font-weight:600;color:#222;text-align:center;line-height:1.3">변호사<br>견적</span>
-      </div>
-      <div onclick="go('s-info')" style="display:flex;flex-direction:column;align-items:center;gap:7px;padding:10px 4px;cursor:pointer">
-        <div style="width:52px;height:52px;border-radius:15px;background:#FFF3E0;display:flex;align-items:center;justify-content:center;font-size:24px">📋</div>
-        <span style="font-size:11px;font-weight:600;color:#222;text-align:center;line-height:1.3">회생<br>안내</span>
-      </div>
-      <div onclick="openM('m-finance')" style="display:flex;flex-direction:column;align-items:center;gap:7px;padding:10px 4px;cursor:pointer">
-        <div style="width:52px;height:52px;border-radius:15px;background:#F3E5F5;display:flex;align-items:center;justify-content:center;font-size:24px">💳</div>
-        <span style="font-size:11px;font-weight:600;color:#222;text-align:center;line-height:1.3">금융<br>연계</span>
-      </div>
-      <div onclick="go('s-bid');setTimeout(function(){switchTab('reg')},100)" style="display:flex;flex-direction:column;align-items:center;gap:7px;padding:10px 4px;cursor:pointer">
-        <div style="width:52px;height:52px;border-radius:15px;background:#E8F5E9;display:flex;align-items:center;justify-content:center;font-size:24px">📝</div>
-        <span style="font-size:11px;font-weight:600;color:#222;text-align:center;line-height:1.3">사건<br>등록</span>
-      </div>
-      <div onclick="window.openAttApply&&window.openAttApply()" style="display:flex;flex-direction:column;align-items:center;gap:7px;padding:10px 4px;cursor:pointer">
-        <div style="width:52px;height:52px;border-radius:15px;background:#FCE4EC;display:flex;align-items:center;justify-content:center;font-size:24px">🏆</div>
-        <span style="font-size:11px;font-weight:600;color:#222;text-align:center;line-height:1.3">변호사<br>입점</span>
-      </div>
-      <div onclick="go('s-info')" style="display:flex;flex-direction:column;align-items:center;gap:7px;padding:10px 4px;cursor:pointer">
-        <div style="width:52px;height:52px;border-radius:15px;background:#E3F2FD;display:flex;align-items:center;justify-content:center;font-size:24px">❓</div>
-        <span style="font-size:11px;font-weight:600;color:#222;text-align:center;line-height:1.3">FAQ</span>
-      </div>
-      <div onclick="go('s-my')" style="display:flex;flex-direction:column;align-items:center;gap:7px;padding:10px 4px;cursor:pointer">
-        <div style="width:52px;height:52px;border-radius:15px;background:#F5F5F5;display:flex;align-items:center;justify-content:center;font-size:24px">👤</div>
-        <span style="font-size:11px;font-weight:600;color:#222;text-align:center;line-height:1.3">마이<br>페이지</span>
-      </div>
-    </div>
-  </div>
+  <!-- ━━━━━━━━ 슬라이드 캠페인 배너 ━━━━━━━━ -->
+  <div style="margin:12px 16px 16px;position:relative;overflow:hidden;border-radius:20px">
+    <div id="home-banner-track" style="display:flex;transition:transform .4s ease;width:400%">
 
-  <!-- 이벤트 배너 (변호사 입점) -->
-  <div onclick="window.openAttApply&&window.openAttApply()" style="margin:0 16px;border-radius:16px;background:linear-gradient(135deg,#0D1B2A,#1A3A5C);padding:16px 18px;display:flex;justify-content:space-between;align-items:center;cursor:pointer">
-    <div>
-      <span style="font-size:10px;font-weight:700;background:#6A3DE8;color:#fff;padding:3px 8px;border-radius:10px;display:inline-block;margin-bottom:6px">이벤트</span>
-      <div style="font-size:13px;font-weight:800;color:#fff;line-height:1.5">변호사 입점 신청하고<br>3개월 무료 체험</div>
-    </div>
-    <div style="font-size:36px">⚖️</div>
-  </div>
-
-  <!-- 공지 -->
-  <div class="notice" style="margin-top:12px">⚠️ 진단 결과는 참고용이며 실제 법원 판결을 보장하지 않습니다.</div>
-
-  <!-- 후기 -->
-  <div class="sec" style="margin-top:18px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-      <div>
-        <div class="sec-t">💬 실제 이용자 후기</div>
-        <div class="sec-s" style="margin-bottom:0">Liferefix로 채무를 해결한 분들의 경험담</div>
-      </div>
-    </div>
-    <div style="display:flex;flex-direction:column;gap:12px">
-      <div style="background:#fff;border-radius:16px;padding:16px;border:1px solid var(--bd)">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-          <div><span style="font-size:13px;font-weight:800">김○○</span><span style="font-size:11px;color:var(--ts);margin-left:8px">40대 · 채무 8,500만원 → 탕감률 74%</span></div>
-          <span style="color:#FFB800;font-size:13px">★★★★★</span>
+      <!-- 슬라이드 1: 서울회생법원 통계 기반 -->
+      <div style="width:25%;flex-shrink:0;background:linear-gradient(135deg,#FFF4D6,#FFE9A8);padding:18px 20px;display:flex;justify-content:space-between;align-items:center;cursor:pointer" onclick="go('s-diag')">
+        <div style="flex:1">
+          <div style="display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:#7A5500;margin-bottom:6px;background:rgba(255,255,255,.6);padding:4px 10px;border-radius:20px">
+            ⚖️ 서울회생법원 통계 기반
+          </div>
+          <div style="font-size:16px;font-weight:900;color:#1A1A1A;line-height:1.4">개인회생,<br><b style="color:#6A3DE8">나도 가능할까?</b></div>
+          <div style="font-size:11px;color:#666;margin-top:4px">3분 AI 진단으로 미리 확인하세요</div>
         </div>
-        <p style="font-size:13px;line-height:1.75;color:var(--ts);margin:0">"처음엔 너무 막막했는데 AI 진단으로 탕감 가능성을 확인하고 용기를 냈어요. 변호사 3명이 제안을 보내줘서 비교하고 선택할 수 있었습니다."</p>
+        <div style="font-size:42px;flex-shrink:0;margin-left:8px">⚖️</div>
       </div>
-      <div style="background:#fff;border-radius:16px;padding:16px;border:1px solid var(--bd)">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-          <div><span style="font-size:13px;font-weight:800">이○○</span><span style="font-size:11px;color:var(--ts);margin-left:8px">30대 · 채무 5,200만원 → 탕감률 68%</span></div>
-          <span style="color:#FFB800;font-size:13px">★★★★★</span>
+
+      <!-- 슬라이드 2: 14.9만 명 -->
+      <div style="width:25%;flex-shrink:0;background:linear-gradient(135deg,#E5F0FF,#C8DFFF);padding:18px 20px;display:flex;justify-content:space-between;align-items:center;cursor:pointer" onclick="go('s-diag')">
+        <div style="flex:1">
+          <div style="display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:#1565C0;margin-bottom:6px;background:rgba(255,255,255,.6);padding:4px 10px;border-radius:20px">
+            📊 2025년 통계
+          </div>
+          <div style="font-size:16px;font-weight:900;color:#1A1A1A;line-height:1.4"><b style="color:#1565C0">14.9만 명</b><br>역대 최대 신청</div>
+          <div style="font-size:11px;color:#666;margin-top:4px">2025년 개인회생 신청 건수</div>
         </div>
-        <p style="font-size:13px;line-height:1.75;color:var(--ts);margin:0">"변호사를 어떻게 찾아야 할지 몰랐는데 여러 분이 직접 제안해주시니 편했어요. 착수금도 다른 곳보다 훨씬 합리적이었습니다."</p>
+        <div style="font-size:42px;flex-shrink:0;margin-left:8px">📊</div>
       </div>
-      <div style="background:#fff;border-radius:16px;padding:16px;border:1px solid var(--bd)">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-          <div><span style="font-size:13px;font-weight:800">박○○</span><span style="font-size:11px;color:var(--ts);margin-left:8px">50대 · 채무 1억 2천만원 → 탕감률 81%</span></div>
-          <span style="color:#FFB800;font-size:13px">★★★★★</span>
+
+      <!-- 슬라이드 3: 베타 사용자 모집 -->
+      <div style="width:25%;flex-shrink:0;background:linear-gradient(135deg,#E0FAF5,#B2F0E2);padding:18px 20px;display:flex;justify-content:space-between;align-items:center;cursor:pointer" onclick="go('s-diag')">
+        <div style="flex:1">
+          <div style="display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:#005945;margin-bottom:6px;background:rgba(255,255,255,.6);padding:4px 10px;border-radius:20px">
+            🎁 베타 사용자 모집
+          </div>
+          <div style="font-size:16px;font-weight:900;color:#1A1A1A;line-height:1.4">진단 + 변호사 매칭<br><b style="color:#005945">무료 체험</b></div>
+          <div style="font-size:11px;color:#666;margin-top:4px">선착순 100명 한정</div>
         </div>
-        <p style="font-size:13px;line-height:1.75;color:var(--ts);margin:0">"사업 실패 후 막막했는데 진단 결과를 보고 희망이 생겼어요. 선택한 변호사 선생님이 끝까지 잘 도와주셨습니다."</p>
+        <div style="font-size:42px;flex-shrink:0;margin-left:8px">🎁</div>
       </div>
-      <div style="background:#fff;border-radius:16px;padding:16px;border:1px solid var(--bd)">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-          <div><span style="font-size:13px;font-weight:800">정○○</span><span style="font-size:11px;color:var(--ts);margin-left:8px">40대 · 채무 6,700만원 → 탕감률 71%</span></div>
-          <span style="color:#FFB800;font-size:13px">★★★★★</span>
+
+      <!-- 슬라이드 4: 다양한 해결방법 -->
+      <div style="width:25%;flex-shrink:0;background:linear-gradient(135deg,#F0E5FF,#DBC8FF);padding:18px 20px;display:flex;justify-content:space-between;align-items:center;cursor:pointer" onclick="go('s-diag')">
+        <div style="flex:1">
+          <div style="display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:#6A3DE8;margin-bottom:6px;background:rgba(255,255,255,.6);padding:4px 10px;border-radius:20px">
+            💡 다양한 선택지
+          </div>
+          <div style="font-size:16px;font-weight:900;color:#1A1A1A;line-height:1.4">변호사·법무사·자가신청<br><b style="color:#6A3DE8">내게 맞는 길</b></div>
+          <div style="font-size:11px;color:#666;margin-top:4px">상황에 맞는 해결 방법 안내</div>
         </div>
-        <p style="font-size:13px;line-height:1.75;color:var(--ts);margin:0">"변호사별 견적을 한눈에 비교하니까 선택이 쉬웠어요. 정말 좋은 서비스입니다."</p>
+        <div style="font-size:42px;flex-shrink:0;margin-left:8px">💡</div>
       </div>
+
     </div>
-    <div id="rv-user-list"></div>
+    <!-- 인디케이터 -->
+    <div style="position:absolute;bottom:10px;left:50%;transform:translateX(-50%);display:flex;gap:5px">
+      <div class="bn-dot active" data-idx="0" style="width:18px;height:5px;background:#1A1A1A;border-radius:3px;cursor:pointer;transition:all .3s"></div>
+      <div class="bn-dot" data-idx="1" style="width:5px;height:5px;background:rgba(0,0,0,.25);border-radius:50%;cursor:pointer;transition:all .3s"></div>
+      <div class="bn-dot" data-idx="2" style="width:5px;height:5px;background:rgba(0,0,0,.25);border-radius:50%;cursor:pointer;transition:all .3s"></div>
+      <div class="bn-dot" data-idx="3" style="width:5px;height:5px;background:rgba(0,0,0,.25);border-radius:50%;cursor:pointer;transition:all .3s"></div>
+    </div>
   </div>
 
-  <!-- 시장 현황 -->
-  <div class="sec">
-    <div class="sec-t">시장 현황</div>
-    <div class="sec-s">2026년 개인회생 시장 동향</div>
-    <div class="card"><div class="card-t">📈 2025년 개인회생 신청 역대 최고치</div><div class="card-b">2025년 연간 신청 14만 9,146건으로 역대 최대. 전년(12만 9,499건) 대비 약 15% 급증.</div></div>
-    <div class="card"><div class="card-t">⚖️ 2026년 기준 중위소득 역대 최대 인상</div><div class="card-b">1인 가구 최저생계비 <b>154만원</b> 적용. 최저생계비 인상으로 월 변제금 부담 감소.</div></div>
-    <div class="card"><div class="card-t">👨‍👩‍👧 단축 변제기간 확대</div><div class="card-b">미성년 자녀 2명 이상 가구는 최단 24개월 변제 가능. 기존 3명 기준에서 2명으로 완화.</div></div>
+  <!-- ━━━━━━━━ 메인 카드 (로그인 분기) ━━━━━━━━ -->
+  <!-- 로그인 X: 진단 CTA -->
+  <div id="home-card-guest" style="margin:0 16px 16px;background:#fff;border:1px solid #EEE;border-radius:20px;padding:22px 20px;box-shadow:0 2px 8px rgba(0,0,0,0.04)">
+    <div style="display:inline-block;background:#F5F2FF;color:#6A3DE8;font-size:11px;font-weight:700;padding:5px 12px;border-radius:20px;margin-bottom:12px">⚖️ 무료 AI 진단</div>
+    <div style="font-size:19px;font-weight:900;line-height:1.4;margin-bottom:8px;color:#1A1A1A">내 채무,<br><b style="color:#6A3DE8">얼마나 줄일 수 있을까?</b></div>
+    <div style="font-size:13px;color:#666;line-height:1.6;margin-bottom:16px">소득과 채무 정보를 입력하면<br>AI가 평균 탕감률과 변제 계획을 알려드려요.</div>
+    <div style="display:flex;gap:8px;margin-bottom:16px">
+      <div style="flex:1;background:#FAFAFA;border-radius:12px;padding:10px;text-align:center">
+        <div style="font-size:16px;font-weight:900;color:#6A3DE8">97건</div>
+        <div style="font-size:10px;color:#666;margin-top:2px">판결문 DB</div>
+      </div>
+      <div style="flex:1;background:#FAFAFA;border-radius:12px;padding:10px;text-align:center">
+        <div style="font-size:16px;font-weight:900;color:#6A3DE8">14.9만</div>
+        <div style="font-size:10px;color:#666;margin-top:2px">2025 신청</div>
+      </div>
+      <div style="flex:1;background:#FAFAFA;border-radius:12px;padding:10px;text-align:center">
+        <div style="font-size:16px;font-weight:900;color:#6A3DE8">35%</div>
+        <div style="font-size:10px;color:#666;margin-top:2px">평균 탕감</div>
+      </div>
+    </div>
+    <button onclick="go('s-diag')" style="width:100%;background:#6A3DE8;color:#fff;border:none;padding:15px;border-radius:14px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">3분 AI 진단 시작하기 →</button>
+  </div>
+
+  <!-- 로그인 O: 내 진행상황 -->
+  <div id="home-card-user" style="display:none;margin:0 16px 16px;background:#fff;border:1px solid #EEE;border-radius:20px;padding:22px 20px;box-shadow:0 2px 8px rgba(0,0,0,0.04);cursor:pointer" onclick="go('s-my')">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <div style="display:inline-block;background:#F5F2FF;color:#6A3DE8;font-size:11px;font-weight:700;padding:5px 12px;border-radius:20px">📋 내 사건</div>
+      <span style="font-size:18px;color:#999">›</span>
+    </div>
+    <div style="font-size:13px;color:#888;margin-bottom:6px" id="home-my-stage-label">진행 단계</div>
+    <div style="font-size:19px;font-weight:900;line-height:1.4;margin-bottom:14px;color:#1A1A1A" id="home-my-stage">서류 준비중</div>
+    <div style="background:#FAFAFA;border-radius:12px;padding:14px">
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:#666;margin-bottom:6px">
+        <span id="home-my-progress-label">진행률</span>
+        <span id="home-my-progress-pct" style="font-weight:700;color:#6A3DE8">25%</span>
+      </div>
+      <div style="height:6px;border-radius:3px;background:#E0E0E0;overflow:hidden">
+        <div id="home-my-progress-bar" style="width:25%;height:100%;background:linear-gradient(90deg,#6A3DE8,#8B5CF6);transition:width .4s"></div>
+      </div>
+      <div style="font-size:11px;color:#888;margin-top:8px" id="home-my-next">담당 변호사가 서류를 준비하고 있어요</div>
+    </div>
+  </div>
+
+  <!-- ━━━━━━━━ 그리드 메뉴 (4×2) ━━━━━━━━ -->
+  <div style="margin:0 16px 16px;background:#fff;border-radius:20px;padding:20px 16px;display:grid;grid-template-columns:repeat(4,1fr);gap:18px 8px;box-shadow:0 2px 8px rgba(0,0,0,0.04)">
+
+    <div onclick="go('s-diag')" style="text-align:center;cursor:pointer;position:relative">
+      <span style="position:absolute;top:-6px;right:6px;background:#FF4757;color:#fff;font-size:9px;font-weight:700;padding:3px 7px;border-radius:8px;z-index:1">무료</span>
+      <div style="width:56px;height:56px;margin:0 auto 8px;border-radius:16px;background:#EDE9FF;display:flex;align-items:center;justify-content:center;font-size:26px">🤖</div>
+      <div style="font-size:12px;font-weight:600;color:#1A1A1A">AI 진단</div>
+    </div>
+
+    <div onclick="checkLoginGo('s-bid')" style="text-align:center;cursor:pointer">
+      <div style="width:56px;height:56px;margin:0 auto 8px;border-radius:16px;background:#FFF8E0;display:flex;align-items:center;justify-content:center;font-size:26px">⚖️</div>
+      <div style="font-size:12px;font-weight:600;color:#1A1A1A">변호사</div>
+    </div>
+
+    <div onclick="openM('m-lawscrivener')" style="text-align:center;cursor:pointer">
+      <div style="width:56px;height:56px;margin:0 auto 8px;border-radius:16px;background:#E0FAF5;display:flex;align-items:center;justify-content:center;font-size:26px">📋</div>
+      <div style="font-size:12px;font-weight:600;color:#1A1A1A">법무사</div>
+    </div>
+
+    <div onclick="openM('m-selfpro')" style="text-align:center;cursor:pointer">
+      <div style="width:56px;height:56px;margin:0 auto 8px;border-radius:16px;background:#FFE4F1;display:flex;align-items:center;justify-content:center;font-size:26px">📖</div>
+      <div style="font-size:12px;font-weight:600;color:#1A1A1A">자가신청</div>
+    </div>
+
+    <div onclick="toast('📊 판례검색 기능은 준비중입니다')" style="text-align:center;cursor:pointer">
+      <div style="width:56px;height:56px;margin:0 auto 8px;border-radius:16px;background:#E5F0FF;display:flex;align-items:center;justify-content:center;font-size:26px">📊</div>
+      <div style="font-size:12px;font-weight:600;color:#1A1A1A">판례검색</div>
+    </div>
+
+    <div onclick="window.open('mailto:liferefix@naver.com')" style="text-align:center;cursor:pointer">
+      <div style="width:56px;height:56px;margin:0 auto 8px;border-radius:16px;background:#FFE5D9;display:flex;align-items:center;justify-content:center;font-size:26px">💬</div>
+      <div style="font-size:12px;font-weight:600;color:#1A1A1A">상담</div>
+    </div>
+
+    <div onclick="scrollToFaq()" style="text-align:center;cursor:pointer">
+      <div style="width:56px;height:56px;margin:0 auto 8px;border-radius:16px;background:#F0E5FF;display:flex;align-items:center;justify-content:center;font-size:26px">📚</div>
+      <div style="font-size:12px;font-weight:600;color:#1A1A1A">FAQ</div>
+    </div>
+
+    <div onclick="openM('m-menu')" style="text-align:center;cursor:pointer">
+      <div style="width:56px;height:56px;margin:0 auto 8px;border-radius:16px;background:#F0F0F0;display:flex;align-items:center;justify-content:center;font-size:26px">⚙️</div>
+      <div style="font-size:12px;font-weight:600;color:#1A1A1A">더보기</div>
+    </div>
+
+  </div>
+
+  <!-- ━━━━━━━━ 뉴스/카드 섹션 (기존 유지) ━━━━━━━━ -->
+  <div class="cards" style="margin:0 16px 16px">
+    <div class="card"><div class="card-t">🆕 2026 변제 트렌드</div><div class="card-b">최저생계비 154만원 적용. 변제기간 36개월 표준화. 최신 판례 반영.</div></div>
+    <div class="card"><div class="card-t">⚖️ 회생법원 분리 운영</div><div class="card-b">서울회생법원 단독 운영으로 처리 속도 향상. 평균 인가까지 4-6개월.</div></div>
     <div class="card"><div class="card-t">📊 20·30대 신청 급증</div><div class="card-b">투자손실·돌려막기로 청년층 개인회생 신청 증가. 전문 변호사 매칭이 더욱 중요해짐.</div></div>
   </div>
 
@@ -417,7 +463,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
     </div>
     <div style="font-size:10px;color:rgba(255,255,255,.25);line-height:1.9">
       LIFEREFIX는 법률 자문 또는 중개 서비스를 제공하지 않습니다. 본 서비스는 일반적인 정보 제공을 목적으로 하며, 특정 전문가를 추천하거나 알선하지 않습니다. 모든 의사결정은 이용자 본인의 판단과 책임 하에 이루어집니다.<br><br>
-      © 2026 Liferefix. All rights reserved. Beta v4.3
+      © 2026 Liferefix. All rights reserved. Beta v4.5
     </div>
   </footer>
 </div>
@@ -929,7 +975,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
     </div>
 
     <div style="margin-top:14px;font-size:10px;color:rgba(255,255,255,.3)">
-      © 2026 Liferefix. All rights reserved. Beta v4.3
+      © 2026 Liferefix. All rights reserved. Beta v4.5
     </div>
   </footer>
 
@@ -1123,37 +1169,78 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
 
 <!-- 변호사 대시보드 -->
 <div class="scr" id="s-att-dash" data-protected="true">
-  <div style="position:sticky;top:0;z-index:200;height:52px;background:#fff;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;padding:0 18px">
-    <div style="font-size:15px;font-weight:900;background:linear-gradient(135deg,var(--p),var(--a));-webkit-background-clip:text;-webkit-text-fill-color:transparent">⚖️ 변호사 포털</div>
-    <div style="display:flex;gap:8px;align-items:center">
-      <span id="att-header-name" style="font-size:12px;color:var(--ts);font-weight:600">변호사</span>
-      <button onclick="go('s-my')" style="font-size:11px;font-weight:700;background:var(--bg);border:1px solid var(--bd);border-radius:20px;padding:5px 12px;cursor:pointer;font-family:inherit;color:var(--ts)">나가기</button>
-    </div>
-  </div>
-  <div style="display:flex;background:#fff;border-bottom:2px solid var(--bd)">
-    <button class="att-tab on" id="atab-dash" onclick="switchAttTab('dash')">대시보드</button>
-    <button class="att-tab" id="atab-cases" onclick="switchAttTab('cases')">사건목록</button>
-    <button class="att-tab" id="atab-hired" onclick="switchAttTab('hired')">진행중</button>
-    <button class="att-tab" id="atab-pay" onclick="switchAttTab('pay')">결제</button>
-    <button class="att-tab" id="atab-profile" onclick="switchAttTab('profile')">프로필</button>
-  </div>
-  <div id="atp-dash" style="padding:16px">
-    <div style="font-size:15px;font-weight:800;margin-bottom:2px">대시보드</div>
-    <div id="att-dash-name" style="font-size:13px;color:var(--ts);margin-bottom:14px">변호사님 👋</div>
-    <div class="alert info" id="att-notice">📬 신규 사건을 확인해보세요.</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
-      <div style="background:#fff;border-radius:var(--rad);padding:14px;border:1px solid var(--bd);box-shadow:var(--shs);cursor:pointer" onclick="switchAttTab('cases')"><div style="font-size:22px;font-weight:900;color:var(--p)" id="att-stat-new">0</div><div style="font-size:11px;color:var(--ts)">신규 사건</div></div>
-      <div style="background:#fff;border-radius:var(--rad);padding:14px;border:1px solid var(--bd);box-shadow:var(--shs);cursor:pointer" onclick="switchAttTab('cases');setTimeout(function(){filterAttCases(document.querySelector('#g-case-filter .tb[data-f=bid]'));},200)"><div style="font-size:22px;font-weight:900;color:var(--a)" id="att-stat-bid">0</div><div style="font-size:11px;color:var(--ts)">제안중 ›</div></div>
-      <div style="background:#fff;border-radius:var(--rad);padding:14px;border:1px solid var(--bd);box-shadow:var(--shs);cursor:pointer" onclick="switchAttTab('hired')"><div style="font-size:22px;font-weight:900;color:#005945" id="att-stat-hired">0</div><div style="font-size:11px;color:var(--ts)">진행중 ›</div></div>
-      <div style="background:#fff;border-radius:var(--rad);padding:14px;border:1px solid var(--bd);box-shadow:var(--shs);cursor:pointer" onclick="switchAttTab('pay')"><div style="font-size:22px;font-weight:900;color:#fff;background:linear-gradient(135deg,var(--p),var(--pd));border-radius:8px;padding:2px 8px;display:inline-block" id="att-stat-quota">...</div><div style="font-size:11px;color:var(--ts);margin-top:4px">잔여 제안권 ›</div></div>
-    </div>
-    <div class="card">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-        <div><div style="font-size:14px;font-weight:800">기본 플랜</div><div style="font-size:12px;color:var(--ts);margin-top:2px">월 50만원 · 제안 10건</div></div>
-        <span style="font-size:11px;font-weight:700;background:var(--al);color:#005945;padding:4px 10px;border-radius:20px">활성</span>
+  <!-- 새 톤 헤더 -->
+  <div style="background:#fff;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #F0F0F0;position:sticky;top:0;z-index:200">
+    <div style="display:flex;align-items:center;gap:10px">
+      <div style="width:36px;height:36px;border-radius:12px;background:#F5F2FF;display:flex;align-items:center;justify-content:center;font-size:18px">⚖️</div>
+      <div>
+        <div style="font-size:15px;font-weight:900;color:#1A1A1A">변호사 포털</div>
+        <div id="att-header-name" style="font-size:11px;color:#888;margin-top:1px">변호사</div>
       </div>
-      <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px"><span style="color:var(--ts)">이번 달 제안</span><b>9건 / 50회</b></div>
-      <div style="height:7px;border-radius:4px;background:var(--bd);overflow:hidden"><div style="width:0%;height:100%;border-radius:4px;background:linear-gradient(90deg,var(--p),#4D8EFF)"></div></div>
+    </div>
+    <button onclick="go('s-my')" style="font-size:11px;font-weight:700;background:#F5F5F5;border:none;border-radius:20px;padding:6px 14px;cursor:pointer;font-family:inherit;color:#666">나가기</button>
+  </div>
+
+  <!-- 탭 (둥근 톤으로) -->
+  <div style="background:#fff;padding:8px 12px;border-bottom:1px solid #F0F0F0;display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch">
+    <button class="att-tab on" id="atab-dash" onclick="switchAttTab('dash')" style="background:#6A3DE8;color:#fff;border:none;padding:8px 16px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0;font-family:inherit">대시보드</button>
+    <button class="att-tab" id="atab-cases" onclick="switchAttTab('cases')" style="background:#F5F5F5;color:#666;border:none;padding:8px 16px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0;font-family:inherit">사건목록</button>
+    <button class="att-tab" id="atab-hired" onclick="switchAttTab('hired')" style="background:#F5F5F5;color:#666;border:none;padding:8px 16px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0;font-family:inherit">진행중</button>
+    <button class="att-tab" id="atab-pay" onclick="switchAttTab('pay')" style="background:#F5F5F5;color:#666;border:none;padding:8px 16px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0;font-family:inherit">결제</button>
+    <button class="att-tab" id="atab-profile" onclick="switchAttTab('profile')" style="background:#F5F5F5;color:#666;border:none;padding:8px 16px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0;font-family:inherit">프로필</button>
+  </div>
+
+  <div id="atp-dash" style="padding:16px;background:#F5F6F8;min-height:calc(100vh - 110px)">
+    <!-- 인사 카드 -->
+    <div style="background:linear-gradient(135deg,#6A3DE8,#8B5CF6);border-radius:20px;padding:20px;color:#fff;margin-bottom:16px">
+      <div style="font-size:13px;opacity:0.85;margin-bottom:4px" id="att-dash-name">변호사님 👋</div>
+      <div style="font-size:18px;font-weight:900;line-height:1.4">오늘도 좋은 하루 되세요</div>
+      <div id="att-notice" style="margin-top:12px;background:rgba(255,255,255,0.18);backdrop-filter:blur(10px);border-radius:12px;padding:10px 14px;font-size:12px;color:#fff">📬 신규 사건을 확인해보세요.</div>
+    </div>
+
+    <!-- 통계 카드 4개 (새 톤) -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+      <div onclick="switchAttTab('cases')" style="background:#fff;border-radius:18px;padding:16px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.04)">
+        <div style="width:36px;height:36px;border-radius:10px;background:#EDE9FF;display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:8px">🆕</div>
+        <div style="font-size:24px;font-weight:900;color:#1A1A1A" id="att-stat-new">0</div>
+        <div style="font-size:11px;color:#888;margin-top:2px">신규 사건</div>
+      </div>
+      <div onclick="switchAttTab('cases');setTimeout(function(){filterAttCases(document.querySelector('#g-case-filter .tb[data-f=bid]'));},200)" style="background:#fff;border-radius:18px;padding:16px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.04)">
+        <div style="width:36px;height:36px;border-radius:10px;background:#FFF8E0;display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:8px">📝</div>
+        <div style="font-size:24px;font-weight:900;color:#1A1A1A" id="att-stat-bid">0</div>
+        <div style="font-size:11px;color:#888;margin-top:2px">제안중 ›</div>
+      </div>
+      <div onclick="switchAttTab('hired')" style="background:#fff;border-radius:18px;padding:16px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.04)">
+        <div style="width:36px;height:36px;border-radius:10px;background:#E0FAF5;display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:8px">✅</div>
+        <div style="font-size:24px;font-weight:900;color:#1A1A1A" id="att-stat-hired">0</div>
+        <div style="font-size:11px;color:#888;margin-top:2px">진행중 ›</div>
+      </div>
+      <div onclick="switchAttTab('pay')" style="background:#fff;border-radius:18px;padding:16px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.04)">
+        <div style="width:36px;height:36px;border-radius:10px;background:#FFE4F1;display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:8px">💎</div>
+        <div style="font-size:20px;font-weight:900;color:#6A3DE8" id="att-stat-quota">...</div>
+        <div style="font-size:11px;color:#888;margin-top:2px">잔여 제안권 ›</div>
+      </div>
+    </div>
+
+    <!-- 플랜 카드 (새 톤) -->
+    <div style="background:#fff;border-radius:18px;padding:18px;box-shadow:0 2px 8px rgba(0,0,0,0.04)">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+            <span style="font-size:14px;font-weight:800;color:#1A1A1A">기본 플랜</span>
+            <span style="font-size:10px;font-weight:700;background:#E0FAF5;color:#005945;padding:3px 8px;border-radius:20px">활성</span>
+          </div>
+          <div style="font-size:11px;color:#888">월 50만원 · 제안 50회</div>
+        </div>
+        <button onclick="switchAttTab('pay')" style="font-size:11px;font-weight:700;background:#F5F2FF;color:#6A3DE8;border:none;padding:6px 12px;border-radius:20px;cursor:pointer;font-family:inherit">관리</button>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px">
+        <span style="color:#888">이번 달 제안</span>
+        <span style="font-weight:800;color:#1A1A1A">9건 / 50회</span>
+      </div>
+      <div style="height:6px;border-radius:3px;background:#F0F0F0;overflow:hidden">
+        <div style="width:18%;height:100%;border-radius:3px;background:linear-gradient(90deg,#6A3DE8,#8B5CF6)"></div>
+      </div>
     </div>
   </div>
   <div id="atp-cases" style="padding:16px;display:none">
@@ -1494,30 +1581,78 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
 
 <!-- 관리자 대시보드 -->
 <div class="scr" id="s-adm-dash" data-protected="true">
-  <div style="position:sticky;top:0;z-index:200;height:52px;background:#0D1B2A;display:flex;align-items:center;justify-content:space-between;padding:0 16px">
-    <div style="font-size:15px;font-weight:900;color:#fff">Liferefix <span style="color:var(--a);font-size:12px">Admin</span></div>
-    <button onclick="go('s-my')" style="font-size:11px;font-weight:700;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:20px;padding:5px 12px;cursor:pointer;font-family:inherit;color:#fff">나가기</button>
-  </div>
-  <div style="display:flex;background:#fff;border-bottom:2px solid var(--bd)">
-    <button class="att-tab on" id="dtab-overview" onclick="switchAdmTab('overview')">현황</button>
-    <button class="att-tab" id="dtab-cases" onclick="switchAdmTab('cases')">사건</button>
-    <button class="att-tab" id="dtab-users" onclick="switchAdmTab('users')">회원</button>
-    <button class="att-tab" id="dtab-atts" onclick="switchAdmTab('atts')">변호사</button>
-    <button class="att-tab" id="dtab-revenue" onclick="switchAdmTab('revenue')">수익</button>
-    <button class="att-tab" id="dtab-db" onclick="switchAdmTab('db')">DB</button>
-    <button class="att-tab" id="dtab-cfg" onclick="switchAdmTab('cfg')">설정</button>
-  </div>
-  <div id="dtp-overview" style="padding:14px">
-    <div class="alert info" id="adm-notice">🔔 데이터를 불러오는 중...</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:14px">
-      <div onclick="switchAdmTab('cases')" style="background:#fff;border-radius:var(--rad);padding:14px;border:1px solid var(--bd);box-shadow:var(--shs);cursor:pointer"><div style="font-size:22px;font-weight:900;color:var(--p)" id="adm-total">0</div><div style="font-size:11px;color:var(--ts)">전체 사건 ›</div></div>
-      <div onclick="switchAdmTab('atts')" style="background:#fff;border-radius:var(--rad);padding:14px;border:1px solid var(--bd);box-shadow:var(--shs);cursor:pointer"><div style="font-size:22px;font-weight:900;color:var(--a)" id="adm-att-cnt">-</div><div style="font-size:11px;color:var(--ts)">파트너 변호사 ›</div></div>
-      <div onclick="switchAdmTab('cases')" style="background:#fff;border-radius:var(--rad);padding:14px;border:1px solid var(--bd);box-shadow:var(--shs);cursor:pointer"><div style="font-size:22px;font-weight:900;color:var(--o)" id="adm-bid-cnt">0</div><div style="font-size:11px;color:var(--ts)">견적 진행중 ›</div></div>
-      <div onclick="switchAdmTab('cases')" style="background:#fff;border-radius:var(--rad);padding:14px;border:1px solid var(--bd);box-shadow:var(--shs);cursor:pointer"><div style="font-size:22px;font-weight:900;color:#005945" id="adm-hired-cnt">0</div><div style="font-size:11px;color:var(--ts)">진행중 ›</div></div>
-      <div style="background:linear-gradient(135deg,var(--p),var(--pd));border-radius:var(--rad);padding:14px;cursor:pointer" onclick="switchAdmTab('revenue')"><div style="font-size:18px;font-weight:900;color:#fff" id="adm-rev-total">-</div><div style="font-size:11px;color:rgba(255,255,255,.8)">총 수익 (원) ›</div></div>
-      <div style="background:linear-gradient(135deg,var(--a),#009B7E);border-radius:var(--rad);padding:14px;cursor:pointer" onclick="switchAdmTab('revenue')"><div style="font-size:18px;font-weight:900;color:#fff" id="adm-rev-pending">-</div><div style="font-size:11px;color:rgba(255,255,255,.8)">대기 결제 (건) ›</div></div>
+  <!-- 새 톤 헤더 (다크) -->
+  <div style="position:sticky;top:0;z-index:200;background:#0D1B2A;padding:14px 18px;display:flex;align-items:center;justify-content:space-between">
+    <div style="display:flex;align-items:center;gap:10px">
+      <div style="width:36px;height:36px;border-radius:12px;background:rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;font-size:18px">🔐</div>
+      <div>
+        <div style="font-size:15px;font-weight:900;color:#fff">Liferefix Admin</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.6);margin-top:1px">관리자 콘솔</div>
+      </div>
     </div>
-    <div id="adm-recent"><div class="card" style="font-size:13px;color:var(--ts)">활동 내역 없음</div></div>
+    <button onclick="go('s-my')" style="font-size:11px;font-weight:700;background:rgba(255,255,255,0.12);border:none;border-radius:20px;padding:6px 14px;cursor:pointer;font-family:inherit;color:#fff">나가기</button>
+  </div>
+
+  <!-- 탭 (둥근 톤) -->
+  <div style="background:#fff;padding:8px 12px;border-bottom:1px solid #F0F0F0;display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch">
+    <button class="att-tab on" id="dtab-overview" onclick="switchAdmTab('overview')" style="background:#0D1B2A;color:#fff;border:none;padding:8px 16px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0;font-family:inherit">현황</button>
+    <button class="att-tab" id="dtab-cases" onclick="switchAdmTab('cases')" style="background:#F5F5F5;color:#666;border:none;padding:8px 16px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0;font-family:inherit">사건</button>
+    <button class="att-tab" id="dtab-users" onclick="switchAdmTab('users')" style="background:#F5F5F5;color:#666;border:none;padding:8px 16px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0;font-family:inherit">회원</button>
+    <button class="att-tab" id="dtab-atts" onclick="switchAdmTab('atts')" style="background:#F5F5F5;color:#666;border:none;padding:8px 16px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0;font-family:inherit">변호사</button>
+    <button class="att-tab" id="dtab-revenue" onclick="switchAdmTab('revenue')" style="background:#F5F5F5;color:#666;border:none;padding:8px 16px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0;font-family:inherit">수익</button>
+    <button class="att-tab" id="dtab-db" onclick="switchAdmTab('db')" style="background:#F5F5F5;color:#666;border:none;padding:8px 16px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0;font-family:inherit">DB</button>
+    <button class="att-tab" id="dtab-cfg" onclick="switchAdmTab('cfg')" style="background:#F5F5F5;color:#666;border:none;padding:8px 16px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0;font-family:inherit">설정</button>
+  </div>
+
+  <div id="dtp-overview" style="padding:16px;background:#F5F6F8;min-height:calc(100vh - 120px)">
+    <!-- 알림 카드 -->
+    <div style="background:#fff;border-radius:18px;padding:16px;margin-bottom:16px;display:flex;align-items:center;gap:12px;box-shadow:0 2px 8px rgba(0,0,0,0.04)">
+      <div style="width:40px;height:40px;border-radius:12px;background:#FFF8E0;display:flex;align-items:center;justify-content:center;font-size:20px">🔔</div>
+      <div id="adm-notice" style="flex:1;font-size:13px;color:#1A1A1A;font-weight:600">데이터를 불러오는 중...</div>
+    </div>
+
+    <!-- 통계 카드 그리드 (새 톤) -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+      <div onclick="switchAdmTab('cases')" style="background:#fff;border-radius:18px;padding:16px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.04)">
+        <div style="width:36px;height:36px;border-radius:10px;background:#EDE9FF;display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:8px">📋</div>
+        <div style="font-size:24px;font-weight:900;color:#1A1A1A" id="adm-total">0</div>
+        <div style="font-size:11px;color:#888;margin-top:2px">전체 사건 ›</div>
+      </div>
+      <div onclick="switchAdmTab('atts')" style="background:#fff;border-radius:18px;padding:16px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.04)">
+        <div style="width:36px;height:36px;border-radius:10px;background:#FFF8E0;display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:8px">⚖️</div>
+        <div style="font-size:24px;font-weight:900;color:#1A1A1A" id="adm-att-cnt">-</div>
+        <div style="font-size:11px;color:#888;margin-top:2px">파트너 변호사 ›</div>
+      </div>
+      <div onclick="switchAdmTab('cases')" style="background:#fff;border-radius:18px;padding:16px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.04)">
+        <div style="width:36px;height:36px;border-radius:10px;background:#FFE4F1;display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:8px">📝</div>
+        <div style="font-size:24px;font-weight:900;color:#1A1A1A" id="adm-bid-cnt">0</div>
+        <div style="font-size:11px;color:#888;margin-top:2px">견적 진행중 ›</div>
+      </div>
+      <div onclick="switchAdmTab('cases')" style="background:#fff;border-radius:18px;padding:16px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.04)">
+        <div style="width:36px;height:36px;border-radius:10px;background:#E0FAF5;display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:8px">✅</div>
+        <div style="font-size:24px;font-weight:900;color:#1A1A1A" id="adm-hired-cnt">0</div>
+        <div style="font-size:11px;color:#888;margin-top:2px">진행중 ›</div>
+      </div>
+      <div style="background:linear-gradient(135deg,#6A3DE8,#5829CC);border-radius:18px;padding:16px;cursor:pointer;color:#fff" onclick="switchAdmTab('revenue')">
+        <div style="width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:8px">💰</div>
+        <div style="font-size:18px;font-weight:900;color:#fff" id="adm-rev-total">-</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.85);margin-top:2px">총 수익 (원) ›</div>
+      </div>
+      <div style="background:linear-gradient(135deg,#00C6A2,#009B7E);border-radius:18px;padding:16px;cursor:pointer;color:#fff" onclick="switchAdmTab('revenue')">
+        <div style="width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:8px">⏳</div>
+        <div style="font-size:18px;font-weight:900;color:#fff" id="adm-rev-pending">-</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.85);margin-top:2px">대기 결제 (건) ›</div>
+      </div>
+    </div>
+
+    <!-- 최근 활동 -->
+    <div style="font-size:13px;font-weight:800;color:#1A1A1A;margin:0 4px 12px;display:flex;justify-content:space-between;align-items:center">
+      최근 활동
+      <small style="font-size:11px;color:#999;font-weight:500">자동 갱신</small>
+    </div>
+    <div id="adm-recent">
+      <div style="background:#fff;border-radius:18px;padding:20px;text-align:center;font-size:13px;color:#888;box-shadow:0 2px 8px rgba(0,0,0,0.04)">활동 내역 없음</div>
+    </div>
   </div>
   <div id="dtp-cases" style="padding:14px;display:none">
     <input type="text" class="finput" id="adm-search" style="margin-bottom:10px" placeholder="🔍 사건ID / 채무유형 / 지역 검색">
@@ -1900,6 +2035,84 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
 <div class="ov" id="m-i3" onclick="ovClose(event,'m-i3')"><div class="modal" style="position:relative"><button class="mclose" onclick="closeM('m-i3')">✕</button><div class="mhandle"></div><div class="mtitle">변제 계획 산정 방식</div><div style="font-size:14px;line-height:1.8;color:var(--ts)"><b style="color:var(--t)">월 변제금 = 월 소득 — 최저생계비</b><br><br>2026년 기준 1인 가구 최저생계비: 약 154만원 (2026년 기준)<br><br>예시: 월 소득 250만 — 생계비 154만 = 가용소득 96만<br>96만 × 36개월 = 총 변제가능액 3,456만원</div></div></div>
 <div class="ov" id="m-i4" onclick="ovClose(event,'m-i4')"><div class="modal" style="position:relative"><button class="mclose" onclick="closeM('m-i4')">✕</button><div class="mhandle"></div><div class="mtitle">주의사항</div><div style="font-size:14px;line-height:1.9;color:var(--ts)">• 신청 시 신용등급 하락 및 금융거래 제한<br>• 변제 기간 중 재산 취득 시 추가 변제 가능<br>• 허위 신청·재산 은닉 시 면책 불허가<br>• 본 서비스 결과는 참고 정보이며 법률 자문이 아닙니다</div></div></div>
 
+<!-- 햄버거/더보기 메뉴 모달 -->
+<div class="ov" id="m-menu" onclick="ovClose(event,'m-menu')">
+  <div class="modal" style="position:relative;padding:0;overflow:hidden">
+    <button class="mclose" onclick="closeM('m-menu')" style="z-index:2">✕</button>
+    <div style="background:linear-gradient(135deg,#6A3DE8,#8B5CF6);padding:24px 20px;color:#fff">
+      <div style="font-size:13px;opacity:0.85;margin-bottom:4px" id="menu-greet">반갑습니다 👋</div>
+      <div style="font-size:20px;font-weight:900" id="menu-name">Liferefix</div>
+    </div>
+    <div style="padding:8px 12px 20px">
+      <div onclick="closeM('m-menu');checkLoginGoMy()" style="display:flex;align-items:center;gap:14px;padding:14px 12px;border-radius:12px;cursor:pointer">
+        <div style="width:40px;height:40px;border-radius:12px;background:#F5F2FF;display:flex;align-items:center;justify-content:center;font-size:20px">📋</div>
+        <div style="flex:1">
+          <div style="font-size:14px;font-weight:700">내 사건 보기</div>
+          <div style="font-size:11px;color:#888;margin-top:2px">진행상황·받은 견적 확인</div>
+        </div>
+        <span style="color:#CCC">›</span>
+      </div>
+      <div onclick="closeM('m-menu');go('s-diag')" style="display:flex;align-items:center;gap:14px;padding:14px 12px;border-radius:12px;cursor:pointer">
+        <div style="width:40px;height:40px;border-radius:12px;background:#EDE9FF;display:flex;align-items:center;justify-content:center;font-size:20px">🤖</div>
+        <div style="flex:1">
+          <div style="font-size:14px;font-weight:700">AI 진단</div>
+          <div style="font-size:11px;color:#888;margin-top:2px">3분 무료 진단</div>
+        </div>
+        <span style="color:#CCC">›</span>
+      </div>
+      <div onclick="closeM('m-menu');go('s-info')" style="display:flex;align-items:center;gap:14px;padding:14px 12px;border-radius:12px;cursor:pointer">
+        <div style="width:40px;height:40px;border-radius:12px;background:#E5F0FF;display:flex;align-items:center;justify-content:center;font-size:20px">📖</div>
+        <div style="flex:1">
+          <div style="font-size:14px;font-weight:700">개인회생 정보</div>
+          <div style="font-size:11px;color:#888;margin-top:2px">절차·서류·FAQ</div>
+        </div>
+        <span style="color:#CCC">›</span>
+      </div>
+      <div onclick="closeM('m-menu');scrollToFaq()" style="display:flex;align-items:center;gap:14px;padding:14px 12px;border-radius:12px;cursor:pointer">
+        <div style="width:40px;height:40px;border-radius:12px;background:#F0E5FF;display:flex;align-items:center;justify-content:center;font-size:20px">📚</div>
+        <div style="flex:1">
+          <div style="font-size:14px;font-weight:700">자주 묻는 질문</div>
+          <div style="font-size:11px;color:#888;margin-top:2px">FAQ 모음</div>
+        </div>
+        <span style="color:#CCC">›</span>
+      </div>
+      <div onclick="closeM('m-menu');if(window.openAttApply)window.openAttApply()" style="display:flex;align-items:center;gap:14px;padding:14px 12px;border-radius:12px;cursor:pointer">
+        <div style="width:40px;height:40px;border-radius:12px;background:#FFF8E0;display:flex;align-items:center;justify-content:center;font-size:20px">⚖️</div>
+        <div style="flex:1">
+          <div style="font-size:14px;font-weight:700">변호사 입점 신청</div>
+          <div style="font-size:11px;color:#888;margin-top:2px">변호사 회원 가입</div>
+        </div>
+        <span style="color:#CCC">›</span>
+      </div>
+      <div style="height:1px;background:#F0F0F0;margin:8px 12px"></div>
+      <div onclick="closeM('m-menu');openM('m-terms')" style="display:flex;align-items:center;gap:14px;padding:14px 12px;border-radius:12px;cursor:pointer">
+        <div style="width:40px;height:40px;border-radius:12px;background:#F0F0F0;display:flex;align-items:center;justify-content:center;font-size:20px">📄</div>
+        <div style="font-size:14px;font-weight:600;color:#666">이용약관</div>
+        <span style="color:#CCC;margin-left:auto">›</span>
+      </div>
+      <div onclick="closeM('m-menu');openM('m-privacy')" style="display:flex;align-items:center;gap:14px;padding:14px 12px;border-radius:12px;cursor:pointer">
+        <div style="width:40px;height:40px;border-radius:12px;background:#F0F0F0;display:flex;align-items:center;justify-content:center;font-size:20px">🔒</div>
+        <div style="font-size:14px;font-weight:600;color:#666">개인정보처리방침</div>
+        <span style="color:#CCC;margin-left:auto">›</span>
+      </div>
+      <div onclick="window.open('mailto:liferefix@naver.com')" style="display:flex;align-items:center;gap:14px;padding:14px 12px;border-radius:12px;cursor:pointer">
+        <div style="width:40px;height:40px;border-radius:12px;background:#F0F0F0;display:flex;align-items:center;justify-content:center;font-size:20px">💬</div>
+        <div style="font-size:14px;font-weight:600;color:#666">문의하기</div>
+        <span style="color:#CCC;margin-left:auto">›</span>
+      </div>
+      <div id="menu-logout-row" onclick="if(window.FB_AUTH&&window.FB_FUNCS){window.FB_FUNCS.signOut(window.FB_AUTH);closeM('m-menu');toast('로그아웃됐어요')}" style="display:none;align-items:center;gap:14px;padding:14px 12px;border-radius:12px;cursor:pointer">
+        <div style="width:40px;height:40px;border-radius:12px;background:#FFE5E5;display:flex;align-items:center;justify-content:center;font-size:20px">🚪</div>
+        <div style="font-size:14px;font-weight:600;color:#FF4757">로그아웃</div>
+      </div>
+      <div id="menu-login-row" onclick="closeM('m-menu');openM('m-login')" style="display:flex;align-items:center;gap:14px;padding:14px 12px;border-radius:12px;cursor:pointer">
+        <div style="width:40px;height:40px;border-radius:12px;background:#F5F2FF;display:flex;align-items:center;justify-content:center;font-size:20px">🔑</div>
+        <div style="font-size:14px;font-weight:600;color:#6A3DE8">로그인 / 회원가입</div>
+        <span style="color:#CCC;margin-left:auto">›</span>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- 법무사 활용 안내 모달 -->
 <div class="ov" id="m-lawscrivener" onclick="ovClose(event,'m-lawscrivener')">
   <div class="modal" style="position:relative">
@@ -2119,6 +2332,10 @@ onAuthStateChanged(fbAuth, function(user) {
   // MY 페이지 대시보드 갱신
   if(window.initMyDash) {
     setTimeout(function(){ window.initMyDash(); }, 100);
+  }
+  // 홈 카드 갱신 (로그인 분기)
+  if(window.updateHomeCard) {
+    setTimeout(function(){ window.updateHomeCard(); }, 200);
   }
   // 로그인 시 실시간 진행상황 리스너 시작
   if(user && window.loadMyProgressInfo) {
@@ -2602,6 +2819,163 @@ var lastDiag=null, cmpList=[], curSort='rec', myCases=[], timerInt=null;
 // NAV
 // ═══════════════════════════════
 var NM={'s-home':'n-home','s-diag':'n-diag','s-bid':'n-bid','s-info':'n-info','s-my':'n-my'};
+// ═══════════════════════════════
+// 홈 화면 헬퍼 (v4.4)
+// ═══════════════════════════════
+
+// 로그인 체크 후 이동
+function checkLoginGo(targetId) {
+  if(window.FB_USER) {
+    go(targetId);
+  } else {
+    // 비로그인 시 진단부터 안내
+    if(targetId === 's-bid') {
+      go('s-diag');
+      setTimeout(function(){ toast('💡 먼저 무료 진단을 받아보세요!'); }, 300);
+    } else {
+      go(targetId);
+    }
+  }
+}
+window.checkLoginGo = checkLoginGo;
+
+// 알림 종 클릭 → 로그인 시 MY로
+function checkLoginGoMy() {
+  if(window.FB_USER) {
+    go('s-my');
+  } else {
+    openM('m-login');
+  }
+}
+window.checkLoginGoMy = checkLoginGoMy;
+
+// 홈 카드 분기 (로그인 시 진행상황, 비로그인 시 진단 CTA)
+function updateHomeCard() {
+  var guestCard = document.getElementById('home-card-guest');
+  var userCard  = document.getElementById('home-card-user');
+  if(!guestCard || !userCard) return;
+
+  if(!window.FB_USER) {
+    guestCard.style.display = 'block';
+    userCard.style.display  = 'none';
+    return;
+  }
+
+  // 로그인 → selections에서 진행중 사건 조회
+  if(!window.FB_DB || !window.FB_FUNCS) return;
+  var uid = window.FB_USER.uid;
+  window.FB_FUNCS.getDocs(window.FB_FUNCS.collection(window.FB_DB,'selections'))
+    .then(function(snap){
+      var mySels = snap.docs.map(function(d){ return d.data(); })
+        .filter(function(s){ return s.userId===uid; });
+
+      if(mySels.length === 0) {
+        // 진행중 사건 없음 → 진단 CTA 유지
+        guestCard.style.display = 'block';
+        userCard.style.display  = 'none';
+        return;
+      }
+
+      // 가장 최근 사건
+      var latest = mySels.sort(function(a,b){
+        return (b.confirmedAt?.seconds||0) - (a.confirmedAt?.seconds||0);
+      })[0];
+
+      var stage = latest.currentStage || '제안 받는중';
+      var stageMap = {
+        '제안 받는중':   { pct: 10, label: '변호사 제안을 기다리는 중' },
+        '서류준비':     { pct: 25, label: '담당 변호사가 서류를 준비하고 있어요' },
+        '법원접수':     { pct: 40, label: '법원에 사건이 접수됐어요' },
+        '심사중':       { pct: 55, label: '법원 심사가 진행되고 있어요' },
+        '변제계획인가': { pct: 75, label: '변제계획이 인가됐어요!' },
+        '변제중':       { pct: 90, label: '변제가 진행 중이에요' },
+        '면책완료':     { pct: 100,label: '🎉 면책이 완료됐어요!' }
+      };
+      var info = stageMap[stage] || stageMap['서류준비'];
+
+      var stageEl    = document.getElementById('home-my-stage');
+      var pctEl      = document.getElementById('home-my-progress-pct');
+      var barEl      = document.getElementById('home-my-progress-bar');
+      var nextEl     = document.getElementById('home-my-next');
+
+      if(stageEl)  stageEl.textContent  = stage;
+      if(pctEl)    pctEl.textContent    = info.pct + '%';
+      if(barEl)    barEl.style.width    = info.pct + '%';
+      if(nextEl)   nextEl.textContent   = info.label;
+
+      guestCard.style.display = 'none';
+      userCard.style.display  = 'block';
+    }).catch(function(){
+      // 오류 시 게스트 카드
+      guestCard.style.display = 'block';
+      userCard.style.display  = 'none';
+    });
+}
+window.updateHomeCard = updateHomeCard;
+
+// 슬라이드 배너 회전
+var _bannerIdx = 0;
+var _bannerTimer = null;
+
+function moveBanner(idx) {
+  var track = document.getElementById('home-banner-track');
+  if(!track) return;
+  _bannerIdx = idx;
+  track.style.transform = 'translateX(-' + (idx * 25) + '%)';
+  // 인디케이터
+  document.querySelectorAll('.bn-dot').forEach(function(d, i){
+    if(i === idx) {
+      d.style.width = '18px';
+      d.style.height = '5px';
+      d.style.background = '#1A1A1A';
+      d.style.borderRadius = '3px';
+    } else {
+      d.style.width = '5px';
+      d.style.height = '5px';
+      d.style.background = 'rgba(0,0,0,.25)';
+      d.style.borderRadius = '50%';
+    }
+  });
+}
+
+function startBannerLoop() {
+  if(_bannerTimer) clearInterval(_bannerTimer);
+  _bannerTimer = setInterval(function(){
+    var next = (_bannerIdx + 1) % 4;
+    moveBanner(next);
+  }, 4000);
+}
+
+// 인디케이터 클릭 이벤트 등록
+document.addEventListener('click', function(e){
+  if(e.target.classList && e.target.classList.contains('bn-dot')) {
+    var idx = parseInt(e.target.dataset.idx) || 0;
+    moveBanner(idx);
+    startBannerLoop(); // 클릭 시 타이머 리셋
+  }
+});
+
+// 페이지 로드 시 슬라이드 시작
+window.addEventListener('load', function(){
+  setTimeout(function(){
+    startBannerLoop();
+    updateHomeCard();
+  }, 500);
+});
+
+// FAQ 페이지로 이동 (정보 페이지의 FAQ 탭)
+function scrollToFaq() {
+  go('s-info');
+  setTimeout(function(){
+    // FAQ 탭으로 전환 (있으면)
+    var faqTab = document.querySelector('[onclick*="itp-faq"]');
+    if(faqTab) faqTab.click();
+    var firstFaq = document.querySelector('#itp-faq .faq-item');
+    if(firstFaq) firstFaq.scrollIntoView({ behavior:'smooth', block:'start' });
+  }, 400);
+}
+window.scrollToFaq = scrollToFaq;
+
 function go(id){
   // MY 탭 클릭 시 role에 따라 자동 포털 이동
   if(id === 's-my' && window.FB_USER && window.FB_DB && window.FB_FUNCS) {
@@ -2688,7 +3062,29 @@ function toast(msg){
   clearTimeout(el._t);
   el._t=setTimeout(function(){el.style.opacity='0';setTimeout(function(){el.style.display='none';},300);},2800);
 }
-function openM(id){document.getElementById(id).classList.add('on');document.body.style.overflow='hidden';}
+function openM(id){
+  document.getElementById(id).classList.add('on');
+  document.body.style.overflow='hidden';
+  // m-menu 열릴 때 로그인 상태 반영
+  if(id === 'm-menu') {
+    var greet = document.getElementById('menu-greet');
+    var name  = document.getElementById('menu-name');
+    var loginRow  = document.getElementById('menu-login-row');
+    var logoutRow = document.getElementById('menu-logout-row');
+    if(window.FB_USER) {
+      var n = window.FB_USER.displayName || (window.FB_USER.email ? window.FB_USER.email.split('@')[0] : '회원');
+      if(greet) greet.textContent = '반갑습니다 👋';
+      if(name)  name.textContent  = n + '님';
+      if(loginRow)  loginRow.style.display  = 'none';
+      if(logoutRow) logoutRow.style.display = 'flex';
+    } else {
+      if(greet) greet.textContent = '반갑습니다 👋';
+      if(name)  name.textContent  = 'Liferefix';
+      if(loginRow)  loginRow.style.display  = 'flex';
+      if(logoutRow) logoutRow.style.display = 'none';
+    }
+  }
+}
 function closeM(id){document.getElementById(id).classList.remove('on');document.body.style.overflow='';}
 function ovClose(e,id){if(e.target===document.getElementById(id))closeM(id);}
 function faq(el){el.nextElementSibling.classList.toggle('on');el.querySelector('.faq-arr').classList.toggle('on');}
@@ -3600,7 +3996,17 @@ function attDoLogin(){
 function switchAttTab(t){
   ['dash','cases','hired','pay','profile'].forEach(function(x){
     var btn=document.getElementById('atab-'+x);var panel=document.getElementById('atp-'+x);
-    if(btn)btn.classList.toggle('on',x===t);
+    if(btn){
+      btn.classList.toggle('on',x===t);
+      // 새 톤 active 스타일
+      if(x===t) {
+        btn.style.background = '#6A3DE8';
+        btn.style.color = '#fff';
+      } else {
+        btn.style.background = '#F5F5F5';
+        btn.style.color = '#666';
+      }
+    }
     if(panel)panel.style.display=x===t?'block':'none';
   });
   if(t==='cases'){
@@ -4263,7 +4669,16 @@ function admDoLogin(){
 function switchAdmTab(t){
   ['overview','cases','users','atts','revenue','db','cfg'].forEach(function(x){
     var btn=document.getElementById('dtab-'+x);var panel=document.getElementById('dtp-'+x);
-    if(btn)btn.classList.toggle('on',x===t);
+    if(btn){
+      btn.classList.toggle('on',x===t);
+      if(x===t) {
+        btn.style.background = '#0D1B2A';
+        btn.style.color = '#fff';
+      } else {
+        btn.style.background = '#F5F5F5';
+        btn.style.color = '#666';
+      }
+    }
     if(panel)panel.style.display=x===t?'block':'none';
   });
   if(t==='overview')admRefresh();
@@ -6287,7 +6702,7 @@ function loadHiredCases() {
     window.FB_FUNCS.getDoc(window.FB_FUNCS.doc(window.FB_DB,'users',window.FB_USER.uid))
       .then(function(uSnap){
         var quota=10;
-        if(uSnap.exists()){ var ud=uSnap.data(); quota=(ud.plan==='premium'?20:10)+(ud.extraBids||0); }
+        if(uSnap.exists()){ var ud=uSnap.data(); quota = ud.plan==='premium' ? 999 : 50; }
         var used=all.length;
         var pct=Math.min(100,Math.round(used/quota*100));
         var qtEl=document.getElementById('hired-quota-text'); if(qtEl)qtEl.textContent=used+' / '+quota+'건';
