@@ -276,7 +276,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
       <div style="width:6px;height:6px;background:#E91E8C;border-radius:50%;animation:pulse 2s infinite"></div>
       <div style="font-size:11px;color:rgba(255,255,255,.7)">베타 서비스 운영중</div>
     </div>
-    <div style="font-size:9px;font-weight:700;background:#E91E8C;color:#fff;padding:2px 8px;border-radius:20px">v5.0</div>
+    <div style="font-size:9px;font-weight:700;background:#E91E8C;color:#fff;padding:2px 8px;border-radius:20px">v1.0</div>
   </div>
 
   <!-- ━━━━━━━━ 슬라이드 캠페인 배너 ━━━━━━━━ -->
@@ -464,7 +464,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
     </div>
     <div style="font-size:10px;color:rgba(255,255,255,.25);line-height:1.9">
       LIFEREFIX는 법률 자문 또는 중개 서비스를 제공하지 않습니다. 본 서비스는 일반적인 정보 제공을 목적으로 하며, 특정 전문가를 추천하거나 알선하지 않습니다. 모든 의사결정은 이용자 본인의 판단과 책임 하에 이루어집니다.<br><br>
-      © 2026 Liferefix. All rights reserved. Beta v5.0
+      © 2026 Liferefix. All rights reserved. Beta v1.0
     </div>
   </footer>
 </div>
@@ -976,7 +976,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
     </div>
 
     <div style="margin-top:14px;font-size:10px;color:rgba(255,255,255,.3)">
-      © 2026 Liferefix. All rights reserved. Beta v5.0
+      © 2026 Liferefix. All rights reserved. Beta v1.0
     </div>
   </footer>
 
@@ -2599,12 +2599,59 @@ window.requestPushPermission = async function() {
   }
 };
 
+// ── 알림음 재생 (Web Audio API — 외부 파일 불필요) ──
+// 사용자가 페이지를 한 번이라도 터치/클릭한 뒤라야 소리가 납니다 (브라우저 자동재생 정책).
+window._notiSoundOn = true; // 사용자가 끌 수 있도록 플래그 (localStorage 연동)
+try {
+  var _stored = localStorage.getItem('lrx_notiSound');
+  if(_stored !== null) window._notiSoundOn = _stored === '1';
+} catch(e) {}
+
+window._audioCtx = null;
+window.playNotiSound = function() {
+  if(!window._notiSoundOn) return;
+  try {
+    if(!window._audioCtx) {
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if(!AC) return;
+      window._audioCtx = new AC();
+    }
+    var ctx = window._audioCtx;
+    if(ctx.state === 'suspended') ctx.resume();
+    // "딩-동" 2음 (E5 → C5)
+    var notes = [ {f: 659.25, t: 0},   {f: 523.25, t: 0.16} ];
+    notes.forEach(function(n){
+      var osc = ctx.createOscillator();
+      var gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = n.f;
+      var start = ctx.currentTime + n.t;
+      gain.gain.setValueAtTime(0, start);
+      gain.gain.linearRampToValueAtTime(0.25, start + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, start + 0.32);
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.start(start);
+      osc.stop(start + 0.34);
+    });
+  } catch(e) { console.log('알림음 재생 실패:', e.message); }
+};
+// 알림음 ON/OFF 토글
+window.toggleNotiSound = function() {
+  window._notiSoundOn = !window._notiSoundOn;
+  try { localStorage.setItem('lrx_notiSound', window._notiSoundOn ? '1' : '0'); } catch(e) {}
+  if(window.toast) window.toast(window._notiSoundOn ? '🔔 알림음 켜짐' : '🔕 알림음 꺼짐');
+  if(window._notiSoundOn) window.playNotiSound(); // 켤 때 미리듣기
+  return window._notiSoundOn;
+};
+
 // 포그라운드 메시지 수신
 if(fbMessaging) {
   onMessage(fbMessaging, function(payload) {
     console.log('FCM 메시지 수신:', payload);
     var title = payload.notification && payload.notification.title || 'Liferefix';
     var body  = payload.notification && payload.notification.body  || '';
+    // 🔔 알림음 재생
+    if(window.playNotiSound) window.playNotiSound();
     // 인앱 토스트 표시
     if(window.toast) window.toast('🔔 ' + title + (body ? ' - '+body : ''));
     // 브라우저 알림도 표시
@@ -2821,7 +2868,7 @@ var lastDiag=null, cmpList=[], curSort='rec', myCases=[], timerInt=null;
 // ═══════════════════════════════
 var NM={'s-home':'n-home','s-diag':'n-diag','s-bid':'n-bid','s-info':'n-info','s-my':'n-my'};
 // ═══════════════════════════════
-// 홈 화면 헬퍼 (v5.0)
+// 홈 화면 헬퍼 (v1.0)
 // ═══════════════════════════════
 
 // 로그인 체크 후 이동
@@ -5683,7 +5730,7 @@ document.addEventListener('click',function(e){
   if(e.target.classList.contains('pay-btn'))          { attRequestPay(e.target.dataset.plan, e.target.dataset.amount); }
   // 알림
   var notiItem = e.target.closest('.noti-item');
-  if(notiItem && notiItem.dataset.nid){ readNoti(notiItem.dataset.nid); }
+  if(notiItem && notiItem.dataset.nid){ openNotiTarget(notiItem); }
 });
 
 // ═══════════════════════════════
@@ -7434,7 +7481,13 @@ function listenNotifications() {
         return tb-ta;
       });
 
+    var _prevUnread = (typeof _notiUnread === 'number') ? _notiUnread : 0;
     _notiUnread = notis.filter(function(n){return !n.read;}).length;
+    // 🔔 미읽음이 늘어났으면(새 알림 도착) 소리 재생 — 단, 최초 로드 후에만
+    if(window._notiInitialized && _notiUnread > _prevUnread && window.playNotiSound) {
+      window.playNotiSound();
+    }
+    window._notiInitialized = true;
     var badge = document.getElementById('hdr-noti-badge');
     if(badge) {
       badge.textContent = _notiUnread > 9 ? '9+' : _notiUnread;
@@ -7449,7 +7502,9 @@ function listenNotifications() {
     }
     listEl.innerHTML = notis.slice(0,20).map(function(n){
       var time = n.createdAt&&n.createdAt.toDate ? n.createdAt.toDate().toLocaleString('ko-KR') : '';
-      return '<div class="noti-item" data-nid="'+n.id+'" style="padding:12px 14px;border-bottom:1px solid var(--bd);background:'+(n.read?'#fff':'var(--pl)')+';cursor:pointer">'
+      var nType  = (n.data && n.data.type)   || n.type   || '';
+      var nCase  = (n.data && n.data.caseId) || n.caseId || '';
+      return '<div class="noti-item" data-nid="'+n.id+'" data-type="'+nType+'" data-caseid="'+nCase+'" style="padding:12px 14px;border-bottom:1px solid var(--bd);background:'+(n.read?'#fff':'var(--pl)')+';cursor:pointer">'
         +'<div style="font-size:13px;font-weight:'+(n.read?'400':'700')+'">'+n.title+'</div>'
         +'<div style="font-size:12px;color:var(--ts);margin-top:3px">'+n.body+'</div>'
         +'<div style="font-size:10px;color:var(--ts);margin-top:3px">'+time+'</div>'
@@ -7463,7 +7518,12 @@ function toggleNotifications() {
   if(!el) return;
   var isOpen = el.style.display !== 'none';
   el.style.display = isOpen ? 'none' : 'block';
-  if(!isOpen) listenNotifications(); // 열 때마다 새로고침
+  if(!isOpen) {
+    listenNotifications(); // 열 때마다 새로고침
+    // 소리 토글 버튼 라벨을 현재 설정에 맞춤
+    var sb = document.getElementById('noti-sound-toggle');
+    if(sb) sb.textContent = window._notiSoundOn ? '🔔 소리 켜짐' : '🔕 소리 꺼짐';
+  }
 }
 
 function readNoti(notiId) {
@@ -7472,6 +7532,42 @@ function readNoti(notiId) {
     window.FB_FUNCS.doc(window.FB_DB,'notifications',notiId), {read:true}
   ).then(function(){ listenNotifications(); }).catch(function(){});
 }
+
+// 알림 클릭 → 읽음 처리 + 해당 섹션으로 이동
+function openNotiTarget(el) {
+  var nid  = el.dataset.nid;
+  var type = el.dataset.type || '';
+  // 1) 읽음 처리
+  if(nid) readNoti(nid);
+  // 2) 드롭다운 닫기
+  var dd = document.getElementById('m-notifications');
+  if(dd) dd.style.display = 'none';
+  // 3) type별 화면 라우팅
+  var role = window._userRole || '';
+  switch(type) {
+    case 'new_case':       // 변호사에게 새 사건 → 변호사 포털 사건목록
+      if(window.go) window.go('s-att-dash');
+      setTimeout(function(){ if(window.switchAttTab) switchAttTab('cases'); }, 350);
+      break;
+    case 'hire_request':   // 변호사에게 계약 요청 → 변호사 포털 진행중
+      if(window.go) window.go('s-att-dash');
+      setTimeout(function(){ if(window.switchAttTab) switchAttTab('hired'); }, 350);
+      break;
+    case 'new_bid':        // 채무자에게 새 견적 → MY 받은 제안
+      if(window.go) window.go('s-my');
+      setTimeout(function(){ if(window.switchMyTab) switchMyTab('bids'); }, 350);
+      break;
+    case 'progress_update':// 채무자에게 진행 업데이트 → MY 내 진단/사건
+      if(window.go) window.go('s-my');
+      setTimeout(function(){ if(window.switchMyTab) switchMyTab('diag'); }, 350);
+      break;
+    default:
+      // type 불명 → 역할 기반 기본 이동
+      if(role === 'attorney') { if(window.go) window.go('s-att-dash'); }
+      else { if(window.go) window.go('s-my'); }
+  }
+}
+window.openNotiTarget = openNotiTarget;
 
 function markAllNotiRead() {
   if(!window.FB_USER||!window.FB_DB||!window.FB_FUNCS) return;
@@ -8702,7 +8798,10 @@ window.go=function(id){
 <div id="m-notifications" style="display:none;position:fixed;top:56px;right:10px;width:300px;max-height:400px;background:#fff;border-radius:var(--rad);box-shadow:0 8px 30px rgba(0,0,0,.15);z-index:1000;overflow:hidden">
   <div style="padding:14px 16px;border-bottom:1px solid var(--bd);display:flex;justify-content:space-between;align-items:center">
     <div style="font-size:14px;font-weight:800">🔔 알림</div>
-    <button onclick="markAllNotiRead()" style="font-size:11px;color:var(--p);font-weight:600;background:none;border:none;cursor:pointer;font-family:inherit">모두 읽음</button>
+    <div style="display:flex;align-items:center;gap:12px">
+      <button id="noti-sound-toggle" onclick="var on=window.toggleNotiSound&&window.toggleNotiSound();this.textContent=on?'🔔 소리 켜짐':'🔕 소리 꺼짐'" style="font-size:11px;color:var(--ts);font-weight:600;background:none;border:none;cursor:pointer;font-family:inherit">🔔 소리 켜짐</button>
+      <button onclick="markAllNotiRead()" style="font-size:11px;color:var(--p);font-weight:600;background:none;border:none;cursor:pointer;font-family:inherit">모두 읽음</button>
+    </div>
   </div>
   <div id="noti-list" style="overflow-y:auto;max-height:340px;padding:8px"></div>
 </div>
