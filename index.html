@@ -276,7 +276,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
       <div style="width:6px;height:6px;background:#E91E8C;border-radius:50%;animation:pulse 2s infinite"></div>
       <div style="font-size:11px;color:rgba(255,255,255,.7)">베타 서비스 운영중</div>
     </div>
-    <div style="font-size:9px;font-weight:700;background:#E91E8C;color:#fff;padding:2px 8px;border-radius:20px">v1.0</div>
+    <div style="font-size:9px;font-weight:700;background:#E91E8C;color:#fff;padding:2px 8px;border-radius:20px">v1.1</div>
   </div>
 
   <!-- ━━━━━━━━ 슬라이드 캠페인 배너 ━━━━━━━━ -->
@@ -464,7 +464,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
     </div>
     <div style="font-size:10px;color:rgba(255,255,255,.25);line-height:1.9">
       LIFEREFIX는 법률 자문 또는 중개 서비스를 제공하지 않습니다. 본 서비스는 일반적인 정보 제공을 목적으로 하며, 특정 전문가를 추천하거나 알선하지 않습니다. 모든 의사결정은 이용자 본인의 판단과 책임 하에 이루어집니다.<br><br>
-      © 2026 Liferefix. All rights reserved. Beta v1.0
+      © 2026 Liferefix. All rights reserved. Beta v1.1
     </div>
   </footer>
 </div>
@@ -976,7 +976,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
     </div>
 
     <div style="margin-top:14px;font-size:10px;color:rgba(255,255,255,.3)">
-      © 2026 Liferefix. All rights reserved. Beta v1.0
+      © 2026 Liferefix. All rights reserved. Beta v1.1
     </div>
   </footer>
 
@@ -2868,7 +2868,7 @@ var lastDiag=null, cmpList=[], curSort='rec', myCases=[], timerInt=null;
 // ═══════════════════════════════
 var NM={'s-home':'n-home','s-diag':'n-diag','s-bid':'n-bid','s-info':'n-info','s-my':'n-my'};
 // ═══════════════════════════════
-// 홈 화면 헬퍼 (v1.0)
+// 홈 화면 헬퍼 (v1.1)
 // ═══════════════════════════════
 
 // 로그인 체크 후 이동
@@ -7533,41 +7533,145 @@ function readNoti(notiId) {
   ).then(function(){ listenNotifications(); }).catch(function(){});
 }
 
-// 알림 클릭 → 읽음 처리 + 해당 섹션으로 이동
+// ── 특정 사건 카드로 포커스 (펼침 + 스크롤 + 하이라이트) ──
+// 카드 같은 조상 요소를 찾아 올라감 (data-cid가 카드 내부 버튼에 박혀 있는 경우 대비)
+function _climbToCard(el) {
+  var best = el, node = el, steps = 0;
+  while(node && node.parentElement && steps < 7) {
+    node = node.parentElement; steps++;
+    var st = (node.getAttribute && node.getAttribute('style')) || '';
+    // 둥근 모서리 + 배경/테두리를 가진 = 카드처럼 보이는 요소
+    if(/border-radius/.test(st) && /(background|border)/.test(st)) best = node;
+    // 섹션/스크롤 컨테이너에 도달하면 중단
+    var id = node.id || '';
+    if(/^(s-|scr|app|root)/.test(id)) break;
+  }
+  return best;
+}
+// 스크롤 + 잠깐 하이라이트
+function _flashCard(card) {
+  if(!card) return;
+  try { card.scrollIntoView({ behavior:'smooth', block:'center' }); }
+  catch(e) { card.scrollIntoView(); }
+  var prevOutline = card.style.outline,
+      prevOffset  = card.style.outlineOffset,
+      prevShadow  = card.style.boxShadow,
+      prevTrans   = card.style.transition;
+  card.style.transition    = 'box-shadow .3s ease, outline-color .3s ease';
+  card.style.outline       = '3px solid var(--p)';
+  card.style.outlineOffset = '2px';
+  card.style.boxShadow     = '0 0 0 5px rgba(106,61,232,.15)';
+  setTimeout(function(){
+    card.style.outline       = prevOutline || '';
+    card.style.outlineOffset = prevOffset  || '';
+    card.style.boxShadow     = prevShadow  || '';
+    card.style.transition    = prevTrans   || '';
+  }, 2200);
+}
+// caseId로 해당 카드 펼치고 스크롤 (탭 전환 직후 비동기 렌더 대비 재시도)
+function focusCaseCard(caseId, attempts) {
+  if(!caseId) return;
+  attempts = attempts || 0;
+  // 1) 변호사 사건 카드: 아코디언 펼침
+  var detail = document.getElementById('case-detail-' + caseId);
+  if(detail) {
+    if(detail.style.display === 'none' || !detail.style.display) {
+      if(window.toggleCaseCard) { window.toggleCaseCard(caseId); }
+      else {
+        detail.style.display = 'block';
+        var ar = document.getElementById('arr-' + caseId);
+        if(ar) ar.style.transform = 'rotate(90deg)';
+      }
+    }
+    var accCard = detail.parentElement;
+    _flashCard(accCard || detail);
+    return;
+  }
+  // 2) data-cid가 박힌 카드 (받은제안 / 진행중 등)
+  var hit = document.querySelector('[data-cid="' + caseId + '"]');
+  if(hit) { _flashCard(_climbToCard(hit)); return; }
+  // 3) 아직 렌더 전이면 잠시 후 재시도
+  if(attempts < 6) {
+    setTimeout(function(){ focusCaseCard(caseId, attempts + 1); }, 250);
+  }
+}
+window.focusCaseCard = focusCaseCard;
+
+// 알림 클릭 → 읽음 처리 + 해당 섹션으로 이동 + 해당 사건 카드 포커스
 function openNotiTarget(el) {
-  var nid  = el.dataset.nid;
-  var type = el.dataset.type || '';
+  var nid    = el.dataset.nid;
+  var type   = el.dataset.type || '';
+  var caseId = el.dataset.caseid || '';
   // 1) 읽음 처리
   if(nid) readNoti(nid);
   // 2) 드롭다운 닫기
   var dd = document.getElementById('m-notifications');
   if(dd) dd.style.display = 'none';
+  // 탭 전환 후 사건 카드 포커스 (탭 렌더보다 살짝 뒤)
+  var focus = function(){ if(caseId) setTimeout(function(){ focusCaseCard(caseId); }, 450); };
   // 3) type별 화면 라우팅
   var role = window._userRole || '';
   switch(type) {
     case 'new_case':       // 변호사에게 새 사건 → 변호사 포털 사건목록
       if(window.go) window.go('s-att-dash');
       setTimeout(function(){ if(window.switchAttTab) switchAttTab('cases'); }, 350);
+      focus();
       break;
     case 'hire_request':   // 변호사에게 계약 요청 → 변호사 포털 진행중
       if(window.go) window.go('s-att-dash');
       setTimeout(function(){ if(window.switchAttTab) switchAttTab('hired'); }, 350);
+      focus();
       break;
     case 'new_bid':        // 채무자에게 새 견적 → MY 받은 제안
       if(window.go) window.go('s-my');
       setTimeout(function(){ if(window.switchMyTab) switchMyTab('bids'); }, 350);
+      focus();
       break;
     case 'progress_update':// 채무자에게 진행 업데이트 → MY 내 진단/사건
       if(window.go) window.go('s-my');
       setTimeout(function(){ if(window.switchMyTab) switchMyTab('diag'); }, 350);
+      focus();
       break;
     default:
       // type 불명 → 역할 기반 기본 이동
       if(role === 'attorney') { if(window.go) window.go('s-att-dash'); }
       else { if(window.go) window.go('s-my'); }
+      focus();
   }
 }
 window.openNotiTarget = openNotiTarget;
+
+// ── 백그라운드 푸시 클릭 라우팅 ──
+// 서비스워커가 보내는 메시지(__lrxNoti) 또는 ?ntype/?ncase 쿼리를 받아
+// openNotiTarget과 동일한 화면 이동 + 사건 카드 포커스를 수행한다.
+function routeFromPush(type, caseId) {
+  if(!type && !caseId) return;
+  openNotiTarget({ dataset: { nid: '', type: type || '', caseid: caseId || '' } });
+}
+window.routeFromPush = routeFromPush;
+// 1) 이미 열린 탭: SW → postMessage 수신
+if('serviceWorker' in navigator) {
+  navigator.serviceWorker.addEventListener('message', function(e){
+    var d = e.data || {};
+    if(d.__lrxNoti) {
+      // 로그인/렌더 준비 대기 후 라우팅
+      setTimeout(function(){ routeFromPush(d.type, d.caseId); }, 600);
+    }
+  });
+}
+// 2) 새 탭으로 열린 경우: 최초 로드 시 쿼리 파라미터 처리
+(function(){
+  try {
+    var p = new URLSearchParams(location.search);
+    var ntype = p.get('ntype'), ncase = p.get('ncase');
+    if(ntype || ncase) {
+      // 앱 초기화·로그인 복원 이후로 충분히 지연
+      setTimeout(function(){ routeFromPush(ntype, ncase); }, 1800);
+      // 쿼리 정리 (뒤로가기/새로고침 시 중복 라우팅 방지)
+      if(history.replaceState) history.replaceState(null, '', location.pathname);
+    }
+  } catch(e) {}
+})();
 
 function markAllNotiRead() {
   if(!window.FB_USER||!window.FB_DB||!window.FB_FUNCS) return;
